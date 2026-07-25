@@ -9,7 +9,7 @@ export default function RankingChart() {
   const { data } = useExcel();
   const { filters } = useFilters();
 
-  const dashboard = processDashboardData(data, filters);
+  const dashboard = processDashboardData(data, filters.derruba);
 
   const option = useMemo(() => {
     const ranking: Record<string, number> = {};
@@ -29,14 +29,12 @@ export default function RankingChart() {
       ranking[operador] = (ranking[operador] || 0) + quantidade;
     });
 
-    // Top 5 do maior para o menor
     const top5 = Object.entries(ranking)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
 
     return {
       backgroundColor: "transparent",
-
       animationDuration: 800,
 
       tooltip: {
@@ -60,21 +58,17 @@ export default function RankingChart() {
 
       xAxis: {
         type: "value",
-
         splitLine: {
           lineStyle: {
             color: "#44475A",
           },
         },
-
         axisLine: {
           show: false,
         },
-
         axisTick: {
           show: false,
         },
-
         axisLabel: {
           color: "#BDC1D6",
         },
@@ -82,19 +76,14 @@ export default function RankingChart() {
 
       yAxis: {
         type: "category",
-
         inverse: true,
-
         data: top5.map((item) => item[0]),
-
         axisLine: {
           show: false,
         },
-
         axisTick: {
           show: false,
         },
-
         axisLabel: {
           color: "#F8F8F2",
           fontSize: 13,
@@ -105,16 +94,12 @@ export default function RankingChart() {
       series: [
         {
           type: "bar",
-
           data: top5.map((item) => item[1]),
-
           barWidth: 22,
-
           itemStyle: {
             color: "#50FA7B",
             borderRadius: [0, 10, 10, 0],
           },
-
           label: {
             show: true,
             position: "right",

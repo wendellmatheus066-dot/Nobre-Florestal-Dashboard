@@ -20,7 +20,6 @@ export default function DashboardLayout({
     <MainLayout>
       <div className="pt-8">
         <Container>
-
           <Header
             title={title}
             subtitle={subtitle}
@@ -28,12 +27,11 @@ export default function DashboardLayout({
 
           <div className="h-6" />
 
-          <FilterBar />
+          <FilterBar tipo="derruba" />
 
           <div className="h-6" />
 
           {children}
-
         </Container>
       </div>
     </MainLayout>

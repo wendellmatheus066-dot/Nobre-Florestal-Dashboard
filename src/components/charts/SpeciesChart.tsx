@@ -9,7 +9,7 @@ export default function SpeciesChart() {
   const { data } = useExcel();
   const { filters } = useFilters();
 
-  const dashboard = processDashboardData(data, filters);
+  const dashboard = processDashboardData(data, filters.derruba);
 
   const option = useMemo(() => {
     const especies = new Map<string, number>();
@@ -17,9 +17,9 @@ export default function SpeciesChart() {
     dashboard.producao.forEach((row: any) => {
       const especie = String(
         row["Espécie"] ??
-        row["ESPÉCIE"] ??
-        row["ESPECIE"] ??
-        "Não informada"
+          row["ESPÉCIE"] ??
+          row["ESPECIE"] ??
+          "Não informada"
       ).trim();
 
       const quantidade = Number(
@@ -160,7 +160,7 @@ export default function SpeciesChart() {
         },
       ],
     };
-  }, [dashboard.producao]);
+  }, [dashboard]);
 
   return (
     <ReactECharts

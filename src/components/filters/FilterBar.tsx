@@ -43,21 +43,48 @@ export default function FilterBar({ tipo }: FilterBarProps) {
   }, [tipo]);
 
   // Nome exibido no filtro
-  const tituloOperador = useMemo(() => {
-    switch (tipo) {
-      case "arraste":
-        return "Skideiro";
+ const tituloOperador = useMemo(() => {
+  switch (tipo) {
+    case "arraste":
+      return "Skideiro";
 
-      case "medicao":
-        return "Medidor";
+    case "medicao":
+      return "Medidor";
 
-      default:
-        return "Motosserrista";
+    default:
+      return "Motosserrista";
+  }
+}, [tipo]);
+
+const registrosFiltrados = useMemo(() => {
+  return registros.filter((r: any) => {
+    if (
+      filtros.operador &&
+      String(r[campoOperador] ?? "").trim() !== filtros.operador.trim()
+    ) {
+      return false;
     }
-  }, [tipo]);
+
+    if (
+      filtros.ut &&
+      String(r["UT"] ?? "").trim() !== filtros.ut.trim()
+    ) {
+      return false;
+    }
+
+    if (
+      filtros.especie &&
+      String(r["Espécie"] ?? "").trim() !== filtros.especie.trim()
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+}, [registros, filtros, campoOperador]);
 
   const operadores = useMemo(() => {
-    const lista = registros
+    const lista = registrosFiltrados
       .map((r: any) => r[campoOperador])
       .filter(Boolean);
 
@@ -65,7 +92,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
   }, [registros, campoOperador]);
 
   const uts = useMemo(() => {
-    const lista = registros
+   const lista = registrosFiltrados
       .map((r: any) => r["UT"])
       .filter(Boolean);
 
@@ -73,7 +100,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
   }, [registros]);
 
   const especies = useMemo(() => {
-    const lista = registros
+   const lista = registrosFiltrados
       .map((r: any) => r["Espécie"])
       .filter(Boolean);
 
