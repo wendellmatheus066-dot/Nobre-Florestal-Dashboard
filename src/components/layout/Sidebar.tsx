@@ -5,7 +5,13 @@ import {
   Ruler,
   Settings,
   ChevronRight,
+  X,
 } from "lucide-react";
+
+type SidebarProps = {
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+};
 
 const menus = [
   {
@@ -30,24 +36,43 @@ const menus = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({
+  sidebarOpen,
+  setSidebarOpen,
+}: SidebarProps) {
   return (
-    <aside className="relative flex h-screen w-[180px] shrink-0 flex-col overflow-hidden bg-[#21222C] text-[#F8F8F2] shadow-2xl mr-6">
-
+    <aside
+      className={`
+        fixed top-0 left-0 z-50
+        h-screen w-[180px]
+        bg-[#21222C] text-[#F8F8F2]
+        shadow-2xl
+        transform transition-transform duration-300
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:relative
+        lg:translate-x-0
+        lg:flex
+        lg:shrink-0
+        lg:mr-6
+      `}
+    >
       {/* Gradiente Superior */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#BD93F9]/10 to-transparent" />
 
       {/* Barra RGB */}
       <div className="absolute inset-y-0 right-0 w-1 top-gradient" />
 
-      {/* Conteúdo */}
       <div className="flex flex-1 flex-col">
+        {/* Botão fechar (somente celular) */}
+        <div className="flex justify-end p-4 lg:hidden">
+          <button onClick={() => setSidebarOpen(false)}>
+            <X size={24} />
+          </button>
+        </div>
 
         {/* PERFIL */}
-        <div className="flex flex-col items-center pt-10">
-
+        <div className="flex flex-col items-center pt-4 lg:pt-10">
           <div className="relative flex h-28 w-28 items-center justify-center">
-
             <div className="logo-ring absolute inset-0 rounded-full" />
 
             <div className="relative z-10 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-[#44475A]">
@@ -59,7 +84,6 @@ export default function Sidebar() {
             </div>
 
             <span className="absolute bottom-1 right-1 z-20 h-4 w-4 rounded-full border-[3px] border-[#21222C] bg-[#50FA7B]" />
-
           </div>
 
           <div className="h-5" />
@@ -72,14 +96,11 @@ export default function Sidebar() {
             <span className="h-2 w-2 rounded-full bg-[#50FA7B]" />
             Administrador
           </p>
-
         </div>
 
         {/* MENU */}
         <nav className="mt-8 flex-1 overflow-y-auto px-5">
-
           <div className="flex flex-col gap-3">
-
             {menus.map((item) => {
               const Icon = item.icon;
 
@@ -88,6 +109,7 @@ export default function Sidebar() {
                   key={item.title}
                   to={item.path}
                   end={item.path === "/"}
+                  onClick={() => setSidebarOpen(false)}
                   className={({ isActive }) =>
                     `group flex items-center justify-between rounded-2xl px-5 py-3 transition-all duration-300 ${
                       isActive
@@ -99,7 +121,6 @@ export default function Sidebar() {
                   {({ isActive }) => (
                     <>
                       <div className="flex items-center gap-4">
-
                         <Icon
                           size={20}
                           className={
@@ -118,7 +139,6 @@ export default function Sidebar() {
                         >
                           {item.title}
                         </span>
-
                       </div>
 
                       {isActive && (
@@ -132,14 +152,11 @@ export default function Sidebar() {
                 </NavLink>
               );
             })}
-
           </div>
-
         </nav>
 
         {/* Rodapé */}
         <footer className="mt-auto border-t border-[#44475A] bg-[#1D1F28] px-5 py-5">
-
           <p className="text-[10px] uppercase tracking-[0.3em] text-[#6272A4]">
             SISTEMA
           </p>
@@ -151,11 +168,8 @@ export default function Sidebar() {
           <p className="mt-1 text-xs text-[#BDC1D6]">
             Versão 1.0.0
           </p>
-
         </footer>
-
       </div>
-
     </aside>
   );
 }

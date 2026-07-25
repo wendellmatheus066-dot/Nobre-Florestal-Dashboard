@@ -11,10 +11,10 @@ export default function Container({ children }: ContainerProps) {
         mx-auto
         w-full
         max-w-7xl
-        pl-10
-        pr-6
-        xl:pl-16
-        xl:pr-12
+        px-4
+        sm:px-6
+        lg:px-8
+        xl:px-10
       "
     >
       {children}

@@ -48,15 +48,28 @@ export default function ChartCard({
       />
 
       {/* Cabeçalho */}
-      <header className="flex items-center border-b border-[#44475A] px-6 py-5">
-
-        <div className="flex items-center gap-4">
+      <header
+        className="
+          flex
+          items-center
+          border-b
+          border-[#44475A]
+          px-4
+          py-4
+          sm:px-5
+          sm:py-5
+          lg:px-6
+        "
+      >
+        <div className="flex items-center gap-3 sm:gap-4">
 
           <div
             className="
               flex
-              h-12
-              w-12
+              h-10
+              w-10
+              sm:h-12
+              sm:w-12
               items-center
               justify-center
               rounded-xl
@@ -72,30 +85,28 @@ export default function ChartCard({
               group-hover:shadow-[0_0_25px_rgba(80,250,123,.45)]
             "
           >
-            <BarChart3 className="h-6 w-6" />
+            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
 
           <div>
 
-            <h2 className="text-xl font-bold text-[#F8F8F2]">
+            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-[#F8F8F2]">
               {title}
             </h2>
 
-            <p className="text-sm text-[#8F93A8]">
+            <p className="text-xs sm:text-sm text-[#8F93A8]">
               Atualizado automaticamente
             </p>
 
           </div>
 
         </div>
-
       </header>
 
       {/* Conteúdo */}
-      <div className="bg-[#343746] p-6">
+      <div className="bg-[#343746] p-4 sm:p-5 lg:p-6 overflow-x-auto">
         {children}
       </div>
-
     </section>
   );
 }

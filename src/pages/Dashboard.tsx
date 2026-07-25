@@ -34,82 +34,124 @@ export default function Dashboard() {
 
   return (
     <MainLayout>
-      <div className="pt-8">
+      <div className="py-4 sm:py-6 lg:py-8">
+
         <Container>
+
           <Header
             title="Dashboard de Produção"
             subtitle="Sistema de Gestão Florestal - NOBRE FLORESTAL"
           />
 
-          <div className="h-6" />
-
-          <FilterBar tipo="derruba" />
-
-          <div className="h-6" />
-
-          {/* ================= KPIs ================= */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            <KpiCard
-              title="Produção Geral"
-              value={dashboard.indicadores.producaoTotal.toLocaleString("pt-BR")}
-              icon={<Trees size={22} />}
-            />
-
-            <KpiCard
-              title="Operadores Ativos"
-              value={dashboard.indicadores.operadores.toLocaleString("pt-BR")}
-              icon={<Users size={22} />}
-            />
-
-            <KpiCard
-              title="Dias Trabalhados"
-              value={dashboard.indicadores.dias.toLocaleString("pt-BR")}
-              icon={<CalendarDays size={22} />}
-            />
-
-            <KpiCard
-              title="Média por Dia"
-              value={dashboard.indicadores.media.toLocaleString("pt-BR")}
-              icon={<TrendingUp size={22} />}
-            />
-
-            <KpiCard
-              title="Espécies Exploradas"
-              value={dashboard.indicadores.especies.toLocaleString("pt-BR")}
-              icon={<Leaf size={22} />}
-            />
+          <div className="mt-6">
+            <FilterBar tipo="derruba" />
           </div>
 
-          <div className="h-8" />
+          {/* KPI */}
+          <section className="mt-6">
 
-          {/* ================= Primeira Linha ================= */}
-          <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
-            <div className="xl:col-span-8">
-              <ChartCard title="Produção por Dia">
-                <ProductionChart />
-              </ChartCard>
+            <div
+              className="
+                grid
+                grid-cols-1
+                gap-4
+                sm:grid-cols-2
+                lg:grid-cols-3
+                xl:grid-cols-5
+                xl:gap-6
+              "
+            >
+
+              <KpiCard
+                title="Produção Geral"
+                value={dashboard.indicadores.producaoTotal.toLocaleString("pt-BR")}
+                icon={<Trees size={22} />}
+              />
+
+              <KpiCard
+                title="Operadores Ativos"
+                value={dashboard.indicadores.operadores.toLocaleString("pt-BR")}
+                icon={<Users size={22} />}
+              />
+
+              <KpiCard
+                title="Dias Trabalhados"
+                value={dashboard.indicadores.dias.toLocaleString("pt-BR")}
+                icon={<CalendarDays size={22} />}
+              />
+
+              <KpiCard
+                title="Média por Dia"
+                value={dashboard.indicadores.media.toLocaleString("pt-BR")}
+                icon={<TrendingUp size={22} />}
+              />
+
+              <KpiCard
+                title="Espécies Exploradas"
+                value={dashboard.indicadores.especies.toLocaleString("pt-BR")}
+                icon={<Leaf size={22} />}
+              />
+
             </div>
 
-            <div className="xl:col-span-4">
-              <ChartCard title="Top Operadores">
-                <RankingChart />
-              </ChartCard>
+          </section>
+
+          {/* Linha 1 */}
+          <section className="mt-6 lg:mt-8">
+
+            <div
+              className="
+                grid
+                grid-cols-1
+                gap-6
+                xl:grid-cols-12
+                xl:gap-8
+              "
+            >
+
+              <div className="xl:col-span-8">
+                <ChartCard title="Produção por Dia">
+                  <ProductionChart />
+                </ChartCard>
+              </div>
+
+              <div className="xl:col-span-4">
+                <ChartCard title="Top Operadores">
+                  <RankingChart />
+                </ChartCard>
+              </div>
+
             </div>
-          </div>
 
-          <div className="h-8" />
+          </section>
 
-          {/* ================= Segunda Linha ================= */}
-          <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
-            <ChartCard title="Produção por UT">
-              <UTChart />
-            </ChartCard>
+          {/* Linha 2 */}
+          <section className="mt-6 lg:mt-8">
 
-            <ChartCard title="Produção por Espécie">
-              <SpeciesChart />
-            </ChartCard>
-          </div>
+            <div
+              className="
+                grid
+                grid-cols-1
+                gap-6
+                xl:grid-cols-2
+                xl:gap-8
+              "
+            >
+
+              <ChartCard title="Produção por UT">
+                <UTChart />
+              </ChartCard>
+
+              <ChartCard title="Produção por Espécie">
+                <SpeciesChart />
+              </ChartCard>
+
+            </div>
+
+          </section>
+
         </Container>
+
       </div>
     </MainLayout>
   );
