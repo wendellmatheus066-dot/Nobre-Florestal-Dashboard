@@ -144,3 +144,24 @@ body {
     }
 
 }
+@keyframes rgbMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.top-gradient {
+  background: linear-gradient(
+    90deg,
+    #00ffff,
+    #00ff88,
+    #ffff00,
+    #ff00ff,
+    #00ffff
+  );
+  background-size: 300% 100%;
+  animation: rgbMove 6s linear infinite;
+}

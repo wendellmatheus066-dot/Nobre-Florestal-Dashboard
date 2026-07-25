@@ -28,7 +28,7 @@ export default function ChartCard({
       "
     >
       {/* Barra RGB */}
-      <div className="h-1 w-full bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-green-400" />
+      <div className="h-1 w-full top-gradient" />
 
       {/* Glow */}
       <div
