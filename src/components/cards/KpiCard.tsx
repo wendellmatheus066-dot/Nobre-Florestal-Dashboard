@@ -39,37 +39,32 @@ export default function KpiCard({
         hover:shadow-[0_10px_25px_rgba(80,250,123,.18)]
       "
     >
-      {/* Barra superior */}
+      {/* Barra Superior Animada */}
       <div className="top-gradient h-1 w-full" />
 
-      <div className="flex flex-1 flex-col justify-between p-4 sm:p-5 lg:p-6">
-
+      <div className="flex flex-1 flex-col justify-between p-6">
         {/* Conteúdo */}
         <div>
-
           {/* Título */}
-          <p className="text-center text-xs sm:text-sm font-semibold text-[#BDC1D6]">
+          <p className="text-center text-sm font-semibold text-[#BDC1D6]">
             {title}
           </p>
 
           {/* Subtítulo */}
           {subtitle && (
-            <p className="mt-1 text-center text-[11px] sm:text-xs text-[#8F93A8]">
+            <p className="mt-1 text-center text-xs text-[#8F93A8]">
               {subtitle}
             </p>
           )}
 
-          {/* Ícone + Valor */}
-          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-4">
-
+          {/* Número + Ícone */}
+          <div className="mt-6 flex items-center justify-center gap-4">
             {icon && (
               <div
                 className="
                   flex
-                  h-12
-                  w-12
-                  sm:h-14
-                  sm:w-14
+                  h-14
+                  w-14
                   items-center
                   justify-center
                   rounded-xl
@@ -88,39 +83,24 @@ export default function KpiCard({
             )}
 
             <h2
-              className={`
-                text-4xl
-                sm:text-5xl
-                lg:text-6xl
-                font-extrabold
-                leading-none
-                tracking-tight
-                text-center
-                break-all
-                ${color}
-              `}
+              className={`text-6xl font-extrabold leading-none tracking-tight ${color}`}
             >
               {value}
             </h2>
-
           </div>
-
         </div>
 
         {/* Rodapé */}
-        <div className="mt-5 flex items-center justify-center gap-2 border-t border-[#44475A] pt-4">
-
+        <div className="mt-6 flex items-center justify-center gap-2 border-t border-[#44475A] pt-4">
           <TrendingUp
             size={16}
             className="text-[#50FA7B] transition-transform duration-300 group-hover:scale-110"
           />
 
-          <span className="text-xs sm:text-sm font-semibold text-[#50FA7B] text-center">
+          <span className="text-sm font-semibold text-[#50FA7B]">
             {footer}
           </span>
-
         </div>
-
       </div>
     </div>
   );
