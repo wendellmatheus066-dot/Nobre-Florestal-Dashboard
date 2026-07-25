@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+:root {
+  /* Fundo */
+  --background: #282A36;
+  --surface: #343746;
+  --card: #44475A;
+  --sidebar: #21222C;
+
+  /* Texto */
+  --text: #F8F8F2;
+  --text-muted: #BDC1D6;
+
+  /* Bordas */
+  --border: #6272A4;
+
+  /* Cores */
+  --primary: #50FA7B;
+  --secondary: #8BE9FD;
+  --warning: #FFB86C;
+  --danger: #FF5555;
+  --purple: #BD93F9;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ===========================================================
+   BARRA RGB PREMIUM
+=========================================================== */
+
+.top-gradient {
+  position: relative;
+  overflow: hidden;
+
+  background: linear-gradient(
+    90deg,
+    #BD93F9,
+    #8BE9FD,
+    #50FA7B,
+    #8BE9FD,
+    #BD93F9
+  );
+
+  background-size: 300% 100%;
+
+  animation: gradientMove 6s linear infinite;
+}
+
+.top-gradient::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.9),
+    transparent
+  );
+
+  transform: translateX(-150%) skewX(-25deg);
+
+  animation: shine 2.8s ease-in-out infinite;
+}
+
+@keyframes gradientMove {
+  from {
+    background-position: 0% 50%;
+  }
+
+  to {
+    background-position: 300% 50%;
+  }
+}
+
+@keyframes shine {
+  from {
+    transform: translateX(-150%) skewX(-25deg);
+  }
+
+  to {
+    transform: translateX(350%) skewX(-25deg);
+  }
+}
+/* ===========================================================
+   ANEL RGB DA LOGO
+=========================================================== */
+
+.logo-ring{
+    background:conic-gradient(
+        #50FA7B,
+        #8BE9FD,
+        #BD93F9,
+        #FF79C6,
+        #50FA7B
+    );
+
+    animation:spinLogo 4s linear infinite;
+
+    box-shadow:
+      0 0 12px rgba(80,250,123,.35),
+      0 0 25px rgba(139,233,253,.20);
+}
+
+.logo-ring::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:4px;
+
+    border-radius:50%;
+
+    background:#21222C;
+
+}
+
+@keyframes spinLogo{
+
+    from{
+        transform:rotate(0deg);
+    }
+
+    to{
+        transform:rotate(360deg);
+    }
+
+}
