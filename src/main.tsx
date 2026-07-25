@@ -6,25 +6,20 @@ import App from "./App";
 
 import { ExcelProvider } from "./context/ExcelContext";
 import { FilterProvider } from "./context/FilterContext";
+import { AuthProvider } from "./context/AuthContext";
 
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-
     <BrowserRouter>
-
-      <ExcelProvider>
-
-        <FilterProvider>
-
-          <App />
-
-        </FilterProvider>
-
-      </ExcelProvider>
-
+      <AuthProvider>
+        <ExcelProvider>
+          <FilterProvider>
+            <App />
+          </FilterProvider>
+        </ExcelProvider>
+      </AuthProvider>
     </BrowserRouter>
-
   </StrictMode>
 );

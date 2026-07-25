@@ -8,6 +8,8 @@ import {
   X,
 } from "lucide-react";
 
+import { useAuth } from "../../context/AuthContext";
+
 type SidebarProps = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -29,17 +31,14 @@ const menus = [
     title: "Medição",
     path: "/medicao",
   },
-  {
-    icon: Settings,
-    title: "Configurações",
-    path: "/configuracoes",
-  },
 ];
 
 export default function Sidebar({
   sidebarOpen,
   setSidebarOpen,
 }: SidebarProps) {
+  const { isAdmin } = useAuth();
+
   return (
     <>
       <aside
@@ -178,6 +177,58 @@ export default function Sidebar({
                   </NavLink>
                 );
               })}
+
+              {isAdmin && (
+                <>
+                  <div className="my-3 border-t border-[#44475A]" />
+
+                  <NavLink
+                    to="/admin"
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) =>
+                      `group flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-300 ${
+                        isActive
+                          ? "border border-[#50FA7B]/30 bg-[#44475A] shadow-lg shadow-[#50FA7B]/20"
+                          : "hover:bg-[#343746]"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <div className="flex items-center gap-3">
+
+                          <Settings
+                            size={20}
+                            className={
+                              isActive
+                                ? "text-[#50FA7B]"
+                                : "text-[#8BE9FD] group-hover:text-[#50FA7B]"
+                            }
+                          />
+
+                          <span
+                            className={
+                              isActive
+                                ? "font-semibold text-[#F8F8F2]"
+                                : "font-medium text-[#BDC1D6]"
+                            }
+                          >
+                            Administração
+                          </span>
+
+                        </div>
+
+                        {isActive && (
+                          <ChevronRight
+                            size={18}
+                            className="text-[#50FA7B]"
+                          />
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                </>
+              )}
 
             </div>
 
