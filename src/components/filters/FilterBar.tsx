@@ -40,7 +40,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
         return "Skideiro Patio";
 
       case "medicao":
-        return "Medidor";
+        return "Equipe";
 
       default:
         return "Motoserrista Corte";
@@ -53,7 +53,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
         return "Skideiro";
 
       case "medicao":
-        return "Medidor";
+        return "Equipe";
 
       default:
         return "Motosserrista";
@@ -61,6 +61,11 @@ export default function FilterBar({ tipo }: FilterBarProps) {
   }, [tipo]);
 
   const registrosFiltrados = useMemo(() => {
+    const campoUT =
+      tipo === "medicao"
+        ? "UT Inventário"
+        : "UT";
+
     return registros.filter((r: any) => {
       if (
         filtros.operador &&
@@ -70,7 +75,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
 
       if (
         filtros.ut &&
-        String(r["UT"] ?? "").trim() !== filtros.ut.trim()
+        String(r[campoUT] ?? "").trim() !== filtros.ut.trim()
       )
         return false;
 
@@ -80,11 +85,16 @@ export default function FilterBar({ tipo }: FilterBarProps) {
       )
         return false;
 
+      if (filtros.data) {
+        const dataRegistro = String(r["Data"] ?? "").substring(0, 10);
+
+        if (dataRegistro !== filtros.data) return false;
+      }
+
       return true;
     });
-  }, [registros, filtros, campoOperador]);
-
-  const operadores = useMemo(() => {
+  }, [registros, filtros, campoOperador, tipo]);
+    const operadores = useMemo(() => {
     const lista = registrosFiltrados
       .map((r: any) => r[campoOperador])
       .filter(Boolean);
@@ -93,12 +103,17 @@ export default function FilterBar({ tipo }: FilterBarProps) {
   }, [registrosFiltrados, campoOperador]);
 
   const uts = useMemo(() => {
+    const campoUT =
+      tipo === "medicao"
+        ? "UT Inventário"
+        : "UT";
+
     const lista = registrosFiltrados
-      .map((r: any) => r["UT"])
+      .map((r: any) => r[campoUT])
       .filter(Boolean);
 
     return [...new Set(lista)].sort();
-  }, [registrosFiltrados]);
+  }, [registrosFiltrados, tipo]);
 
   const especies = useMemo(() => {
     const lista = registrosFiltrados
@@ -141,30 +156,15 @@ export default function FilterBar({ tipo }: FilterBarProps) {
               data: "",
             })
           }
-          className="
-            mr-2
-            flex
-            h-9
-            w-9
-            items-center
-            justify-center
-            rounded-lg
-            border
-            border-[#44475A]
-            bg-[#282A36]
-            text-slate-400
-            transition-all
-            hover:border-green-500
-            hover:text-green-400
-          "
+          className="mr-2 flex h-9 w-9 items-center justify-center rounded-lg border border-[#44475A] bg-[#282A36] text-slate-400 transition-all hover:border-green-500 hover:text-green-400"
         >
           <Trash2 size={17} />
         </button>
+
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-
-        {/* DATA */}
+              {/* DATA */}
         <div>
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Calendar size={16} />
@@ -180,24 +180,11 @@ export default function FilterBar({ tipo }: FilterBarProps) {
                 data: e.target.value,
               })
             }
-            className="
-              h-12
-              w-full
-              rounded-xl
-              border
-              border-[#44475A]
-              bg-[#282A36]
-              px-4
-              text-white
-              focus:border-green-500
-              focus:outline-none
-              focus:ring-2
-              focus:ring-green-500/20
-            "
+            className="h-12 w-full rounded-xl border border-[#44475A] bg-[#282A36] px-4 text-white focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
           />
         </div>
 
-                {/* OPERADOR */}
+        {/* OPERADOR / EQUIPE */}
         <div>
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Users size={16} />
@@ -212,23 +199,12 @@ export default function FilterBar({ tipo }: FilterBarProps) {
                 operador: e.target.value,
               })
             }
-            className="
-              h-12
-              w-full
-              rounded-xl
-              border
-              border-[#44475A]
-              bg-[#282A36]
-              px-4
-              text-white
-              focus:border-green-500
-              focus:outline-none
-              focus:ring-2
-              focus:ring-green-500/20
-            "
+            className="h-12 w-full rounded-xl border border-[#44475A] bg-[#282A36] px-4 text-white focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
           >
             <option value="">
-              {`Todos os ${tituloOperador}s`}
+              {tipo === "medicao"
+                ? "Todas as Equipes"
+                : `Todos os ${tituloOperador}s`}
             </option>
 
             {operadores.map((op: any) => (
@@ -254,20 +230,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
                 ut: e.target.value,
               })
             }
-            className="
-              h-12
-              w-full
-              rounded-xl
-              border
-              border-[#44475A]
-              bg-[#282A36]
-              px-4
-              text-white
-              focus:border-green-500
-              focus:outline-none
-              focus:ring-2
-              focus:ring-green-500/20
-            "
+            className="h-12 w-full rounded-xl border border-[#44475A] bg-[#282A36] px-4 text-white focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
           >
             <option value="">Todas as UTs</option>
 
@@ -278,8 +241,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
             ))}
           </select>
         </div>
-
-        {/* ESPÉCIE */}
+                {/* ESPÉCIE */}
         <div>
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Leaf size={16} />
@@ -294,20 +256,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
                 especie: e.target.value,
               })
             }
-            className="
-              h-12
-              w-full
-              rounded-xl
-              border
-              border-[#44475A]
-              bg-[#282A36]
-              px-4
-              text-white
-              focus:border-green-500
-              focus:outline-none
-              focus:ring-2
-              focus:ring-green-500/20
-            "
+            className="h-12 w-full rounded-xl border border-[#44475A] bg-[#282A36] px-4 text-white focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
           >
             <option value="">Todas as Espécies</option>
 

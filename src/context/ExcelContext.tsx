@@ -33,9 +33,21 @@ export function ExcelProvider({
   useEffect(() => {
     async function carregarDados() {
       try {
+        console.log("====================================");
+        console.log("Iniciando carregamento do Supabase...");
+        console.log("====================================");
+
         const producao = await buscarProducaoSupabase();
+        console.log("PRODUÇÃO:", producao);
+        console.log("Qtd Produção:", producao?.length);
+
         const arraste = await buscarArrasteSupabase();
+        console.log("ARRASTE:", arraste);
+        console.log("Qtd Arraste:", arraste?.length);
+
         const medicao = await buscarMedicaoSupabase();
+        console.log("MEDIÇÃO:", medicao);
+        console.log("Qtd Medição:", medicao?.length);
 
         setData({
           "PRODUÇÃO": producao,
@@ -43,9 +55,11 @@ export function ExcelProvider({
           "MEDIÇÃO": medicao,
         });
 
-        console.log("Dados carregados do Supabase");
+        console.log("====================================");
+        console.log("Dados carregados com sucesso!");
+        console.log("====================================");
       } catch (error) {
-        console.error("Erro buscando dados:", error);
+        console.error("ERRO AO BUSCAR DADOS:", error);
       }
     }
 
