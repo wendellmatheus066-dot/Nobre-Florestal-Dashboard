@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { CalendarDays, Leaf } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
 interface HeaderProps {
   title: string;
@@ -9,9 +11,30 @@ export default function Header({
   title,
   subtitle,
 }: HeaderProps) {
+  const [ultimaAtualizacao, setUltimaAtualizacao] =
+    useState("Carregando...");
+
+  useEffect(() => {
+    async function carregarData() {
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .select("*");
+
+      console.log("DATA:", data);
+      console.log("ERROR:", error);
+
+      if (data && data.length > 0) {
+        setUltimaAtualizacao(
+          new Date(data[0].valor).toLocaleString("pt-BR")
+        );
+      }
+    }
+
+    carregarData();
+  }, []);
+
   return (
     <header className="mb-8 overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] shadow-xl">
-      {/* Linha superior */}
       <div className="h-1 bg-gradient-to-r from-[#50FA7B] via-[#8BE9FD] to-[#BD93F9]" />
 
       <div className="flex flex-col gap-6 px-6 py-8">
@@ -35,7 +58,7 @@ export default function Header({
               <CalendarDays size={16} />
 
               <span>
-                Atualizado em {new Date().toLocaleString("pt-BR")}
+                Atualizado em {ultimaAtualizacao}
               </span>
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { supabase } from "../lib/supabase";
 import { readExcel } from "../services/excelService";
 import { useExcelContext } from "../context/ExcelContext";
 import { salvarExcelNoSupabase } from "../services/uploadExcel";
@@ -13,7 +14,7 @@ export function useExcel() {
       // Atualiza tela local
       setData(result);
 
-      // Envia para Supabase
+      // Envia Produção
       if (result["PRODUÇÃO"]) {
         await salvarExcelNoSupabase(
           "producao",
@@ -21,6 +22,7 @@ export function useExcel() {
         );
       }
 
+      // Envia Arraste
       if (result["ARRASTE"]) {
         await salvarExcelNoSupabase(
           "arraste",
@@ -28,18 +30,30 @@ export function useExcel() {
         );
       }
 
+      // Envia Medição
       const medicao =
-  result["MEDIÇÃO"] ??
-  result["MEDICAO"] ??
-  result["MEDIÇÃO ".trim()];
+        result["MEDIÇÃO"] ??
+        result["MEDICAO"] ??
+        result["MEDIÇÃO ".trim()];
 
+      if (medicao) {
+        await salvarExcelNoSupabase(
+          "medicao",
+          medicao
+        );
+      }
 
-if (medicao) {
-  await salvarExcelNoSupabase(
-    "medicao",
-    medicao
-  );
-}
+      // Atualiza a data/hora da última importação
+      const { error } = await supabase
+        .from("configuracoes")
+        .update({
+          valor: new Date().toISOString(),
+        })
+        .eq("chave", "ultima_importacao");
+
+      if (error) {
+        console.error("Erro ao atualizar data da importação:", error);
+      }
 
       console.log("Excel salvo no Supabase!");
 
