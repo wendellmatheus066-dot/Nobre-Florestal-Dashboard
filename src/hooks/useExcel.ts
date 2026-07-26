@@ -44,15 +44,22 @@ export function useExcel() {
       }
 
       // Atualiza a data/hora da última importação
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("configuracoes")
         .update({
           valor: new Date().toISOString(),
         })
-        .eq("chave", "ultima_importacao");
+        .eq("chave", "ultima_importacao")
+        .select();
+
+      console.log("Atualização configuracoes:", data);
+      console.log("Erro configuracoes:", error);
 
       if (error) {
-        console.error("Erro ao atualizar data da importação:", error);
+        console.error(
+          "Erro ao atualizar data da importação:",
+          error
+        );
       }
 
       console.log("Excel salvo no Supabase!");
