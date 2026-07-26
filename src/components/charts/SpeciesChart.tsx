@@ -17,9 +17,9 @@ export default function SpeciesChart() {
     dashboard.producao.forEach((row: any) => {
       const especie = String(
         row["Espécie"] ??
-          row["ESPÉCIE"] ??
-          row["ESPECIE"] ??
-          "Não informada"
+        row["ESPÉCIE"] ??
+        row["ESPECIE"] ??
+        "Não informada"
       ).trim();
 
       const quantidade = Number(
@@ -38,14 +38,15 @@ export default function SpeciesChart() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
 
-    const nomes = top10.map((item) => item[0]);
-    const valores = top10.map((item) => item[1]);
+    const nomes = top10.map(([nome]) => nome);
+    const valores = top10.map(([, valor]) => valor);
 
     return {
       backgroundColor: "transparent",
 
       animation: true,
-      animationDuration: 700,
+      animationDuration: 800,
+      animationEasing: "cubicOut",
 
       tooltip: {
         trigger: "axis",
@@ -58,15 +59,26 @@ export default function SpeciesChart() {
         textStyle: {
           color: "#F8F8F2",
         },
-        valueFormatter: (value: number) =>
-          value.toLocaleString("pt-BR"),
+        formatter: (params: any) => {
+          const p = params[0];
+
+          return `
+            <div style="padding:6px">
+              <strong>${p.name}</strong><br/>
+              Produção:
+              <span style="color:#FBBF24;font-weight:bold">
+                ${Number(p.value).toLocaleString("pt-BR")}
+              </span>
+            </div>
+          `;
+        },
       },
 
       grid: {
-        top: 20,
-        left: 200,
-        right: 35,
-        bottom: 20,
+        top: 10,
+        left: 125,
+        right: 10,
+        bottom: 10,
         containLabel: true,
       },
 
@@ -76,6 +88,7 @@ export default function SpeciesChart() {
         splitLine: {
           lineStyle: {
             color: "#44475A",
+            opacity: 0.15,
           },
         },
 
@@ -110,8 +123,9 @@ export default function SpeciesChart() {
 
         axisLabel: {
           color: "#F8F8F2",
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: "bold",
+          margin: 8,
         },
       },
 
@@ -123,39 +137,66 @@ export default function SpeciesChart() {
 
           data: valores,
 
-          barWidth: 20,
+          barWidth: 30,
 
           itemStyle: {
-            borderRadius: [0, 10, 10, 0],
+            borderRadius: [0, 14, 14, 0],
 
             color: (params: any) => {
-              const cores = [
-                "#F59E0B",
-                "#FBBF24",
-                "#FCD34D",
-                "#F97316",
-                "#FB923C",
-                "#FACC15",
-                "#D97706",
-                "#F59E0B",
-                "#FDBA74",
-                "#EA580C",
+              const gradients = [
+                ["#FCD34D", "#F59E0B"],
+                ["#FBBF24", "#D97706"],
+                ["#FDE68A", "#F59E0B"],
+                ["#FDBA74", "#EA580C"],
+                ["#FB923C", "#EA580C"],
+                ["#FACC15", "#D97706"],
+                ["#FCD34D", "#F59E0B"],
+                ["#FDBA74", "#F97316"],
+                ["#FDE68A", "#FBBF24"],
+                ["#F59E0B", "#EA580C"],
               ];
 
-              return cores[params.dataIndex] ?? "#F59E0B";
+              const [inicio, fim] =
+                gradients[params.dataIndex] ??
+                ["#FBBF24", "#F59E0B"];
+
+              return {
+                type: "linear",
+                x: 0,
+                y: 0,
+                x2: 1,
+                y2: 0,
+                colorStops: [
+                  {
+                    offset: 0,
+                    color: inicio,
+                  },
+                  {
+                    offset: 1,
+                    color: fim,
+                  },
+                ],
+              };
             },
           },
-
-          label: {
+                    label: {
             show: true,
             position: "right",
+            distance: 8,
             color: "#FFFFFF",
             fontWeight: "bold",
-            formatter: "{c}",
+            fontSize: 13,
+            formatter: ({ value }: any) =>
+              Number(value).toLocaleString("pt-BR"),
           },
 
           emphasis: {
             focus: "series",
+
+            itemStyle: {
+              shadowBlur: 18,
+              shadowColor: "rgba(245,158,11,0.35)",
+            },
           },
         },
       ],
@@ -169,7 +210,7 @@ export default function SpeciesChart() {
       lazyUpdate={true}
       style={{
         width: "100%",
-        height: 420,
+        height: 500,
       }}
     />
   );

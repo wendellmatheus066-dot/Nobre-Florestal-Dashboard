@@ -1,5 +1,12 @@
 import { useMemo } from "react";
-import { Search, Calendar, Users, Trees, Leaf } from "lucide-react";
+import {
+  Search,
+  Calendar,
+  Users,
+  Trees,
+  Leaf,
+  Trash2,
+} from "lucide-react";
 
 import { useExcel } from "../../hooks/useExcel";
 import { useFilters } from "../../context/FilterContext";
@@ -14,7 +21,6 @@ export default function FilterBar({ tipo }: FilterBarProps) {
 
   const filtros = filters[tipo];
 
-  // Seleciona automaticamente a planilha correta
   const registros = useMemo(() => {
     switch (tipo) {
       case "arraste":
@@ -28,7 +34,6 @@ export default function FilterBar({ tipo }: FilterBarProps) {
     }
   }, [data, tipo]);
 
-  // Campo do operador
   const campoOperador = useMemo(() => {
     switch (tipo) {
       case "arraste":
@@ -42,46 +47,42 @@ export default function FilterBar({ tipo }: FilterBarProps) {
     }
   }, [tipo]);
 
-  // Nome exibido no filtro
- const tituloOperador = useMemo(() => {
-  switch (tipo) {
-    case "arraste":
-      return "Skideiro";
+  const tituloOperador = useMemo(() => {
+    switch (tipo) {
+      case "arraste":
+        return "Skideiro";
 
-    case "medicao":
-      return "Medidor";
+      case "medicao":
+        return "Medidor";
 
-    default:
-      return "Motosserrista";
-  }
-}, [tipo]);
-
-const registrosFiltrados = useMemo(() => {
-  return registros.filter((r: any) => {
-    if (
-      filtros.operador &&
-      String(r[campoOperador] ?? "").trim() !== filtros.operador.trim()
-    ) {
-      return false;
+      default:
+        return "Motosserrista";
     }
+  }, [tipo]);
 
-    if (
-      filtros.ut &&
-      String(r["UT"] ?? "").trim() !== filtros.ut.trim()
-    ) {
-      return false;
-    }
+  const registrosFiltrados = useMemo(() => {
+    return registros.filter((r: any) => {
+      if (
+        filtros.operador &&
+        String(r[campoOperador] ?? "").trim() !== filtros.operador.trim()
+      )
+        return false;
 
-    if (
-      filtros.especie &&
-      String(r["Espécie"] ?? "").trim() !== filtros.especie.trim()
-    ) {
-      return false;
-    }
+      if (
+        filtros.ut &&
+        String(r["UT"] ?? "").trim() !== filtros.ut.trim()
+      )
+        return false;
 
-    return true;
-  });
-}, [registros, filtros, campoOperador]);
+      if (
+        filtros.especie &&
+        String(r["Espécie"] ?? "").trim() !== filtros.especie.trim()
+      )
+        return false;
+
+      return true;
+    });
+  }, [registros, filtros, campoOperador]);
 
   const operadores = useMemo(() => {
     const lista = registrosFiltrados
@@ -89,48 +90,83 @@ const registrosFiltrados = useMemo(() => {
       .filter(Boolean);
 
     return [...new Set(lista)].sort();
-  }, [registros, campoOperador]);
+  }, [registrosFiltrados, campoOperador]);
 
   const uts = useMemo(() => {
-   const lista = registrosFiltrados
+    const lista = registrosFiltrados
       .map((r: any) => r["UT"])
       .filter(Boolean);
 
     return [...new Set(lista)].sort();
-  }, [registros]);
+  }, [registrosFiltrados]);
 
   const especies = useMemo(() => {
-   const lista = registrosFiltrados
+    const lista = registrosFiltrados
       .map((r: any) => r["Espécie"])
       .filter(Boolean);
 
     return [...new Set(lista)].sort();
-  }, [registros]);
+  }, [registrosFiltrados]);
 
   return (
-    <div className="rounded-2xl border border-[#44475A] bg-[#343746] shadow-xl p-6 mb-30">
+    <div className="mb-8 rounded-2xl border border-[#44475A] bg-[#343746] p-6 shadow-xl">
 
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600/15">
-          <Search className="text-green-400" size={20} />
+      <div className="mb-5 flex items-center justify-between pr-2">
+
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600/15">
+            <Search className="text-green-400" size={20} />
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold text-white">
+              Filtros
+            </h2>
+
+            <p className="text-sm text-slate-400">
+              Os dados são atualizados automaticamente.
+            </p>
+          </div>
         </div>
 
-        <div>
-          <h2 className="text-xl font-semibold text-white">
-            Filtros
-          </h2>
-
-          <p className="text-sm text-slate-400">
-            Os dados são atualizados automaticamente.
-          </p>
-        </div>
+        <button
+          type="button"
+          title="Limpar filtros"
+          onClick={() =>
+            setFilters(tipo, {
+              operador: "",
+              ut: "",
+              especie: "",
+              equipe: "",
+              data: "",
+            })
+          }
+          className="
+            mr-2
+            flex
+            h-9
+            w-9
+            items-center
+            justify-center
+            rounded-lg
+            border
+            border-[#44475A]
+            bg-[#282A36]
+            text-slate-400
+            transition-all
+            hover:border-green-500
+            hover:text-green-400
+          "
+        >
+          <Trash2 size={17} />
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
 
         {/* DATA */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Calendar size={16} />
             Data
           </label>
@@ -145,25 +181,25 @@ const registrosFiltrados = useMemo(() => {
               })
             }
             className="
-              w-full
               h-12
+              w-full
               rounded-xl
-              bg-[#282A36]
               border
               border-[#44475A]
+              bg-[#282A36]
               px-4
               text-white
-              focus:outline-none
               focus:border-green-500
+              focus:outline-none
               focus:ring-2
               focus:ring-green-500/20
             "
           />
         </div>
 
-        {/* OPERADOR */}
+                {/* OPERADOR */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Users size={16} />
             {tituloOperador}
           </label>
@@ -177,16 +213,16 @@ const registrosFiltrados = useMemo(() => {
               })
             }
             className="
-              w-full
               h-12
+              w-full
               rounded-xl
-              bg-[#282A36]
               border
               border-[#44475A]
+              bg-[#282A36]
               px-4
               text-white
-              focus:outline-none
               focus:border-green-500
+              focus:outline-none
               focus:ring-2
               focus:ring-green-500/20
             "
@@ -195,16 +231,17 @@ const registrosFiltrados = useMemo(() => {
               {`Todos os ${tituloOperador}s`}
             </option>
 
-            {operadores.map((op) => (
-              <option key={op} value={op}>
-                {op}
+            {operadores.map((op: any) => (
+              <option key={String(op)} value={String(op)}>
+                {String(op)}
               </option>
             ))}
           </select>
         </div>
-                {/* UT */}
+
+        {/* UT */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Trees size={16} />
             UT
           </label>
@@ -218,25 +255,25 @@ const registrosFiltrados = useMemo(() => {
               })
             }
             className="
-              w-full
               h-12
+              w-full
               rounded-xl
-              bg-[#282A36]
               border
               border-[#44475A]
+              bg-[#282A36]
               px-4
               text-white
-              focus:outline-none
               focus:border-green-500
+              focus:outline-none
               focus:ring-2
               focus:ring-green-500/20
             "
           >
             <option value="">Todas as UTs</option>
 
-            {uts.map((ut) => (
-              <option key={ut} value={ut}>
-                {ut}
+            {uts.map((ut: any) => (
+              <option key={String(ut)} value={String(ut)}>
+                {String(ut)}
               </option>
             ))}
           </select>
@@ -244,7 +281,7 @@ const registrosFiltrados = useMemo(() => {
 
         {/* ESPÉCIE */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Leaf size={16} />
             Espécie
           </label>
@@ -258,32 +295,30 @@ const registrosFiltrados = useMemo(() => {
               })
             }
             className="
-              w-full
               h-12
+              w-full
               rounded-xl
-              bg-[#282A36]
               border
               border-[#44475A]
+              bg-[#282A36]
               px-4
               text-white
-              focus:outline-none
               focus:border-green-500
+              focus:outline-none
               focus:ring-2
               focus:ring-green-500/20
             "
           >
             <option value="">Todas as Espécies</option>
 
-            {especies.map((esp) => (
-              <option key={esp} value={esp}>
-                {esp}
+            {especies.map((esp: any) => (
+              <option key={String(esp)} value={String(esp)}>
+                {String(esp)}
               </option>
             ))}
           </select>
         </div>
-
       </div>
-
     </div>
   );
 }

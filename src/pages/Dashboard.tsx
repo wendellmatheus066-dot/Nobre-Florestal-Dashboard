@@ -91,7 +91,7 @@ export default function Dashboard() {
             </div>
 
             <div className="xl:col-span-4">
-              <ChartCard title="Top Operadores">
+              <ChartCard title="Top 5 Operadores">
                 <RankingChart />
               </ChartCard>
             </div>

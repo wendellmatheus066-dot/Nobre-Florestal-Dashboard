@@ -47,6 +47,24 @@ export default function RankingChart() {
         textStyle: {
           color: "#F8F8F2",
         },
+        formatter: (params: any) => {
+          const index = params[0].dataIndex;
+
+          const posicao =
+            index === 0
+              ? "🥇 1º Lugar"
+              : index === 1
+              ? "🥈 2º Lugar"
+              : index === 2
+              ? "🥉 3º Lugar"
+              : `${index + 1}º Lugar`;
+
+          return `
+            <b>${posicao}</b><br/>
+            ${top5[index][0]}<br/>
+            <b>${top5[index][1]}</b>
+          `;
+        },
       },
 
       grid: {
@@ -77,7 +95,13 @@ export default function RankingChart() {
       yAxis: {
         type: "category",
         inverse: true,
-        data: top5.map((item) => item[0]),
+        data: top5.map((item, index) => {
+          if (index === 0) return `🥇 ${item[0]}`;
+          if (index === 1) return `🥈 ${item[0]}`;
+          if (index === 2) return `🥉 ${item[0]}`;
+
+          return `${index + 1}º ${item[0]}`;
+        }),
         axisLine: {
           show: false,
         },
@@ -105,6 +129,7 @@ export default function RankingChart() {
             position: "right",
             color: "#FFFFFF",
             fontWeight: "bold",
+            fontSize: 13,
           },
         },
       ],

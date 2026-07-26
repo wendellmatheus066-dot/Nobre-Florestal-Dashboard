@@ -32,18 +32,19 @@ export default function UTChart() {
       );
     });
 
+    // Ordena do maior para o menor
     const ranking = [...uts.entries()].sort(
       (a, b) => b[1] - a[1]
     );
 
-    const categorias = ranking.map((item) => item[0]);
-    const valores = ranking.map((item) => item[1]);
+    const categorias = ranking.map(([ut]) => ut);
+    const valores = ranking.map(([, valor]) => valor);
 
     return {
       backgroundColor: "transparent",
 
       animation: true,
-      animationDuration: 700,
+      animationDuration: 800,
 
       tooltip: {
         trigger: "axis",
@@ -56,15 +57,26 @@ export default function UTChart() {
         textStyle: {
           color: "#F8F8F2",
         },
-        valueFormatter: (value: number) =>
-          value.toLocaleString("pt-BR"),
+        formatter: (params: any) => {
+          const p = params[0];
+
+          return `
+            <div style="padding:4px">
+              <strong>UT ${p.name}</strong><br/>
+              Produção:
+              <strong style="color:#60A5FA">
+                ${Number(p.value).toLocaleString("pt-BR")}
+              </strong>
+            </div>
+          `;
+        },
       },
 
       grid: {
-        top: 20,
-        left: 90,
-        right: 35,
-        bottom: 20,
+        top: 15,
+        left: 80,
+        right: 45,
+        bottom: 15,
         containLabel: true,
       },
 
@@ -74,6 +86,7 @@ export default function UTChart() {
         splitLine: {
           lineStyle: {
             color: "#44475A",
+            opacity: 0.35,
           },
         },
 
@@ -93,6 +106,8 @@ export default function UTChart() {
 
       yAxis: {
         type: "category",
+
+        inverse: true,
 
         data: categorias,
 
@@ -119,22 +134,22 @@ export default function UTChart() {
 
           data: valores,
 
-          barWidth: 20,
+          barWidth: 24,
 
           itemStyle: {
             borderRadius: [0, 10, 10, 0],
 
             color: (params: any) => {
               const cores = [
-                "#4F8EF7",
-                "#60A5FA",
-                "#3B82F6",
-                "#2563EB",
                 "#1D4ED8",
-                "#93C5FD",
                 "#2563EB",
+                "#3B82F6",
+                "#4F8EF7",
+                "#60A5FA",
+                "#93C5FD",
                 "#60A5FA",
                 "#4F8EF7",
+                "#3B82F6",
               ];
 
               return cores[params.dataIndex] ?? "#4F8EF7";
@@ -146,7 +161,9 @@ export default function UTChart() {
             position: "right",
             color: "#FFFFFF",
             fontWeight: "bold",
-            formatter: "{c}",
+            fontSize: 12,
+            formatter: ({ value }: any) =>
+              Number(value).toLocaleString("pt-BR"),
           },
 
           emphasis: {
