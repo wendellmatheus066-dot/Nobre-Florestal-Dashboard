@@ -48,6 +48,10 @@ export default function Medicao() {
   );
 
 
+  console.log("STATS MEDIÇÃO:", stats);
+
+
+
   return (
 
     <MainLayout>
@@ -64,7 +68,6 @@ export default function Medicao() {
 
 
           <div className="h-6" />
-
 
 
           <FilterBar tipo="medicao" />
@@ -87,10 +90,27 @@ export default function Medicao() {
 
 
             <KpiCard
+              title="Volume Florestal"
+              value={stats.volumeFlorestal.toFixed(2)}
+              icon={<Trees size={28} />}
+            />
+
+
+
+            <KpiCard
               title="Volume Comercial"
               value={stats.volumeComercial.toFixed(2)}
               icon={<TrendingUp size={28} />}
             />
+
+
+
+            <KpiCard
+              title="Média m³/Árvore"
+              value={stats.mediaArvore.toFixed(3)}
+              icon={<TrendingUp size={28} />}
+            />
+
 
 
             <KpiCard
@@ -100,25 +120,13 @@ export default function Medicao() {
             />
 
 
+
             <KpiCard
               title="Dias"
               value={stats.dias}
               icon={<CalendarDays size={28} />}
             />
 
-
-            <KpiCard
-              title="UT's"
-              value={stats.uts}
-              icon={<TrendingUp size={28} />}
-            />
-
-
-            <KpiCard
-              title="Média m³/Árvore"
-              value={stats.mediaArvore.toFixed(3)}
-              icon={<TrendingUp size={28} />}
-            />
 
 
             <KpiCard
