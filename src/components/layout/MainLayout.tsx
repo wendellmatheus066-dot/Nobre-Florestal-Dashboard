@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { Menu } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 
 type Props = {
@@ -9,6 +10,12 @@ type Props = {
 
 export default function MainLayout({ children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  // Fecha o menu automaticamente ao trocar de página
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   return (
     <div className="flex min-h-screen bg-[#282A36] text-[#F8F8F2]">
@@ -43,6 +50,8 @@ export default function MainLayout({ children }: Props) {
         <button
           onClick={() => setSidebarOpen(true)}
           className="
+            relative
+            z-50
             mb-4
             flex
             h-11
