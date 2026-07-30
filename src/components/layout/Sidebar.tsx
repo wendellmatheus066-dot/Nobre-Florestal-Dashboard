@@ -6,6 +6,7 @@ import {
   Map,
   Settings,
   ChevronRight,
+  LogOut,
   X,
 } from "lucide-react";
 
@@ -43,7 +44,7 @@ export default function Sidebar({
   sidebarOpen,
   setSidebarOpen,
 }: SidebarProps) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, logout } = useAuth();
 
   return (
     <>
@@ -77,7 +78,6 @@ export default function Sidebar({
 
         <div className="flex h-full flex-col">
 
-          {/* Fechar menu mobile */}
           <div className="flex justify-end p-3 lg:hidden">
             <button
               onClick={() => setSidebarOpen(false)}
@@ -87,7 +87,6 @@ export default function Sidebar({
             </button>
           </div>
 
-          {/* Logo */}
           <div className="flex flex-col items-center pt-6">
 
             <div className="relative flex h-24 w-24 items-center justify-center">
@@ -122,7 +121,6 @@ export default function Sidebar({
 
           </div>
 
-          {/* Menu */}
           <nav className="mt-8 flex-1 overflow-y-auto px-3">
 
             <div className="flex flex-col gap-4">
@@ -180,7 +178,8 @@ export default function Sidebar({
                   </NavLink>
                 );
               })}
-                            {isAdmin && (
+
+              {isAdmin && (
                 <>
                   <div className="my-5 border-t border-[#44475A]" />
 
@@ -239,9 +238,25 @@ export default function Sidebar({
             </div>
 
           </nav>
-
           {/* Rodapé */}
           <footer className="mt-auto border-t border-[#44475A] bg-[#1D1F28] px-4 py-4">
+
+            <button
+              onClick={async () => {
+                await logout();
+                setSidebarOpen(false);
+              }}
+              className="mb-4 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-[#F8F8F2] transition hover:bg-[#343746]"
+            >
+              <LogOut
+                size={20}
+                className="text-red-400"
+              />
+
+              <span className="font-semibold">
+                Sair
+              </span>
+            </button>
 
             <p className="text-[10px] uppercase tracking-[0.30em] text-[#6272A4]">
               SISTEMA
@@ -263,4 +278,4 @@ export default function Sidebar({
 
     </>
   );
-}
+}          

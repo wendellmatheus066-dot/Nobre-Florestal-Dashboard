@@ -42,8 +42,7 @@ export default function MapaFlorestal() {
   const inventario = data["INVENTÁRIO"] || [];
 
   function limparNumero(valor: any) {
-    if (valor === undefined || valor === null) return "";
-
+    if (!valor) return "";
     return String(valor).replace(".0", "").trim();
   }
 
@@ -59,31 +58,22 @@ export default function MapaFlorestal() {
 
   const mapaArvores = new Map();
 
-  // 🔴 DERRUBADA
   producao.forEach((arvore: any) => {
-    const numero = limparNumero(arvore["Nº ÁRVORE"]);
-
-    mapaArvores.set(numero, {
+    mapaArvores.set(limparNumero(arvore["Nº ÁRVORE"]), {
       ...arvore,
       STATUS: "DERRUBADA",
     });
   });
 
-  // 🟡 ARRASTE
   arraste.forEach((arvore: any) => {
-    const numero = limparNumero(arvore["Nº ÁRVORE"]);
-
-    mapaArvores.set(numero, {
+    mapaArvores.set(limparNumero(arvore["Nº ÁRVORE"]), {
       ...arvore,
       STATUS: "ARRASTE",
     });
   });
 
-  // 🔵 MEDIÇÃO
   medicao.forEach((arvore: any) => {
-    const numero = limparNumero(arvore["Nº ÁRVORE"]);
-
-    mapaArvores.set(numero, {
+    mapaArvores.set(limparNumero(arvore["Nº ÁRVORE"]), {
       ...arvore,
       STATUS: "MEDIÇÃO",
     });
@@ -92,14 +82,11 @@ export default function MapaFlorestal() {
   const pontosMapa: any[] = [];
 
   mapaArvores.forEach((arvore: any) => {
-    const numero = limparNumero(arvore["Nº ÁRVORE"]);
+    const dadosInventario = mapaInventario.get(
+      limparNumero(arvore["Nº ÁRVORE"])
+    );
 
-    const dadosInventario = mapaInventario.get(numero);
-
-    if (!dadosInventario) {
-      console.log("Não encontrou no inventário:", numero);
-      return;
-    }
+    if (!dadosInventario) return;
 
     pontosMapa.push({
       ...arvore,
@@ -110,16 +97,29 @@ export default function MapaFlorestal() {
       UPA: dadosInventario.UPA,
       UT: dadosInventario["Nº UT"],
       VOLUME_TOTAL:
-              Number(arvore["COMERCIAL M3"]) || 0,
+        Number(arvore["COMERCIAL M3"]) || 0,
     });
   });
 
-  console.log("PONTOS MAPA:", pontosMapa);
+  const totalDerrubada = pontosMapa.filter(
+    (p) => p.STATUS === "DERRUBADA"
+  ).length;
+
+  const totalArraste = pontosMapa.filter(
+    (p) => p.STATUS === "ARRASTE"
+  ).length;
+
+  const totalMedicao = pontosMapa.filter(
+    (p) => p.STATUS === "MEDIÇÃO"
+  ).length;
 
   return (
     <MainLayout>
+
       <div className="pt-8 w-full">
+
         <Container>
+
           <Header
             title="Mapa Operacional"
             subtitle="Derrubada • Arraste • Medição"
@@ -127,103 +127,211 @@ export default function MapaFlorestal() {
 
           <div className="h-6" />
 
-          <div
-            className="
-              relative
-              z-0
-              h-[600px]
-              rounded-2xl
-              overflow-hidden
-              border
-              border-[#44475A]
-            "
-          >
-            <MapContainer
-              center={[
-                -3.290908,
-                -56.151795,
-              ]}
-              zoom={16}
-              className="h-full w-full"
+          <div className="relative h-[600px]">
+
+            <div
+              className="
+                absolute
+                top-3
+                right-3
+                z-[1000]
+                w-48
+                rounded-lg
+                border
+                border-white/10
+                bg-black/25
+                backdrop-blur-md
+                shadow-xl
+              "
             >
-              <TileLayer
-                url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
-                attribution="Google Satellite"
-              />
 
-              <AjustarMapa pontos={pontosMapa} />
+              <div className="border-b border-white/10 px-3 py-2">
 
-              {pontosMapa.map((arvore: any, index: number) => {
-                let cor = "#ff0000";
+                <h2 className="text-center text-sm font-semibold text-white">
+                  🌲 Operação
+                </h2>
 
-                if (arvore.STATUS === "ARRASTE") {
-                  cor = "#ffd000";
-                }
+              </div>
 
-                if (arvore.STATUS === "MEDIÇÃO") {
-                  cor = "#008cff";
-                }
+              <div className="space-y-2 px-3 py-2">
 
-                return (
-                  <CircleMarker
-                    key={index}
-                    center={[
-                      Number(arvore.LATITUDE),
-                      Number(arvore.LONGITUDE),
-                    ]}
-                    radius={2}
-                    pathOptions={{
-                      color: cor,
-                      fillColor: cor,
-                      fillOpacity: 1,
-                    }}
-                  >
-                    <Popup>
-                      <div>
-                        <strong>
-                          {arvore.STATUS === "DERRUBADA" && "🔴 DERRUBADA"}
-                          {arvore.STATUS === "ARRASTE" && "🟡 ARRASTE"}
-                          {arvore.STATUS === "MEDIÇÃO" && "🔵 MEDIÇÃO"}
-                        </strong>
+                <div className="flex items-center justify-between">
 
-                        <br />
-                        <br />
+                  <div className="flex items-center gap-2">
 
-                        Árvore: {arvore["Nº ÁRVORE"]}
+                    <span className="h-3 w-3 rounded-full bg-red-500" />
 
-                        <br />
+                    <span className="text-[13px] text-white/90">
+                      Derrubada
+                    </span>
 
-                        Espécie: {arvore.ESPECIE}
+                  </div>
 
-                        <br />
+                  <span className="text-sm font-semibold text-white">
+                    {totalDerrubada}
+                  </span>
 
-                        CAP: {arvore.CAP}
+                </div>
 
-                        <br />
+                <div className="flex items-center justify-between">
 
-                        UPA: {arvore.UPA}
+                  <div className="flex items-center gap-2">
 
-                        <br />
+                    <span className="h-3 w-3 rounded-full bg-yellow-400" />
 
-                        UT: {arvore.UT}
-                                                {arvore.STATUS === "MEDIÇÃO" && (
-                          <>
-                            <br />
-                            <br />
+                    <span className="text-[13px] text-white/90">
+                      Arraste
+                    </span>
 
-                            Volume Comercial:{" "}
-                            {arvore.VOLUME_TOTAL.toFixed(2)} m³
-                          </>
-                        )}
-                      </div>
-                    </Popup>
-                  </CircleMarker>
-                );
-              })}
-            </MapContainer>
+                  </div>
+
+                  <span className="text-sm font-semibold text-white">
+                    {totalArraste}
+                  </span>
+
+                </div>
+
+                <div className="flex items-center justify-between">
+
+                  <div className="flex items-center gap-2">
+
+                    <span className="h-3 w-3 rounded-full bg-blue-500" />
+
+                    <span className="text-[13px] text-white/90">
+                      Medição
+                    </span>
+
+                  </div>
+
+                  <span className="text-sm font-semibold text-white">
+                    {totalMedicao}
+                  </span>
+
+                </div>
+
+              </div>
+
+              <div className="flex items-center justify-between border-t border-white/10 px-3 py-2">
+
+                <span className="text-[13px] font-semibold text-white">
+                  Total
+                </span>
+
+                <span className="text-sm font-bold text-white">
+                  {pontosMapa.length}
+                </span>
+
+              </div>
+
+            </div>
+
+            <div className="h-full overflow-hidden rounded-2xl border border-[#44475A]">
+
+              <MapContainer
+                center={[-3.290908, -56.151795]}
+                zoom={16}
+                className="h-full w-full"
+              >
+                                <TileLayer
+                  url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+                  attribution="Google Satellite"
+                />
+
+                <AjustarMapa pontos={pontosMapa} />
+
+                {pontosMapa.map((arvore: any, index: number) => {
+                  let cor = "#EF4444";
+
+                  if (arvore.STATUS === "ARRASTE") {
+                    cor = "#FACC15";
+                  }
+
+                  if (arvore.STATUS === "MEDIÇÃO") {
+                    cor = "#3B82F6";
+                  }
+
+                  return (
+                    <CircleMarker
+                      key={index}
+                      center={[
+                        Number(arvore.LATITUDE),
+                        Number(arvore.LONGITUDE),
+                      ]}
+                      radius={3}
+                      pathOptions={{
+                        color: "#FFFFFF",
+                        weight: 1,
+                        fillColor: cor,
+                        fillOpacity: 1,
+                      }}
+                    >
+                      <Popup>
+                        <div className="min-w-[220px]">
+
+                          <div className="mb-2 border-b pb-2">
+
+                            <strong className="text-base">
+                              {arvore.STATUS === "DERRUBADA" && "🔴 Derrubada"}
+                              {arvore.STATUS === "ARRASTE" && "🟡 Arraste"}
+                              {arvore.STATUS === "MEDIÇÃO" && "🔵 Medição"}
+                            </strong>
+
+                          </div>
+
+                          <div className="space-y-1 text-sm">
+
+                            <div>
+                              <strong>Árvore:</strong>{" "}
+                              {arvore["Nº ÁRVORE"]}
+                            </div>
+
+                            <div>
+                              <strong>Espécie:</strong>{" "}
+                              {arvore.ESPECIE}
+                            </div>
+
+                            <div>
+                              <strong>CAP:</strong>{" "}
+                              {arvore.CAP} cm
+                            </div>
+
+                            <div>
+                              <strong>UPA:</strong>{" "}
+                              {arvore.UPA}
+                            </div>
+
+                            <div>
+                              <strong>UT:</strong>{" "}
+                              {arvore.UT}
+                            </div>
+
+                            {arvore.STATUS === "MEDIÇÃO" && (
+                              <div className="mt-2 border-t pt-2">
+
+                                <strong>Volume Comercial:</strong>{" "}
+                                {arvore.VOLUME_TOTAL.toFixed(2)} m³
+
+                              </div>
+                            )}
+
+                          </div>
+
+                        </div>
+                      </Popup>
+                    </CircleMarker>
+                  );
+                })}
+
+              </MapContainer>
+
+            </div>
+
           </div>
+
         </Container>
+
       </div>
+
     </MainLayout>
   );
 }

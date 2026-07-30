@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 export default function Login() {
   const { login, session } = useAuth();
 
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [erro, setErro] = useState("");
 
@@ -13,31 +14,28 @@ export default function Login() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (login(password)) {
+    setErro("");
+
+    const sucesso = await login(email, password);
+
+    if (sucesso) {
       return;
     }
 
-    setErro("Senha incorreta");
+    setErro("E-mail ou senha inválidos");
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#282A36] px-4">
-
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-md rounded-2xl border border-[#44475A] bg-[#343746] p-8 shadow-2xl"
       >
-
         <div className="mb-8 flex justify-center">
-
-          <ShieldCheck
-            size={70}
-            className="text-[#50FA7B]"
-          />
-
+          <ShieldCheck size={70} className="text-[#50FA7B]" />
         </div>
 
         <h1 className="mb-8 text-center text-4xl font-bold text-white">
@@ -45,8 +43,19 @@ export default function Login() {
         </h1>
 
         <input
+          type="email"
+          placeholder="E-mail"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setErro("");
+          }}
+          className="mb-4 h-12 w-full rounded-xl border border-[#44475A] bg-[#282A36] px-4 text-white outline-none focus:border-[#50FA7B]"
+        />
+
+        <input
           type="password"
-          placeholder="Digite sua senha"
+          placeholder="Senha"
           value={password}
           onChange={(e) => {
             setPassword(e.target.value);
@@ -67,9 +76,7 @@ export default function Login() {
         >
           Entrar
         </button>
-
       </form>
-
     </div>
   );
 }
