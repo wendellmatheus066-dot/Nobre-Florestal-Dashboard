@@ -18,6 +18,7 @@ export default {
           );
         }
 
+        // Exclui do Authentication
         const { error: authError } =
           await ctx.supabaseAdmin.auth.admin.deleteUser(id);
 
@@ -31,11 +32,26 @@ export default {
           );
         }
 
+        // Exclui da tabela usuarios
+        const { error: dbError } = await ctx.supabaseAdmin
+          .from("usuarios")
+          .delete()
+          .eq("id", id);
+
+        if (dbError) {
+          return Response.json(
+            {
+              sucesso: false,
+              mensagem: dbError.message,
+            },
+            { status: 400 }
+          );
+        }
+
         return Response.json({
           sucesso: true,
           mensagem: "Usuário excluído com sucesso.",
         });
-
       } catch (error) {
         return Response.json(
           {

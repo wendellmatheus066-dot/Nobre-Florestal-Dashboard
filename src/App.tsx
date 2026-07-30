@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
@@ -8,6 +9,7 @@ import MapaFlorestal from "./pages/MapaFlorestal";
 import Admin from "./pages/Admin";
 import AdminUsuarios from "./pages/AdminUsuarios";
 import NovoUsuario from "./pages/NovoUsuario";
+import EditarUsuario from "./pages/EditarUsuario";
 
 function App() {
   return (
@@ -30,6 +32,11 @@ function App() {
       <Route
         path="/admin/usuarios/novo"
         element={<NovoUsuario />}
+      />
+
+      <Route
+        path="/admin/usuarios/:id"
+        element={<EditarUsuario />}
       />
     </Routes>
   );

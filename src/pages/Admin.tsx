@@ -700,6 +700,7 @@ loading
 
 )}
 {success && (
+  
 
 
 <div className="
@@ -739,7 +740,27 @@ Dados enviados para o Supabase com sucesso.
 
 
 )}
-
+<button
+  onClick={() => navigate("/admin/usuarios")}
+  className="
+    mt-8
+    flex
+    w-full
+    items-center
+    justify-center
+    gap-3
+    rounded-2xl
+    bg-[#8BE9FD]
+    py-4
+    text-lg
+    font-bold
+    text-[#282A36]
+    hover:bg-cyan-300
+  "
+>
+  <UserCheck size={22} />
+  Gerenciar Usuários
+</button>
 
 
 

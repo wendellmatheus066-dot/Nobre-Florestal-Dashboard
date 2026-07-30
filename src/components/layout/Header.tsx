@@ -16,12 +16,9 @@ export default function Header({
 
   useEffect(() => {
     async function carregarData() {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("configuracoes")
         .select("*");
-
-      console.log("DATA:", data);
-      console.log("ERROR:", error);
 
       if (data && data.length > 0) {
         setUltimaAtualizacao(
@@ -34,36 +31,42 @@ export default function Header({
   }, []);
 
   return (
-    <header className="mb-8 overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] shadow-xl">
+    <header className="mb-6 rounded-2xl border border-[#44475A] bg-[#343746] shadow-lg">
+
       <div className="h-1 bg-gradient-to-r from-[#50FA7B] via-[#8BE9FD] to-[#BD93F9]" />
 
-      <div className="flex flex-col gap-6 px-6 py-8">
-        <div className="flex items-start gap-5">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#44475A] bg-[#282A36]">
-            <Leaf size={30} className="text-[#50FA7B]" />
-          </div>
+      <div className="flex items-center gap-5 px-8 py-6">
 
-          <div>
-            <h1 className="text-3xl font-bold text-white">
-              {title}
-            </h1>
-
-            {subtitle && (
-              <p className="mt-1 text-[#BDC1D6]">
-                {subtitle}
-              </p>
-            )}
-
-            <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[#44475A] bg-[#282A36] px-4 py-2 text-sm text-[#8BE9FD]">
-              <CalendarDays size={16} />
-
-              <span>
-                Atualizado em {ultimaAtualizacao}
-              </span>
-            </div>
-          </div>
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#44475A] bg-[#282A36]">
+          <Leaf size={26} className="text-[#50FA7B]" />
         </div>
+
+        <div className="flex-1">
+
+          <h1 className="text-[2rem] font-bold leading-none text-white">
+            {title}
+          </h1>
+
+          {subtitle && (
+            <p className="mt-2 text-base text-[#BDC1D6]">
+              {subtitle}
+            </p>
+          )}
+
+          <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[#44475A] bg-[#282A36] px-3 py-2 text-sm text-[#8BE9FD]">
+
+            <CalendarDays size={16} />
+
+            <span>
+              Atualizado em {ultimaAtualizacao}
+            </span>
+
+          </div>
+
+        </div>
+
       </div>
+
     </header>
   );
 }

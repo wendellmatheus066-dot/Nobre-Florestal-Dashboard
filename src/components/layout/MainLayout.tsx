@@ -12,7 +12,6 @@ export default function MainLayout({ children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
-  // Fecha o menu automaticamente ao trocar de página
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
@@ -20,10 +19,10 @@ export default function MainLayout({ children }: Props) {
   return (
     <div className="flex min-h-screen bg-[#282A36] text-[#F8F8F2]">
 
-      {/* Overlay somente no celular */}
+      {/* Overlay Mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -35,42 +34,52 @@ export default function MainLayout({ children }: Props) {
       />
 
       {/* Conteúdo */}
-      <main
-        className="
-          flex-1
-          min-w-0
-          overflow-y-auto
-          p-4
-          sm:p-5
-          lg:p-6
-        "
-      >
+      <main className="flex-1 min-w-0 overflow-y-auto">
 
-        {/* Botão do menu (somente celular) */}
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="
-            relative
-            z-50
-            mb-4
-            flex
-            h-11
-            w-11
-            items-center
-            justify-center
-            rounded-xl
-            bg-[#343746]
-            border
-            border-[#44475A]
-            text-white
-            shadow-lg
-            lg:hidden
-          "
-        >
-          <Menu size={22} />
-        </button>
+        {/* ESTE DIV CRIA O ESPAÇO DA SIDEBAR */}
+        <div className="w-full pl-8 lg:pl-10 xl:pl-12 2xl:pl-14">
 
-        {children}
+          <div
+            className="
+              mx-auto
+              w-full
+              max-w-[1700px]
+              px-6
+              py-6
+              sm:px-8
+              xl:px-10
+            "
+          >
+
+            {/* Botão Mobile */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="
+                mb-6
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-xl
+                border
+                border-[#44475A]
+                bg-[#343746]
+                text-white
+                transition-all
+                duration-200
+                hover:bg-[#44475A]
+                lg:hidden
+              "
+            >
+              <Menu size={20} />
+            </button>
+
+            {children}
+
+          </div>
+
+        </div>
 
       </main>
 

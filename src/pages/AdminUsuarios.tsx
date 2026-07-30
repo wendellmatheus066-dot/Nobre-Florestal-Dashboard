@@ -10,6 +10,7 @@ import {
 
 import MainLayout from "../components/layout/MainLayout";
 import { listarUsuarios } from "../services/usuarios";
+import { excluirUsuario } from "../services/excluirUsuario";
 
 type Usuario = {
   id: string;
@@ -41,6 +42,27 @@ export default function AdminUsuarios() {
     carregarUsuarios();
   }, []);
 
+  async function remover(id: string) {
+    const confirmar = window.confirm(
+      "Deseja realmente excluir este usuário?"
+    );
+
+    if (!confirmar) return;
+
+    try {
+      await excluirUsuario(id);
+
+      setUsuarios((lista) =>
+        lista.filter((u) => u.id !== id)
+      );
+
+      alert("Usuário excluído com sucesso!");
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao excluir usuário.");
+    }
+  }
+
   const usuariosFiltrados = useMemo(() => {
     return usuarios.filter((usuario) => {
       const texto = pesquisa.toLowerCase();
@@ -56,18 +78,19 @@ export default function AdminUsuarios() {
   return (
     <MainLayout>
 
-      <div className="mx-auto w-full max-w-7xl px-8 py-8">
+      <div className="mx-auto w-full max-w-[1750px] space-y-8">
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        {/* Cabeçalho */}
+        <div className="flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
 
           <div>
 
-            <h1 className="text-4xl font-black text-white">
+            <h1 className="text-4xl font-black tracking-tight text-white">
               Gerenciamento de Usuários
             </h1>
 
-            <p className="mt-3 text-[#BDC1D6]">
-              Cadastre, edite e gerencie os usuários do sistema.
+            <p className="mt-3 max-w-2xl text-base text-[#BDC1D6]">
+              Cadastre, edite e gerencie todos os usuários do sistema.
             </p>
 
           </div>
@@ -75,49 +98,54 @@ export default function AdminUsuarios() {
           <button
             onClick={() => navigate("/admin/usuarios/novo")}
             className="
-              flex
+              inline-flex
+              h-14
               items-center
+              justify-center
               gap-3
               rounded-2xl
               bg-[#50FA7B]
-              px-6
-              py-4
+              px-8
               font-bold
               text-[#282A36]
-              hover:scale-105
-              transition
+              shadow-lg
+              transition-all
+              duration-300
+              hover:scale-[1.02]
+              hover:shadow-[0_0_30px_rgba(80,250,123,0.35)]
             "
           >
-
             <Plus size={22} />
-
             Novo Usuário
-
           </button>
 
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        {/* Cards */}
+        <div className="grid gap-6 xl:grid-cols-[340px_1fr]">
 
-          <div className="rounded-3xl border border-[#44475A] bg-[#343746] p-6">
+          {/* Card Total */}
+          <div className="rounded-3xl border border-[#44475A] bg-[#343746] p-8 shadow-xl">
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-5">
 
-              <Users
-                size={34}
-                className="text-[#50FA7B]"
-              />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#50FA7B]/15">
+
+                <Users
+                  size={34}
+                  className="text-[#50FA7B]"
+                />
+
+              </div>
 
               <div>
 
-                <p className="text-[#BDC1D6]">
+                <p className="text-sm uppercase tracking-wider text-[#BDC1D6]">
                   Total de Usuários
                 </p>
 
-                <h2 className="text-4xl font-black text-white">
-
+                <h2 className="mt-1 text-4xl font-black text-white">
                   {usuariosFiltrados.length}
-
                 </h2>
 
               </div>
@@ -126,231 +154,305 @@ export default function AdminUsuarios() {
 
           </div>
 
-          <div className="relative">
+          {/* Pesquisa */}
+          <div className="rounded-3xl border border-[#44475A] bg-[#343746] p-6 shadow-xl">
 
-            <Search
-              size={20}
-              className="
-                absolute
-                left-4
-                top-1/2
-                -translate-y-1/2
-                text-[#6272A4]
-              "
-            />
+            <div className="relative">
 
-            <input
-              type="text"
-              placeholder="Pesquisar usuário..."
-              value={pesquisa}
-              onChange={(e) =>
-                setPesquisa(e.target.value)
-              }
-              className="
-                w-full
-                rounded-3xl
-                border
-                border-[#44475A]
-                bg-[#343746]
-                py-4
-                pl-12
-                pr-4
-                text-white
-                outline-none
-              "
-            />
+              <Search
+                size={22}
+                className="absolute left-5 top-1/2 -translate-y-1/2 text-[#6272A4]"
+              />
+
+              <input
+                type="text"
+                placeholder="Pesquisar por nome, e-mail ou perfil..."
+                value={pesquisa}
+                onChange={(e) => setPesquisa(e.target.value)}
+                className="
+                  h-14
+                  w-full
+                  rounded-2xl
+                  border
+                  border-[#44475A]
+                  bg-[#282A36]
+                  pl-14
+                  pr-5
+                  text-white
+                  placeholder:text-[#6272A4]
+                  outline-none
+                  transition-all
+                  duration-300
+                  focus:border-[#50FA7B]
+                  focus:ring-2
+                  focus:ring-[#50FA7B]/20
+                "
+              />
+
+            </div>
 
           </div>
 
         </div>
-                <div className="mt-8 overflow-hidden rounded-3xl border border-[#44475A] bg-[#343746]">
 
+        {/* Tabela */}
+        <div className="overflow-hidden rounded-3xl border border-[#44475A] bg-[#343746] shadow-xl">
           {loading ? (
 
-            <div className="p-10 text-center text-white">
-              Carregando usuários...
-            </div>
+  <div className="flex h-72 items-center justify-center">
 
-          ) : (
+    <div className="text-center">
 
-            <table className="w-full">
+      <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-4 border-[#44475A] border-t-[#50FA7B]" />
 
-              <thead className="bg-[#282A36]">
+      <p className="text-lg font-medium text-[#BDC1D6]">
+        Carregando usuários...
+      </p>
 
-                <tr>
+    </div>
 
-                  <th className="p-4 text-left text-white">
-                    Nome
-                  </th>
+  </div>
 
-                  <th className="p-4 text-left text-white">
-                    E-mail
-                  </th>
+) : (
 
-                  <th className="p-4 text-left text-white">
-                    Perfil
-                  </th>
+  <div className="overflow-x-auto">
 
-                  <th className="p-4 text-center text-white">
-                    Status
-                  </th>
+    <table className="min-w-full">
 
-                  <th className="p-4 text-center text-white">
-                    Ações
-                  </th>
+      <thead className="border-b border-[#44475A] bg-[#2F3140]">
 
-                </tr>
+        <tr>
 
-              </thead>
+          <th className="px-8 py-5 text-left text-sm font-bold uppercase tracking-wider text-[#BDC1D6]">
+            Nome
+          </th>
 
-              <tbody>
+          <th className="px-8 py-5 text-left text-sm font-bold uppercase tracking-wider text-[#BDC1D6]">
+            E-mail
+          </th>
 
-                {usuariosFiltrados.map((usuario) => (
+          <th className="px-8 py-5 text-left text-sm font-bold uppercase tracking-wider text-[#BDC1D6]">
+            Perfil
+          </th>
 
-                  <tr
-                    key={usuario.id}
-                    className="
-                      border-t
-                      border-[#44475A]
-                      hover:bg-[#3D4052]
-                      transition
-                    "
-                  >
+          <th className="px-8 py-5 text-center text-sm font-bold uppercase tracking-wider text-[#BDC1D6]">
+            Status
+          </th>
 
-                    <td className="p-4 font-semibold text-white">
-                      {usuario.nome}
-                    </td>
+          <th className="w-44 px-8 py-5 text-center text-sm font-bold uppercase tracking-wider text-[#BDC1D6]">
+            Ações
+          </th>
 
-                    <td className="p-4 text-[#BDC1D6]">
-                      {usuario.email}
-                    </td>
+        </tr>
 
-                    <td className="p-4">
+      </thead>
 
-                      <span className="
-                        rounded-xl
-                        bg-[#8BE9FD]/20
-                        px-3
-                        py-1
-                        text-[#8BE9FD]
-                        font-semibold
-                      ">
+      <tbody>
 
-                        {usuario.perfil}
+        {usuariosFiltrados.map((usuario) => (
 
-                      </span>
+          <tr
+            key={usuario.id}
+            className="
+              border-b
+              border-[#44475A]
+              transition-all
+              duration-200
+              hover:bg-[#3A3D4F]
+            "
+          >
 
-                    </td>
+            <td className="px-8 py-6">
 
-                    <td className="p-4 text-center">
+              <div className="flex flex-col">
 
-                      {usuario.ativo ? (
+                <span className="text-[15px] font-bold text-white">
+                  {usuario.nome}
+                </span>
 
-                        <span className="
-                          rounded-full
-                          bg-green-500/20
-                          px-3
-                          py-1
-                          font-bold
-                          text-green-400
-                        ">
-                          Ativo
-                        </span>
+              </div>
 
-                      ) : (
+            </td>
 
-                        <span className="
-                          rounded-full
-                          bg-red-500/20
-                          px-3
-                          py-1
-                          font-bold
-                          text-red-400
-                        ">
-                          Inativo
-                        </span>
+            <td className="px-8 py-6 text-[#BDC1D6]">
+              {usuario.email}
+            </td>
 
-                      )}
+            <td className="px-8 py-6">
 
-                    </td>
+              <span
+                className="
+                  inline-flex
+                  items-center
+                  rounded-full
+                  bg-cyan-500/15
+                  px-4
+                  py-2
+                  text-sm
+                  font-semibold
+                  text-cyan-300
+                "
+              >
+                {usuario.perfil}
+              </span>
 
-                    <td className="p-4">
+            </td>
 
-                      <div className="
-                        flex
-                        justify-center
-                        gap-3
-                      ">
+            <td className="px-8 py-6 text-center">
 
-                        <button
-                          className="
-                            rounded-xl
-                            bg-blue-500/20
-                            p-2
-                            text-blue-400
-                            hover:bg-blue-500
-                            hover:text-white
-                            transition
-                          "
-                        >
+              {usuario.ativo ? (
 
-                          <Pencil size={18} />
+                <span
+                  className="
+                    inline-flex
+                    items-center
+                    rounded-full
+                    bg-green-500/15
+                    px-4
+                    py-2
+                    text-sm
+                    font-bold
+                    text-green-400
+                  "
+                >
+                  Ativo
+                </span>
 
-                        </button>
+              ) : (
 
-                        <button
-                          className="
-                            rounded-xl
-                            bg-red-500/20
-                            p-2
-                            text-red-400
-                            hover:bg-red-500
-                            hover:text-white
-                            transition
-                          "
-                        >
+                <span
+                  className="
+                    inline-flex
+                    items-center
+                    rounded-full
+                    bg-red-500/15
+                    px-4
+                    py-2
+                    text-sm
+                    font-bold
+                    text-red-400
+                  "
+                >
+                  Inativo
+                </span>
 
-                          <Trash2 size={18} />
+              )}
 
-                        </button>
+            </td>
 
-                      </div>
+            <td className="px-8 py-6">
 
-                    </td>
+              <div className="flex items-center justify-center gap-4">
 
-                  </tr>
+                <button
+                  onClick={() =>
+                    navigate(`/admin/usuarios/${usuario.id}`)
+                  }
+                  className="
+                    flex
+                    h-11
+                    w-11
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-blue-500/15
+                    text-blue-400
+                    transition-all
+                    duration-300
+                    hover:scale-105
+                    hover:bg-blue-500
+                    hover:text-white
+                  "
+                >
+                  <Pencil size={18} />
+                </button>
 
-                ))}
-                              </tbody>
+                <button
+                  onClick={() => remover(usuario.id)}
+                  className="
+                    flex
+                    h-11
+                    w-11
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-red-500/15
+                    text-red-400
+                    transition-all
+                    duration-300
+                    hover:scale-105
+                    hover:bg-red-500
+                    hover:text-white
+                  "
+                >
+                  <Trash2 size={18} />
+                </button>
 
-            </table>
+              </div>
 
-          )}
+            </td>
 
-          {!loading && usuariosFiltrados.length === 0 && (
+          </tr>
 
-            <div className="p-10 text-center">
+        ))}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+)}
+        {!loading && usuariosFiltrados.length === 0 && (
+
+          <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+
+            <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-[#282A36] border border-[#44475A]">
 
               <Users
-                size={52}
-                className="mx-auto mb-4 text-[#6272A4]"
+                size={46}
+                className="text-[#6272A4]"
               />
-
-              <h3 className="text-2xl font-bold text-white">
-                Nenhum usuário encontrado
-              </h3>
-
-              <p className="mt-2 text-[#BDC1D6]">
-                Tente outro termo na pesquisa.
-              </p>
 
             </div>
 
-          )}
+            <h3 className="text-2xl font-bold text-white">
+              Nenhum usuário encontrado
+            </h3>
 
-        </div>
+            <p className="mt-3 max-w-md text-[#BDC1D6] leading-relaxed">
+              Não encontramos nenhum usuário com os filtros informados.
+              Tente pesquisar por outro nome, e-mail ou perfil.
+            </p>
 
-      </div>
+            <button
+              onClick={() => setPesquisa("")}
+              className="
+                mt-8
+                rounded-2xl
+                border
+                border-[#44475A]
+                bg-[#282A36]
+                px-6
+                py-3
+                font-semibold
+                text-white
+                transition-all
+                duration-300
+                hover:border-[#50FA7B]
+                hover:text-[#50FA7B]
+              "
+            >
+              Limpar Pesquisa
+            </button>
+
+          </div>
+
+                )}
+
+      </div> {/* Fecha a Tabela */}
+
+    </div> {/* Fecha o container principal */}
 
     </MainLayout>
 
