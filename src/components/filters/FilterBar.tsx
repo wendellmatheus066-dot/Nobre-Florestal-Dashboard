@@ -86,15 +86,29 @@ export default function FilterBar({ tipo }: FilterBarProps) {
         return false;
 
       if (filtros.data) {
-        const dataRegistro = String(r["Data"] ?? "").substring(0, 10);
+        let dataRegistro = String(r["Data"] ?? "").trim();
 
-        if (dataRegistro !== filtros.data) return false;
+        if (dataRegistro.includes("/")) {
+          const partes = dataRegistro.substring(0, 10).split("/");
+
+          if (partes.length === 3) {
+            dataRegistro = `${partes[2]}-${partes[1]}-${partes[0]}`;
+          }
+        } else {
+          dataRegistro = dataRegistro.substring(0, 10);
+        }
+
+        if (dataRegistro !== filtros.data) {
+          return false;
+        }
       }
 
       return true;
     });
   }, [registros, filtros, campoOperador, tipo]);
-    const operadores = useMemo(() => {
+
+
+      const operadores = useMemo(() => {
     const lista = registrosFiltrados
       .map((r: any) => r[campoOperador])
       .filter(Boolean);
@@ -164,7 +178,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-              {/* DATA */}
+
         <div>
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Calendar size={16} />
@@ -184,7 +198,6 @@ export default function FilterBar({ tipo }: FilterBarProps) {
           />
         </div>
 
-        {/* OPERADOR / EQUIPE */}
         <div>
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Users size={16} />
@@ -215,7 +228,6 @@ export default function FilterBar({ tipo }: FilterBarProps) {
           </select>
         </div>
 
-        {/* UT */}
         <div>
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Trees size={16} />
@@ -241,7 +253,7 @@ export default function FilterBar({ tipo }: FilterBarProps) {
             ))}
           </select>
         </div>
-                {/* ESPÉCIE */}
+
         <div>
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <Leaf size={16} />
@@ -267,7 +279,9 @@ export default function FilterBar({ tipo }: FilterBarProps) {
             ))}
           </select>
         </div>
+
       </div>
+
     </div>
   );
 }
