@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Menu } from "lucide-react";
 import { useLocation } from "react-router-dom";
@@ -18,7 +18,6 @@ export default function MainLayout({ children }: Props) {
 
   return (
     <div className="flex min-h-screen bg-[#282A36] text-[#F8F8F2]">
-
       {/* Overlay Mobile */}
       {sidebarOpen && (
         <div
@@ -35,30 +34,28 @@ export default function MainLayout({ children }: Props) {
 
       {/* Conteúdo */}
       <main className="flex-1 min-w-0 overflow-y-auto">
-
-        {/* ESTE DIV CRIA O ESPAÇO DA SIDEBAR */}
-        <div className="w-full pl-8 lg:pl-10 xl:pl-12 2xl:pl-14">
-
+        <div className="w-full flex justify-center">
           <div
             className="
-              mx-auto
               w-full
-              max-w-[1700px]
-              px-6
-              py-6
-              sm:px-8
-              xl:px-10
+              max-w-[1550px]
+              px-10
+              py-10
+              sm:px-12
+              lg:px-14
+              xl:px-16
+              2xl:px-20
             "
           >
-
             {/* Botão Mobile */}
             <button
               onClick={() => setSidebarOpen(true)}
               className="
-                mb-6
+                lg:hidden
+                mb-8
                 flex
-                h-10
-                w-10
+                h-11
+                w-11
                 items-center
                 justify-center
                 rounded-xl
@@ -69,20 +66,15 @@ export default function MainLayout({ children }: Props) {
                 transition-all
                 duration-200
                 hover:bg-[#44475A]
-                lg:hidden
               "
             >
-              <Menu size={20} />
+              <Menu size={22} />
             </button>
 
             {children}
-
           </div>
-
         </div>
-
       </main>
-
     </div>
   );
 }

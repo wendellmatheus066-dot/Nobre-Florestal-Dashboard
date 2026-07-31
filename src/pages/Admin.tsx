@@ -2,12 +2,10 @@ import InfoCard from "../components/InfoCard";
 
 import {
   useState,
-  useRef
+  useRef,
 } from "react";
 
-import {
-  useNavigate
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
   Upload,
@@ -22,20 +20,12 @@ import * as XLSX from "xlsx";
 
 import MainLayout from "../components/layout/MainLayout";
 
-import {
-  useAuth
-} from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
-import {
-  salvarPlanilha
-} from "../services/uploadExcelSupabase";
+import { salvarPlanilha } from "../services/uploadExcelSupabase";
 
 export default function Admin() {
-
-  const {
-    isAdmin,
-    logout
-  } = useAuth();
+  const { isAdmin, logout } = useAuth();
 
   const navigate = useNavigate();
 
@@ -45,227 +35,159 @@ export default function Admin() {
   const [tipoImportacao, setTipoImportacao] =
     useState("inventario");
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [success, setSuccess] =
-    useState(false);
+  const [success, setSuccess] = useState(false);
 
   const fileInputRef =
     useRef<HTMLInputElement>(null);
 
   function handleLogout() {
-
     logout();
-
     navigate("/");
-
   }
 
   function handleFileChange(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
-
-    const file =
-      event.target.files?.[0];
+    const file = event.target.files?.[0];
 
     if (!file) return;
 
     setSelectedFile(file);
-
     setSuccess(false);
-
   }
 
   async function handleImport() {
         if (!selectedFile) {
-
       alert("Selecione um arquivo");
-
       return;
-
     }
 
     try {
-
       setLoading(true);
 
-      const buffer =
-        await selectedFile.arrayBuffer();
+      const buffer = await selectedFile.arrayBuffer();
 
-      const workbook =
-        XLSX.read(buffer, {
-          type: "array",
-          cellDates: true,
-        });
+      const workbook = XLSX.read(buffer, {
+        type: "array",
+        cellDates: true,
+      });
 
-      console.log(
-        "ABAS:",
-        workbook.SheetNames
-      );
+      console.log("ABAS:", workbook.SheetNames);
 
       if (tipoImportacao === "inventario") {
+        const primeiraAba = workbook.SheetNames[0];
 
-        const primeiraAba =
-          workbook.SheetNames[0];
+        const dados = XLSX.utils.sheet_to_json(
+          workbook.Sheets[primeiraAba],
+          {
+            raw: false,
+            defval: "",
+          }
+        );
 
-        const dados =
-          XLSX.utils.sheet_to_json(
-            workbook.Sheets[primeiraAba],
+        await salvarPlanilha("inventario", dados);
+      }
+
+      if (tipoImportacao === "operacao") {
+        for (const aba of workbook.SheetNames) {
+          const sheet = workbook.Sheets[aba];
+
+          const dados = XLSX.utils.sheet_to_json(
+            sheet,
             {
               raw: false,
               defval: "",
             }
           );
 
-        await salvarPlanilha(
-          "inventario",
-          dados
-        );
+          const nome = aba
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toUpperCase();
 
-      }
-
-      if (tipoImportacao === "operacao") {
-
-        for (const aba of workbook.SheetNames) {
-
-          const sheet =
-            workbook.Sheets[aba];
-
-          const dados =
-            XLSX.utils.sheet_to_json(
-              sheet,
-              {
-                raw: false,
-                defval: "",
-              }
-            );
-
-          const nome =
-            aba
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-              .toUpperCase();
-
-          console.log(
-            "Importando:",
-            nome,
-            dados.length
-          );
+          console.log("Importando:", nome, dados.length);
 
           if (nome === "PRODUCAO") {
-
-            await salvarPlanilha(
-              "producao",
-              dados
-            );
-
+            await salvarPlanilha("producao", dados);
           }
 
           if (nome === "ARRASTE") {
-
-            await salvarPlanilha(
-              "arraste",
-              dados
-            );
-
+            await salvarPlanilha("arraste", dados);
           }
 
           if (nome === "MEDICAO") {
-
-            await salvarPlanilha(
-              "medicao",
-              dados
-            );
-
+            await salvarPlanilha("medicao", dados);
           }
-
         }
-
       }
 
       setSuccess(true);
-
     } catch (error) {
-
-      console.error(
-        "ERRO IMPORTAÇÃO:",
-        error
-      );
-
-      alert(
-        "Erro na importação"
-      );
-
+      console.error("ERRO IMPORTAÇÃO:", error);
+      alert("Erro na importação");
     } finally {
-
       setLoading(false);
-
     }
-
   }
 
   if (isAdmin) {
-        return (
-
+    return (
       <MainLayout>
-
         <div
           className="
-          mx-auto
-          w-full
-          max-w-6xl
-          px-8
-          py-8
-        "
+            mx-auto
+            w-full
+            max-w-[1400px]
+            px-12
+            py-12
+          "
         >
-
           <div className="mb-12">
-
             <p
               className="
-              text-sm
-              uppercase
-              tracking-[5px]
-              text-[#50FA7B]
-            "
+                text-sm
+                uppercase
+                tracking-[5px]
+                text-[#50FA7B]
+              "
             >
               TRK FLOREST
             </p>
 
             <h1
               className="
-              mt-2
-              text-4xl
-              font-black
-              text-white
-            "
+                mt-2
+                text-5xl
+                font-black
+                text-white
+              "
             >
               Painel Administrativo
             </h1>
 
             <p
               className="
-              mt-4
-              max-w-3xl
-              text-lg
-              text-[#BDC1D6]
-            "
+                mt-4
+                max-w-3xl
+                text-xl
+                leading-9
+                text-[#BDC1D6]
+              "
             >
               Gerencie importações de planilhas e mantenha os dados do sistema atualizados.
             </p>
-
           </div>
 
           <div
             className="
-            grid
-            gap-6
-            sm:grid-cols-2
-            xl:grid-cols-4
-          "
+              grid
+              gap-8
+              sm:grid-cols-2
+              xl:grid-cols-4
+            "
           >
-
             <InfoCard
               icon={<UserCheck size={26} />}
               titulo="Administrador"
@@ -293,27 +215,25 @@ export default function Admin() {
               valor={selectedFile ? "Carregado" : "--"}
               cor="text-[#F1FA8C]"
             />
-
           </div>
 
           <div
             className="
-            mt-10
-            rounded-3xl
-            border
-            border-[#44475A]
-            bg-[#343746]
-            p-8
-          "
+              mt-14
+              rounded-3xl
+              border
+              border-[#44475A]
+              bg-[#343746]
+              p-10
+            "
           >
-
             <h2
               className="
-              mb-6
-              text-2xl
-              font-bold
-              text-white
-            "
+                mb-6
+                text-3xl
+                font-bold
+                text-white
+              "
             >
               Importação de Planilhas
             </h2>
@@ -329,7 +249,8 @@ export default function Admin() {
                 border
                 border-[#6272A4]
                 bg-[#282A36]
-                p-4
+                h-16
+                px-6
                 text-lg
                 font-bold
                 text-white
@@ -368,19 +289,17 @@ export default function Admin() {
                 border-dashed
                 border-[#6272A4]
                 bg-[#282A36]
-                py-10
+                h-20
                 text-xl
                 font-bold
                 text-white
                 hover:border-[#50FA7B]
               "
             >
-              <Upload size={26} />
+              <Upload size={24} />
               Selecionar Excel
             </button>
-
-            {selectedFile && (
-
+                        {selectedFile && (
               <div
                 className="
                   mt-8
@@ -388,13 +307,12 @@ export default function Admin() {
                   border
                   border-[#44475A]
                   bg-[#282A36]
-                  p-8
+                  p-10
                 "
               >
-
                 <h3
                   className="
-                    text-2xl
+                    text-3xl
                     font-bold
                     text-white
                   "
@@ -419,7 +337,7 @@ export default function Admin() {
                     w-full
                     rounded-2xl
                     bg-[#50FA7B]
-                    py-4
+                    h-16
                     text-lg
                     font-bold
                     text-[#282A36]
@@ -430,13 +348,10 @@ export default function Admin() {
                     ? "Importando..."
                     : "Importar Dados"}
                 </button>
-
               </div>
-
             )}
 
             {success && (
-
               <div
                 className="
                   mt-8
@@ -447,7 +362,6 @@ export default function Admin() {
                   p-6
                 "
               >
-
                 <h3
                   className="
                     text-xl
@@ -466,9 +380,7 @@ export default function Admin() {
                 >
                   Dados enviados para o Supabase com sucesso.
                 </p>
-
               </div>
-
             )}
 
             <button
@@ -482,7 +394,7 @@ export default function Admin() {
                 gap-3
                 rounded-2xl
                 bg-[#8BE9FD]
-                py-4
+                h-16
                 text-lg
                 font-bold
                 text-[#282A36]
@@ -504,7 +416,7 @@ export default function Admin() {
                 gap-3
                 rounded-2xl
                 bg-red-500
-                py-4
+                h-16
                 text-lg
                 font-bold
                 text-white
@@ -514,17 +426,11 @@ export default function Admin() {
               <LogOut size={22} />
               Sair da Administração
             </button>
-
           </div>
-
         </div>
-
       </MainLayout>
-
     );
-
   }
 
   return null;
-
 }
