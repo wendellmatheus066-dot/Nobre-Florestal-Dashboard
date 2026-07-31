@@ -8,6 +8,10 @@ import {
 
 import { useEffect } from "react";
 
+import { ArrowLeft } from "lucide-react";
+
+import { useNavigate } from "react-router-dom";
+
 import MainLayout from "../components/layout/MainLayout";
 import Header from "../components/layout/Header";
 import Container from "../components/layout/Container";
@@ -34,6 +38,8 @@ function AjustarMapa({ pontos }: any) {
 }
 
 export default function MapaFlorestal() {
+  const navigate = useNavigate();
+
   const { data } = useExcelContext();
 
   const producao = data["PRODUÇÃO"] || [];
@@ -129,6 +135,28 @@ export default function MapaFlorestal() {
 
           <div className="relative h-[600px]">
 
+            <button
+              onClick={() => navigate(-1)}
+              className="
+                absolute
+                top-3
+                left-3
+                z-[1000]
+                flex
+                items-center
+                gap-2
+                rounded-lg
+                bg-black/70
+                px-4
+                py-2
+                text-white
+                shadow-lg
+              "
+            >
+              <ArrowLeft size={18} />
+              Voltar
+            </button>
+
             <div
               className="
                 absolute
@@ -144,8 +172,7 @@ export default function MapaFlorestal() {
                 shadow-xl
               "
             >
-
-              <div className="border-b border-white/10 px-3 py-2">
+                            <div className="border-b border-white/10 px-3 py-2">
 
                 <h2 className="text-center text-sm font-semibold text-white">
                   🌲 Operação
@@ -232,7 +259,8 @@ export default function MapaFlorestal() {
                 zoom={16}
                 className="h-full w-full"
               >
-                                <TileLayer
+
+                <TileLayer
                   url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
                   attribution="Google Satellite"
                 />
@@ -240,6 +268,7 @@ export default function MapaFlorestal() {
                 <AjustarMapa pontos={pontosMapa} />
 
                 {pontosMapa.map((arvore: any, index: number) => {
+
                   let cor = "#EF4444";
 
                   if (arvore.STATUS === "ARRASTE") {
@@ -266,6 +295,7 @@ export default function MapaFlorestal() {
                       }}
                     >
                       <Popup>
+
                         <div className="min-w-[220px]">
 
                           <div className="mb-2 border-b pb-2">
@@ -306,20 +336,26 @@ export default function MapaFlorestal() {
                             </div>
 
                             {arvore.STATUS === "MEDIÇÃO" && (
+
                               <div className="mt-2 border-t pt-2">
 
                                 <strong>Volume Comercial:</strong>{" "}
                                 {arvore.VOLUME_TOTAL.toFixed(2)} m³
 
                               </div>
+
                             )}
 
                           </div>
 
                         </div>
+
                       </Popup>
+
                     </CircleMarker>
+
                   );
+
                 })}
 
               </MapContainer>
@@ -333,5 +369,7 @@ export default function MapaFlorestal() {
       </div>
 
     </MainLayout>
+
   );
+
 }
