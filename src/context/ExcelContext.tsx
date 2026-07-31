@@ -11,6 +11,7 @@ import {
   buscarArrasteSupabase,
   buscarMedicaoSupabase,
   buscarInventarioSupabase,
+  buscarUltimaImportacao,
 } from "../services/supabaseExcel";
 
 export type ExcelData = Record<string, any[]>;
@@ -18,8 +19,6 @@ export type ExcelData = Record<string, any[]>;
 type ExcelContextType = {
   data: ExcelData;
   setData: React.Dispatch<React.SetStateAction<ExcelData>>;
-
-  // NOVO
   ultimaAtualizacao: Date | null;
 };
 
@@ -45,7 +44,6 @@ export function ExcelProvider({
   const [data, setData] =
     useState<ExcelData>({});
 
-  // NOVO
   const [ultimaAtualizacao, setUltimaAtualizacao] =
     useState<Date | null>(null);
 
@@ -60,10 +58,12 @@ export function ExcelProvider({
           producao,
           arraste,
           medicao,
+          ultimaImportacao,
         ] = await Promise.all([
           buscarProducaoSupabase(),
           buscarArrasteSupabase(),
           buscarMedicaoSupabase(),
+          buscarUltimaImportacao(),
         ]);
 
         setData({
@@ -73,13 +73,17 @@ export function ExcelProvider({
           "INVENTÁRIO": [],
         });
 
-        // NOVO
-        setUltimaAtualizacao(new Date());
+        if (ultimaImportacao) {
+          setUltimaAtualizacao(
+            new Date(ultimaImportacao)
+          );
+        }
 
         console.log("Dashboard pronto!");
         console.log("Produção:", producao.length);
         console.log("Arraste:", arraste.length);
         console.log("Medição:", medicao.length);
+        console.log("Última Importação:", ultimaImportacao);
 
         const numerosArvores = [
           ...producao,
@@ -123,26 +127,16 @@ export function ExcelProvider({
           ...estadoAtual,
           "INVENTÁRIO": inventario,
         }));
-                console.log(
-          "Inventário carregado!"
-        );
 
+        console.log("Inventário carregado!");
         console.log(
           "Qtd Inventário:",
           inventario.length
         );
 
-        console.log(
-          "===================================="
-        );
-
-        console.log(
-          "Todos dados carregados!"
-        );
-
-        console.log(
-          "===================================="
-        );
+        console.log("====================================");
+        console.log("Todos dados carregados!");
+        console.log("====================================");
       } catch (error) {
         console.error(
           "ERRO AO CARREGAR DADOS:",

@@ -15,7 +15,9 @@ interface FilterBarProps {
   tipo: "derruba" | "arraste" | "medicao";
 }
 
-export default function FilterBar({ tipo }: FilterBarProps) {
+export default function FilterBar({
+  tipo,
+}: FilterBarProps) {
   const { data } = useExcel();
   const { filters, setFilters } = useFilters();
 
@@ -27,12 +29,30 @@ export default function FilterBar({ tipo }: FilterBarProps) {
         return data["ARRASTE"] ?? [];
 
       case "medicao":
-        return data["MEDIÇÃO"] ?? data["MEDICAO"] ?? [];
+        return (
+          data["MEDIÇÃO"] ??
+          data["MEDICAO"] ??
+          []
+        );
 
       default:
-        return data["PRODUÇÃO"] ?? data["PRODUCAO"] ?? [];
+        return (
+          data["PRODUÇÃO"] ??
+          data["PRODUCAO"] ??
+          []
+        );
     }
   }, [data, tipo]);
+
+  console.log(
+    "Primeiro Registro:",
+    registros[0]
+  );
+
+  console.log(
+    "Valor da Data:",
+    registros[0]?.["Data"]
+  );
 
   const campoOperador = useMemo(() => {
     switch (tipo) {
@@ -69,52 +89,75 @@ export default function FilterBar({ tipo }: FilterBarProps) {
     return registros.filter((r: any) => {
       if (
         filtros.operador &&
-        String(r[campoOperador] ?? "").trim() !== filtros.operador.trim()
+        String(
+          r[campoOperador] ?? ""
+        ).trim() !== filtros.operador.trim()
       )
         return false;
 
       if (
         filtros.ut &&
-        String(r[campoUT] ?? "").trim() !== filtros.ut.trim()
+        String(
+          r[campoUT] ?? ""
+        ).trim() !== filtros.ut.trim()
       )
         return false;
 
       if (
         filtros.especie &&
-        String(r["Espécie"] ?? "").trim() !== filtros.especie.trim()
+        String(
+          r["Espécie"] ?? ""
+        ).trim() !== filtros.especie.trim()
       )
         return false;
 
       if (filtros.data) {
-        let dataRegistro = String(r["Data"] ?? "").trim();
+        let dataRegistro = String(
+          r["Data"] ?? ""
+        ).trim();
 
         if (dataRegistro.includes("/")) {
-          const partes = dataRegistro.substring(0, 10).split("/");
+          const partes =
+            dataRegistro
+              .substring(0, 10)
+              .split("/");
 
           if (partes.length === 3) {
             dataRegistro = `${partes[2]}-${partes[1]}-${partes[0]}`;
           }
         } else {
-          dataRegistro = dataRegistro.substring(0, 10);
+          dataRegistro =
+            dataRegistro.substring(0, 10);
         }
 
-        if (dataRegistro !== filtros.data) {
+        if (
+          dataRegistro !== filtros.data
+        ) {
           return false;
         }
       }
 
       return true;
     });
-  }, [registros, filtros, campoOperador, tipo]);
+  }, [
+    registros,
+    filtros,
+    campoOperador,
+    tipo,
+  ]);
 
-
-      const operadores = useMemo(() => {
+  const operadores = useMemo(() => {
     const lista = registrosFiltrados
-      .map((r: any) => r[campoOperador])
+      .map(
+        (r: any) => r[campoOperador]
+      )
       .filter(Boolean);
 
     return [...new Set(lista)].sort();
-  }, [registrosFiltrados, campoOperador]);
+  }, [
+    registrosFiltrados,
+    campoOperador,
+  ]);
 
   const uts = useMemo(() => {
     const campoUT =
@@ -131,7 +174,9 @@ export default function FilterBar({ tipo }: FilterBarProps) {
 
   const especies = useMemo(() => {
     const lista = registrosFiltrados
-      .map((r: any) => r["Espécie"])
+      .map(
+        (r: any) => r["Espécie"]
+      )
       .filter(Boolean);
 
     return [...new Set(lista)].sort();
@@ -143,11 +188,18 @@ export default function FilterBar({ tipo }: FilterBarProps) {
       <div className="mb-5 flex items-center justify-between pr-2">
 
         <div className="flex items-center gap-3">
+
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600/15">
-            <Search className="text-green-400" size={20} />
+
+            <Search
+              className="text-green-400"
+              size={20}
+            />
+
           </div>
 
           <div>
+
             <h2 className="text-xl font-semibold text-white">
               Filtros
             </h2>
@@ -155,10 +207,11 @@ export default function FilterBar({ tipo }: FilterBarProps) {
             <p className="text-sm text-slate-400">
               Os dados são atualizados automaticamente.
             </p>
-          </div>
-        </div>
 
-        <button
+          </div>
+
+        </div>
+                <button
           type="button"
           title="Limpar filtros"
           onClick={() =>
@@ -221,7 +274,10 @@ export default function FilterBar({ tipo }: FilterBarProps) {
             </option>
 
             {operadores.map((op: any) => (
-              <option key={String(op)} value={String(op)}>
+              <option
+                key={String(op)}
+                value={String(op)}
+              >
                 {String(op)}
               </option>
             ))}
@@ -244,10 +300,15 @@ export default function FilterBar({ tipo }: FilterBarProps) {
             }
             className="h-12 w-full rounded-xl border border-[#44475A] bg-[#282A36] px-4 text-white focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
           >
-            <option value="">Todas as UTs</option>
+            <option value="">
+              Todas as UTs
+            </option>
 
             {uts.map((ut: any) => (
-              <option key={String(ut)} value={String(ut)}>
+              <option
+                key={String(ut)}
+                value={String(ut)}
+              >
                 {String(ut)}
               </option>
             ))}
@@ -270,10 +331,15 @@ export default function FilterBar({ tipo }: FilterBarProps) {
             }
             className="h-12 w-full rounded-xl border border-[#44475A] bg-[#282A36] px-4 text-white focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
           >
-            <option value="">Todas as Espécies</option>
+            <option value="">
+              Todas as Espécies
+            </option>
 
             {especies.map((esp: any) => (
-              <option key={String(esp)} value={String(esp)}>
+              <option
+                key={String(esp)}
+                value={String(esp)}
+              >
                 {String(esp)}
               </option>
             ))}

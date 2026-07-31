@@ -96,6 +96,7 @@ export default function Admin() {
       const workbook =
         XLSX.read(buffer, {
           type: "array",
+          cellDates: true,
         });
 
       console.log(
@@ -110,7 +111,11 @@ export default function Admin() {
 
         const dados =
           XLSX.utils.sheet_to_json(
-            workbook.Sheets[primeiraAba]
+            workbook.Sheets[primeiraAba],
+            {
+              raw: false,
+              defval: "",
+            }
           );
 
         await salvarPlanilha(
@@ -128,13 +133,25 @@ export default function Admin() {
             workbook.Sheets[aba];
 
           const dados =
-            XLSX.utils.sheet_to_json(sheet);
+            XLSX.utils.sheet_to_json(
+              sheet,
+              {
+                raw: false,
+                defval: "",
+              }
+            );
 
           const nome =
             aba
               .normalize("NFD")
               .replace(/[\u0300-\u036f]/g, "")
               .toUpperCase();
+
+          console.log(
+            "Importando:",
+            nome,
+            dados.length
+          );
 
           if (nome === "PRODUCAO") {
 
@@ -189,8 +206,7 @@ export default function Admin() {
   }
 
   if (isAdmin) {
-
-    return (
+        return (
 
       <MainLayout>
 
@@ -279,7 +295,8 @@ export default function Admin() {
             />
 
           </div>
-                    <div
+
+          <div
             className="
             mt-10
             rounded-3xl
