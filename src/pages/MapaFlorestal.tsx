@@ -40,6 +40,28 @@ function AjustarMapa({ pontos }: any) {
 export default function MapaFlorestal() {
   const navigate = useNavigate();
 
+  // Fecha automaticamente o mapa quando o Safari
+  // vai para segundo plano (corrige o bug do iPhone)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        navigate(-1);
+      }
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+    };
+  }, [navigate]);
+
   const { data } = useExcelContext();
 
   const producao = data["PRODUÇÃO"] || [];
@@ -49,13 +71,18 @@ export default function MapaFlorestal() {
 
   function limparNumero(valor: any) {
     if (!valor) return "";
-    return String(valor).replace(".0", "").trim();
+
+    return String(valor)
+      .replace(".0", "")
+      .trim();
   }
 
   const mapaInventario = new Map();
 
   inventario.forEach((arvore: any) => {
-    const numero = limparNumero(arvore["Nº ÁRVORE"]);
+    const numero = limparNumero(
+      arvore["Nº ÁRVORE"]
+    );
 
     if (numero) {
       mapaInventario.set(numero, arvore);
@@ -65,65 +92,91 @@ export default function MapaFlorestal() {
   const mapaArvores = new Map();
 
   producao.forEach((arvore: any) => {
-    mapaArvores.set(limparNumero(arvore["Nº ÁRVORE"]), {
-      ...arvore,
-      STATUS: "DERRUBADA",
-    });
+    mapaArvores.set(
+      limparNumero(arvore["Nº ÁRVORE"]),
+      {
+        ...arvore,
+        STATUS: "DERRUBADA",
+      }
+    );
   });
 
   arraste.forEach((arvore: any) => {
-    mapaArvores.set(limparNumero(arvore["Nº ÁRVORE"]), {
-      ...arvore,
-      STATUS: "ARRASTE",
-    });
+    mapaArvores.set(
+      limparNumero(arvore["Nº ÁRVORE"]),
+      {
+        ...arvore,
+        STATUS: "ARRASTE",
+      }
+    );
   });
 
   medicao.forEach((arvore: any) => {
-    mapaArvores.set(limparNumero(arvore["Nº ÁRVORE"]), {
-      ...arvore,
-      STATUS: "MEDIÇÃO",
-    });
+    mapaArvores.set(
+      limparNumero(arvore["Nº ÁRVORE"]),
+      {
+        ...arvore,
+        STATUS: "MEDIÇÃO",
+      }
+    );
   });
 
   const pontosMapa: any[] = [];
 
   mapaArvores.forEach((arvore: any) => {
-    const dadosInventario = mapaInventario.get(
-      limparNumero(arvore["Nº ÁRVORE"])
-    );
+    const dadosInventario =
+      mapaInventario.get(
+        limparNumero(
+          arvore["Nº ÁRVORE"]
+        )
+      );
 
     if (!dadosInventario) return;
 
     pontosMapa.push({
       ...arvore,
-      LATITUDE: dadosInventario.LATITUDE,
-      LONGITUDE: dadosInventario.LONGITUDE,
-      ESPECIE: dadosInventario["NOME COMUM"],
-      CAP: dadosInventario["CAP (CM)"],
+      LATITUDE:
+        dadosInventario.LATITUDE,
+      LONGITUDE:
+        dadosInventario.LONGITUDE,
+      ESPECIE:
+        dadosInventario[
+          "NOME COMUM"
+        ],
+      CAP:
+        dadosInventario[
+          "CAP (CM)"
+        ],
       UPA: dadosInventario.UPA,
       UT: dadosInventario["Nº UT"],
       VOLUME_TOTAL:
-        Number(arvore["COMERCIAL M3"]) || 0,
+        Number(
+          arvore["COMERCIAL M3"]
+        ) || 0,
     });
   });
 
-  const totalDerrubada = pontosMapa.filter(
-    (p) => p.STATUS === "DERRUBADA"
-  ).length;
+  const totalDerrubada =
+    pontosMapa.filter(
+      (p) =>
+        p.STATUS === "DERRUBADA"
+    ).length;
 
-  const totalArraste = pontosMapa.filter(
-    (p) => p.STATUS === "ARRASTE"
-  ).length;
+  const totalArraste =
+    pontosMapa.filter(
+      (p) =>
+        p.STATUS === "ARRASTE"
+    ).length;
 
-  const totalMedicao = pontosMapa.filter(
-    (p) => p.STATUS === "MEDIÇÃO"
-  ).length;
+  const totalMedicao =
+    pontosMapa.filter(
+      (p) =>
+        p.STATUS === "MEDIÇÃO"
+    ).length;
 
   return (
     <MainLayout>
-
       <div className="pt-8 w-full">
-
         <Container>
 
           <Header
@@ -137,24 +190,22 @@ export default function MapaFlorestal() {
 
             <button
               onClick={() => navigate(-1)}
+              style={{ zIndex: 99999 }}
               className="
                 absolute
                 top-20
                 left-3
-                z-[9999]
                 flex
                 items-center
-                gap-2
-                rounded-lg
-                bg-black/70
-                px-4
-                py-2
+                justify-center
+                rounded-xl
+                bg-black/80
+                p-3
                 text-white
-                shadow-lg
+                shadow-xl
               "
             >
-              <ArrowLeft size={25} />
-              
+              <ArrowLeft size={24} />
             </button>
 
             <div
@@ -280,6 +331,7 @@ export default function MapaFlorestal() {
                   }
 
                   return (
+
                     <CircleMarker
                       key={index}
                       center={[
@@ -294,6 +346,7 @@ export default function MapaFlorestal() {
                         fillOpacity: 1,
                       }}
                     >
+
                       <Popup>
 
                         <div className="min-w-[220px]">
