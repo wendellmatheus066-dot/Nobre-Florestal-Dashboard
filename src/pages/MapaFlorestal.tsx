@@ -139,9 +139,9 @@ export default function MapaFlorestal() {
               onClick={() => navigate(-1)}
               className="
                 absolute
-                top-3
+                top-20
                 left-3
-                z-[1000]
+                z-[9999]
                 flex
                 items-center
                 gap-2
@@ -153,8 +153,8 @@ export default function MapaFlorestal() {
                 shadow-lg
               "
             >
-              <ArrowLeft size={18} />
-              Voltar
+              <ArrowLeft size={25} />
+              
             </button>
 
             <div
