@@ -19,9 +19,41 @@ export default function ProductionChart() {
     const agrupado: Record<string, number> = {};
 
     dashboard.producao.forEach((row: any) => {
-      const data = String(row["Data do Corte"] ?? "");
+      let dia = String(
+        row["Data do Corte"] ?? ""
+      ).trim();
 
-      const dia = data.substring(0, 10);
+      if (dia.includes("/")) {
+        const partes = dia
+          .substring(0, 10)
+          .split("/");
+
+        if (partes.length === 3) {
+          if (partes[2].length === 2) {
+            partes[2] = "20" + partes[2];
+          }
+
+          dia =
+            partes[0].padStart(2, "0") +
+            "/" +
+            partes[1].padStart(2, "0") +
+            "/" +
+            partes[2];
+        }
+      } else if (dia.includes("-")) {
+        const partes = dia
+          .substring(0, 10)
+          .split("-");
+
+        if (partes.length === 3) {
+          dia =
+            partes[2] +
+            "/" +
+            partes[1] +
+            "/" +
+            partes[0];
+        }
+      }
 
       const quantidade = Number(
         String(row["QUANT."] ?? 0)
@@ -29,11 +61,32 @@ export default function ProductionChart() {
           .replace(",", ".")
       );
 
-      agrupado[dia] = (agrupado[dia] || 0) + quantidade;
+      agrupado[dia] =
+        (agrupado[dia] || 0) + quantidade;
     });
 
-    const dias = Object.keys(agrupado).sort();
-    const valores = dias.map((d) => agrupado[d]);
+    const dias = Object.keys(agrupado).sort(
+      (a, b) => {
+        const da = a
+          .split("/")
+          .reverse()
+          .join("-");
+
+        const db = b
+          .split("/")
+          .reverse()
+          .join("-");
+
+        return (
+          new Date(da).getTime() -
+          new Date(db).getTime()
+        );
+      }
+    );
+
+    const valores = dias.map(
+      (d) => agrupado[d]
+    );
 
     return {
       backgroundColor: "transparent",
@@ -75,6 +128,7 @@ export default function ProductionChart() {
         axisLabel: {
           color: "#BDC1D6",
           fontSize: 12,
+          rotate: 30,
         },
       },
 
@@ -133,11 +187,13 @@ export default function ProductionChart() {
               [
                 {
                   offset: 0,
-                  color: "rgba(80,250,123,0.35)",
+                  color:
+                    "rgba(80,250,123,0.35)",
                 },
                 {
                   offset: 1,
-                  color: "rgba(80,250,123,0.03)",
+                  color:
+                    "rgba(80,250,123,0.03)",
                 },
               ]
             ),

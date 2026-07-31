@@ -44,15 +44,27 @@ export default function FilterBar({
     }
   }, [data, tipo]);
 
-  console.log(
-    "Primeiro Registro:",
-    registros[0]
-  );
+  console.log("====================================");
+console.log("Primeiro Registro:", registros[0]);
 
-  console.log(
-    "Valor da Data:",
-    registros[0]?.["Data"]
-  );
+console.log("Colunas da planilha:");
+console.log(Object.keys(registros[0] || {}));
+
+console.log("Data:", registros[0]?.["Data"]);
+const valor = registros[0]?.["Data do Corte"];
+
+console.log("Valor original:", valor);
+console.log("Tipo:", typeof valor);
+
+if (valor instanceof Date) {
+  console.log("É Date:", valor.toISOString());
+}
+console.log("DATA DO CORTE:", registros[0]?.["DATA DO CORTE"]);
+console.log("Data Corte:", registros[0]?.["Data Corte"]);
+
+console.table(registros.slice(0, 5));
+
+console.log("====================================");
 
   const campoOperador = useMemo(() => {
     switch (tipo) {

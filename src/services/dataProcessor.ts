@@ -29,7 +29,6 @@ export interface DashboardResult {
   indicadores: DashboardIndicators;
 }
 
-
 function normalize(text: any) {
   return String(text ?? "")
     .toUpperCase()
@@ -38,7 +37,6 @@ function normalize(text: any) {
     .replace(/\s+/g, " ")
     .trim();
 }
-
 
 function getSheet(
   data: Record<string, any[]>,
@@ -51,7 +49,6 @@ function getSheet(
   return key ? data[key] : [];
 }
 
-
 function findColumn(
   rows: any[],
   aliases: string[]
@@ -61,11 +58,9 @@ function findColumn(
   const headers = Object.keys(rows[0]);
 
   for (const header of headers) {
-
     const h = normalize(header);
 
     for (const alias of aliases) {
-
       const a = normalize(alias);
 
       if (
@@ -75,16 +70,13 @@ function findColumn(
       ) {
         return header;
       }
-
     }
   }
 
   return null;
 }
 
-
 function toNumber(value: any) {
-
   if (
     value === null ||
     value === undefined ||
@@ -93,12 +85,9 @@ function toNumber(value: any) {
     return 0;
   }
 
-
   const texto = String(value).trim();
 
-
   if (texto.includes(",")) {
-
     const numero = Number(
       texto
         .replace(/\./g, "")
@@ -110,7 +99,6 @@ function toNumber(value: any) {
       : numero;
   }
 
-
   const numero = Number(texto);
 
   return isNaN(numero)
@@ -118,36 +106,30 @@ function toNumber(value: any) {
     : numero;
 }
 
-
 export function processDashboardData(
   data: Record<string, any[]>,
   filters?: DashboardFilters
 ): DashboardResult {
 
-
   const producaoOriginal =
     getSheet(data, "PRODUÇÃO");
-
 
   const geral =
     getSheet(data, "GERAL");
 
-
   let arraste =
     getSheet(data, "ARRASTE");
-
 
   let medicao =
     getSheet(data, "MEDIÇÃO");
 
-
   const justificadas =
     getSheet(data, "JUSTIFICADAS");
 
-
   const restantes =
     getSheet(data, "RESTANTES");
-      const colunaQuantidade =
+
+  const colunaQuantidade =
     findColumn(producaoOriginal, [
       "QUANT.",
       "QUANT",
@@ -157,7 +139,6 @@ export function processDashboardData(
       "M3",
     ]);
 
-
   const colunaOperador =
     findColumn(producaoOriginal, [
       "MOTOSERRISTA CORTE",
@@ -166,12 +147,10 @@ export function processDashboardData(
       "FUNCIONARIO",
     ]);
 
-
   const colunaUT =
     findColumn(producaoOriginal, [
       "UT",
     ]);
-
 
   const colunaEspecie =
     findColumn(producaoOriginal, [
@@ -179,13 +158,11 @@ export function processDashboardData(
       "ESPECIE",
     ]);
 
-
   const colunaData =
     findColumn(producaoOriginal, [
       "DATA DO CORTE",
       "DATA",
     ]);
-
 
   const colunaEspecieMedicao =
     findColumn(medicao, [
@@ -193,13 +170,11 @@ export function processDashboardData(
       "ESPECIE",
     ]) ?? "Espécie";
 
-
   const colunaComercialMedicao =
     findColumn(medicao, [
       "COMERCIAL M3",
       "COMERCIAL",
     ]) ?? "Comercial M3";
-
 
   const colunaArvoresMedicao =
     findColumn(medicao, [
@@ -207,53 +182,73 @@ export function processDashboardData(
       "QTDA",
     ]) ?? "qtd a";
 
-
   let producao = [
     ...producaoOriginal
   ];
-
 
   if (filters) {
 
     producao =
       producao.filter((row) => {
 
-
         if (
           filters.operador &&
           colunaOperador &&
-          String(row[colunaOperador]).trim()
-          !== filters.operador.trim()
+          String(row[colunaOperador]).trim() !==
+            filters.operador.trim()
         ) {
           return false;
         }
-
 
         if (
           filters.ut &&
           colunaUT &&
-          String(row[colunaUT]).trim()
-          !== filters.ut.trim()
+          String(row[colunaUT]).trim() !==
+            filters.ut.trim()
         ) {
           return false;
         }
-
 
         if (
           filters.especie &&
           colunaEspecie &&
-          String(row[colunaEspecie]).trim()
-          !== filters.especie.trim()
+          String(row[colunaEspecie]).trim() !==
+            filters.especie.trim()
         ) {
           return false;
         }
+      if (
+  filters.data &&
+  colunaData
+) {
+  const valor = String(
+    row[colunaData] ?? ""
+  ).trim();
 
+  const partesRegistro = valor.split("/");
+
+  if (partesRegistro.length === 3) {
+    const dia = partesRegistro[0].padStart(2, "0");
+    const mes = partesRegistro[1].padStart(2, "0");
+
+    let ano = partesRegistro[2];
+
+    if (ano.length === 2) {
+      ano = "20" + ano;
+    }
+
+    const dataRegistro =
+      `${ano}-${mes}-${dia}`;
+
+    if (dataRegistro !== filters.data) {
+      return false;
+    }
+  }
+}
 
         return true;
 
       });
-
-
 
     const colunaOperadorArraste =
       findColumn(arraste, [
@@ -262,12 +257,10 @@ export function processDashboardData(
         "OPERADOR",
       ]);
 
-
     const colunaUTArraste =
       findColumn(arraste, [
         "UT",
       ]);
-
 
     const colunaEspecieArraste =
       findColumn(arraste, [
@@ -275,65 +268,52 @@ export function processDashboardData(
         "ESPECIE",
       ]);
 
-
-
     arraste =
       arraste.filter((row) => {
-
 
         if (
           filters.operador &&
           colunaOperadorArraste &&
-          String(row[colunaOperadorArraste]).trim()
-          !== filters.operador.trim()
+          String(row[colunaOperadorArraste]).trim() !==
+            filters.operador.trim()
         ) {
           return false;
         }
-
 
         if (
           filters.ut &&
           colunaUTArraste &&
-          String(row[colunaUTArraste]).trim()
-          !== filters.ut.trim()
+          String(row[colunaUTArraste]).trim() !==
+            filters.ut.trim()
         ) {
           return false;
         }
-
 
         if (
           filters.especie &&
           colunaEspecieArraste &&
-          String(row[colunaEspecieArraste]).trim()
-          !== filters.especie.trim()
+          String(row[colunaEspecieArraste]).trim() !==
+            filters.especie.trim()
         ) {
           return false;
         }
 
-
         return true;
 
       });
-
-
 
     const colunaEquipeMedicao =
       findColumn(medicao, [
         "EQUIPE",
       ]) ?? "Equipe";
 
-
     const colunaUTMedicao =
       findColumn(medicao, [
         "UT INVENTÁRIO",
         "UT INVENTARIO",
       ]) ?? "UT Inventário";
-
-
-
-    medicao =
+          medicao =
       medicao.filter((row) => {
-
 
         if (
           filters.operador &&
@@ -343,7 +323,6 @@ export function processDashboardData(
           return false;
         }
 
-
         if (
           filters.ut &&
           String(row[colunaUTMedicao] ?? "").trim()
@@ -351,7 +330,6 @@ export function processDashboardData(
         ) {
           return false;
         }
-
 
         if (
           filters.especie &&
@@ -361,57 +339,43 @@ export function processDashboardData(
           return false;
         }
 
-
         return true;
 
       });
 
   }
-    let producaoTotal = 0;
 
+  let producaoTotal = 0;
 
   const operadores =
     new Set<string>();
 
-
   const dias =
     new Set<string>();
-
 
   const especies =
     new Set<string>();
 
-
   const producaoPorData =
     new Map<string, number>();
 
-
-
   for (const row of producao) {
-
 
     const quantidade =
       colunaQuantidade
         ? toNumber(row[colunaQuantidade])
         : 0;
 
-
     producaoTotal += quantidade;
-
-
 
     if (
       colunaOperador &&
       row[colunaOperador]
     ) {
-
       operadores.add(
         String(row[colunaOperador]).trim()
       );
-
     }
-
-
 
     if (
       colunaData &&
@@ -421,9 +385,7 @@ export function processDashboardData(
       const data =
         String(row[colunaData]).trim();
 
-
       dias.add(data);
-
 
       producaoPorData.set(
         data,
@@ -433,25 +395,18 @@ export function processDashboardData(
 
     }
 
-
-
     if (
       colunaEspecie &&
       row[colunaEspecie]
     ) {
-
       especies.add(
         String(row[colunaEspecie]).trim()
       );
-
     }
 
   }
 
-
-
   let producaoDiaria = 0;
-
 
   if (producaoPorData.size > 0) {
 
@@ -460,18 +415,12 @@ export function processDashboardData(
         .sort()
         .pop();
 
-
     if (ultimaData) {
-
       producaoDiaria =
         producaoPorData.get(ultimaData) ?? 0;
-
     }
 
   }
-
-
-
 
   // ===============================
   // ÁRVORES DERRUBADAS (PRODUÇÃO)
@@ -480,9 +429,7 @@ export function processDashboardData(
   const mapaArvores =
     new Map<string, number>();
 
-
   for (const row of producao) {
-
 
     const especie =
       String(
@@ -490,15 +437,12 @@ export function processDashboardData(
         ?? ""
       ).trim();
 
-
     if (!especie) continue;
-
 
     const quantidade =
       colunaQuantidade
         ? toNumber(row[colunaQuantidade])
         : 1;
-
 
     mapaArvores.set(
       especie,
@@ -508,9 +452,6 @@ export function processDashboardData(
 
   }
 
-
-
-
   // ===============================
   // MÉDIA DA MEDIÇÃO
   // ===============================
@@ -519,53 +460,37 @@ export function processDashboardData(
     new Map<
       string,
       {
-        comercial:number;
-        arvoresMedicao:number;
+        comercial: number;
+        arvoresMedicao: number;
       }
     >();
-
-
-
-  for (const row of medicao) {
-
+      for (const row of medicao) {
 
     const especie =
       String(
         row[colunaEspecieMedicao] ?? ""
       ).trim();
 
-
-
     if (!especie) continue;
-
-
 
     const comercial =
       toNumber(
         row[colunaComercialMedicao]
       );
 
-
     const arvoresMedicao =
       toNumber(
         row[colunaArvoresMedicao]
       );
 
-
-
     const atual =
       mapaMedicao.get(especie) ?? {
-        comercial:0,
-        arvoresMedicao:0,
+        comercial: 0,
+        arvoresMedicao: 0,
       };
 
-
-
     atual.comercial += comercial;
-
     atual.arvoresMedicao += arvoresMedicao;
-
-
 
     mapaMedicao.set(
       especie,
@@ -574,29 +499,20 @@ export function processDashboardData(
 
   }
 
-
-
-
   // ===============================
   // ESTIMATIVA FINAL
   // DERRUBADA × MÉDIA MEDIÇÃO
   // ===============================
 
-  const estimativaEspecies:
-    EstimativaEspecie[] =
-
-
+  const estimativaEspecies: EstimativaEspecie[] =
     Array.from(mapaArvores.entries())
       .map(([especie, arvores]) => {
 
-
         const dados =
           mapaMedicao.get(especie) ?? {
-            comercial:0,
-            arvoresMedicao:0,
+            comercial: 0,
+            arvoresMedicao: 0,
           };
-
-
 
         const mediaArvore =
           dados.arvoresMedicao > 0
@@ -604,39 +520,26 @@ export function processDashboardData(
               dados.arvoresMedicao
             : 0;
 
-
-
         return {
-
           especie,
-
 
           // vem da derrubada
           arvores,
 
-
           // volume previsto
           volumeComercial:
-            arvores *
-            mediaArvore,
-
+            arvores * mediaArvore,
 
           // média da medição
           mediaArvore,
-
         };
-
 
       })
       .sort(
-        (a,b)=>
+        (a, b) =>
           b.volumeComercial -
           a.volumeComercial
       );
-
-
-
-
 
   return {
 
@@ -652,20 +555,13 @@ export function processDashboardData(
 
     restantes,
 
-
     estimativaEspecies,
-
-
 
     indicadores: {
 
-
       producaoDiaria,
 
-
       producaoTotal,
-
-
 
       media:
         dias.size > 0
@@ -675,15 +571,11 @@ export function processDashboardData(
             )
           : 0,
 
-
-
       operadores:
         operadores.size,
 
-
       dias:
         dias.size,
-
 
       especies:
         especies.size,
