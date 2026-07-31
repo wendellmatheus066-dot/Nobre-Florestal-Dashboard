@@ -10,7 +10,10 @@ import { useEffect } from "react";
 
 import { ArrowLeft } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 
 import MainLayout from "../components/layout/MainLayout";
 import Header from "../components/layout/Header";
@@ -39,6 +42,7 @@ function AjustarMapa({ pontos }: any) {
 
 export default function MapaFlorestal() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Fecha automaticamente o mapa quando o Safari
   // vai para segundo plano (corrige o bug do iPhone)
@@ -306,10 +310,11 @@ export default function MapaFlorestal() {
             <div className="h-full overflow-hidden rounded-2xl border border-[#44475A]">
 
               <MapContainer
-                center={[-3.290908, -56.151795]}
-                zoom={16}
-                className="h-full w-full"
-              >
+  key={location.pathname}
+  center={[-3.290908, -56.151795]}
+  zoom={16}
+  className="h-full w-full"
+>
 
                 <TileLayer
                   url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
