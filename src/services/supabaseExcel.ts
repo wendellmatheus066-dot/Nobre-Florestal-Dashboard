@@ -90,10 +90,7 @@ async function buscarInventarioFiltrado(
 
       todos.push(...data);
 
-      console.log(
-        `inventario página ${inicio}:`,
-        data.length
-      );
+      console.log(`inventario página ${inicio}:`, data.length);
 
       if (data.length < tamanho) {
         break;
@@ -102,10 +99,7 @@ async function buscarInventarioFiltrado(
       inicio += tamanho;
     }
 
-    console.log(
-      "TOTAL INVENTARIO BUSCADO:",
-      todos.length
-    );
+    console.log("TOTAL INVENTARIO BUSCADO:", todos.length);
 
     const numerosLimpos = numeros.map((numero) =>
       limparNumero(numero)
@@ -121,10 +115,7 @@ async function buscarInventarioFiltrado(
       return numerosLimpos.includes(numeroInventario);
     });
 
-    console.log(
-      "INVENTÁRIO ENCONTRADO:",
-      filtrado.length
-    );
+    console.log("INVENTÁRIO ENCONTRADO:", filtrado.length);
 
     return filtrado.map((item) => item.dados);
   } catch (error) {
@@ -178,23 +169,15 @@ export async function buscarInventarioSupabase(
 export async function buscarUltimaImportacao() {
   try {
     const { data, error } = await supabase
-      .from("configuracoes")
-      .select("*");
-
-    console.log("==========================================");
-    console.log("CONFIGURAÇÕES RETORNADAS:");
-    console.table(data);
-    console.log("ERRO:", error);
-    console.log("==========================================");
+      .from("configuracoes2")
+      .select("chave, valor");
 
     if (error) {
+      console.error("Erro buscando última importação:", error);
       return null;
     }
 
     if (!data || data.length === 0) {
-      console.warn(
-        "A tabela 'configuracoes' retornou ZERO registros."
-      );
       return null;
     }
 
@@ -203,24 +186,9 @@ export async function buscarUltimaImportacao() {
         item.chave === "ultima_importacao"
     );
 
-    console.log(
-      "REGISTRO ENCONTRADO:",
-      registro
-    );
-
-    if (!registro) {
-      console.warn(
-        "Não existe uma linha com chave = 'ultima_importacao'."
-      );
-      return null;
-    }
-
-    return registro.valor;
+    return registro?.valor ?? null;
   } catch (error) {
-    console.error(
-      "Erro inesperado:",
-      error
-    );
+    console.error("Erro inesperado:", error);
     return null;
   }
 }
