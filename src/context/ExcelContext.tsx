@@ -66,6 +66,9 @@ export function ExcelProvider({
           buscarUltimaImportacao(),
         ]);
 
+        // 👇 ADICIONADO APENAS PARA TESTE
+        console.log("RETORNO buscarUltimaImportacao():", ultimaImportacao);
+
         setData({
           "PRODUÇÃO": producao,
           "ARRASTE": arraste,
