@@ -160,7 +160,7 @@ export default function MotivoChart() {
   }, [dashboard]);
 
   return (
-    <ChartCard title="Motivos de Ocorrência">
+    <ChartCard title="STATUS">
       <ReactECharts
         option={option}
         style={{

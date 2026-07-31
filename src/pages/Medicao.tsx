@@ -24,33 +24,26 @@ import {
   calcularStatsMedicao,
 } from "../processors/medicao";
 
-
 export default function Medicao() {
 
   const { data } = useExcel();
 
   const { filters } = useFilters();
 
-
   const dashboard = processDashboardData(
     data,
     filters.medicao
   );
 
-
   const registros = processarMedicao(
     dashboard.medicao
   );
-
 
   const stats = calcularStatsMedicao(
     registros
   );
 
-
   console.log("STATS MEDIÇÃO:", stats);
-
-
 
   return (
 
@@ -60,22 +53,16 @@ export default function Medicao() {
 
         <Container>
 
-
           <Header
             title="Dashboard de Medição"
             subtitle="Sistema de Gestão Florestal - NOBRE FLORESTAL"
           />
 
-
           <div className="h-6" />
-
 
           <FilterBar tipo="medicao" />
 
-
           <div className="h-8" />
-
-
 
           <div
             className="
@@ -88,14 +75,11 @@ export default function Medicao() {
             "
           >
 
-
             <KpiCard
               title="Volume Florestal"
               value={stats.volumeFlorestal.toFixed(2)}
               icon={<Trees size={28} />}
             />
-
-
 
             <KpiCard
               title="Volume Comercial"
@@ -103,15 +87,11 @@ export default function Medicao() {
               icon={<TrendingUp size={28} />}
             />
 
-
-
             <KpiCard
-              title="Média m³/Árvore"
-              value={stats.mediaArvore.toFixed(3)}
+              title="Média por Equipe"
+              value={stats.mediaEquipe.toFixed(2)}
               icon={<TrendingUp size={28} />}
             />
-
-
 
             <KpiCard
               title="Árvores"
@@ -119,15 +99,11 @@ export default function Medicao() {
               icon={<Trees size={28} />}
             />
 
-
-
             <KpiCard
               title="Dias"
               value={stats.dias}
               icon={<CalendarDays size={28} />}
             />
-
-
 
             <KpiCard
               title="Espécies"
@@ -135,14 +111,9 @@ export default function Medicao() {
               icon={<Leaf size={28} />}
             />
 
-
           </div>
 
-
-
           <div className="h-10" />
-
-
 
           <div
             className="
@@ -158,15 +129,12 @@ export default function Medicao() {
 
           </div>
 
-
-
         </Container>
 
-
       </div>
-
 
     </MainLayout>
 
   );
+
 }

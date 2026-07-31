@@ -4,9 +4,10 @@ import {
   CircleMarker,
   Popup,
   useMap,
+  GeoJSON,
 } from "react-leaflet";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { ArrowLeft } from "lucide-react";
 
@@ -66,12 +67,30 @@ export default function MapaFlorestal() {
     };
   }, [navigate]);
 
+useEffect(() => {
+  fetch("/mapas/uts.geojson")
+    .then((response) => response.json())
+    .then((json) => {
+  console.log("UTs carregadas:", json);
+  console.log("Primeira feature:", json.features[0]);
+  console.log("Geometria:", json.features[0].geometry);
+  console.log("Propriedades:", json.features[0].properties);
+
+  setUtsGeoJson(json);
+})
+    .catch((erro) => {
+      console.error("Erro ao carregar UTs:", erro);
+    });
+}, []);
+
   const { data } = useExcelContext();
 
   const producao = data["PRODUÇÃO"] || [];
   const arraste = data["ARRASTE"] || [];
   const medicao = data["MEDIÇÃO"] || [];
   const inventario = data["INVENTÁRIO"] || [];
+  const [utsGeoJson, setUtsGeoJson] = useState<any>(null);
+  
 
   function limparNumero(valor: any) {
     if (!valor) return "";
@@ -320,6 +339,19 @@ export default function MapaFlorestal() {
                   url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
                   attribution="Google Satellite"
                 />
+                {utsGeoJson && (
+  <GeoJSON
+    data={utsGeoJson}
+    style={() => ({
+      color: "#00FF00",
+      weight: 2,
+      opacity: 1,
+      fillColor: "#00FF00",
+      fillOpacity: 0.05,
+    })}
+  />
+)}
+ 
 
                 <AjustarMapa pontos={pontosMapa} />
 
