@@ -44,28 +44,6 @@ export default function FilterBar({
     }
   }, [data, tipo]);
 
-  console.log("====================================");
-console.log("Primeiro Registro:", registros[0]);
-
-console.log("Colunas da planilha:");
-console.log(Object.keys(registros[0] || {}));
-
-console.log("Data:", registros[0]?.["Data"]);
-const valor = registros[0]?.["Data do Corte"];
-
-console.log("Valor original:", valor);
-console.log("Tipo:", typeof valor);
-
-if (valor instanceof Date) {
-  console.log("É Date:", valor.toISOString());
-}
-console.log("DATA DO CORTE:", registros[0]?.["DATA DO CORTE"]);
-console.log("Data Corte:", registros[0]?.["Data Corte"]);
-
-console.table(registros.slice(0, 5));
-
-console.log("====================================");
-
   const campoOperador = useMemo(() => {
     switch (tipo) {
       case "arraste":
@@ -92,8 +70,21 @@ console.log("====================================");
     }
   }, [tipo]);
 
+  const campoData = useMemo(() => {
+    switch (tipo) {
+      case "arraste":
+        return "Data";
+
+      case "medicao":
+        return "Data Patio";
+
+      default:
+        return "Data do Corte";
+    }
+  }, [tipo]);
+
   const registrosFiltrados = useMemo(() => {
-    const campoUT =
+        const campoUT =
       tipo === "medicao"
         ? "UT Inventário"
         : "UT";
@@ -125,17 +116,17 @@ console.log("====================================");
 
       if (filtros.data) {
         let dataRegistro = String(
-          r["Data"] ?? ""
+          r[campoData] ?? ""
         ).trim();
 
         if (dataRegistro.includes("/")) {
-          const partes =
-            dataRegistro
-              .substring(0, 10)
-              .split("/");
+          const partes = dataRegistro
+            .substring(0, 10)
+            .split("/");
 
           if (partes.length === 3) {
-            dataRegistro = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            dataRegistro =
+              `${partes[2]}-${partes[1]}-${partes[0]}`;
           }
         } else {
           dataRegistro =
@@ -155,6 +146,7 @@ console.log("====================================");
     registros,
     filtros,
     campoOperador,
+    campoData,
     tipo,
   ]);
 
@@ -195,23 +187,20 @@ console.log("====================================");
   }, [registrosFiltrados]);
 
   return (
-    <div className="mb-8 rounded-2xl border border-[#44475A] bg-[#343746] p-6 shadow-xl">
+        <div className="mb-8 rounded-2xl border border-[#44475A] bg-[#343746] p-6 shadow-xl">
 
       <div className="mb-5 flex items-center justify-between pr-2">
 
         <div className="flex items-center gap-3">
 
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600/15">
-
             <Search
               className="text-green-400"
               size={20}
             />
-
           </div>
 
           <div>
-
             <h2 className="text-xl font-semibold text-white">
               Filtros
             </h2>
@@ -219,11 +208,11 @@ console.log("====================================");
             <p className="text-sm text-slate-400">
               Os dados são atualizados automaticamente.
             </p>
-
           </div>
 
         </div>
-                <button
+
+        <button
           type="button"
           title="Limpar filtros"
           onClick={() =>

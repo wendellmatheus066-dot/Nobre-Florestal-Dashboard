@@ -23,14 +23,29 @@ export default function ProductionChart() {
         row["Data do Corte"] ?? ""
       ).trim();
 
-      if (dia.includes("/")) {
-        const partes = dia
-          .substring(0, 10)
-          .split("/");
+      // Converte yyyy-mm-dd para dd/mm/yyyy
+      if (dia.includes("-")) {
+        const partes = dia.substring(0, 10).split("-");
 
         if (partes.length === 3) {
-          if (partes[2].length === 2) {
-            partes[2] = "20" + partes[2];
+          dia =
+            partes[2].padStart(2, "0") +
+            "/" +
+            partes[1].padStart(2, "0") +
+            "/" +
+            partes[0];
+        }
+      }
+
+      // Padroniza dd/mm/yy -> dd/mm/yyyy
+      else if (dia.includes("/")) {
+        const partes = dia.substring(0, 10).split("/");
+
+        if (partes.length === 3) {
+          let ano = partes[2];
+
+          if (ano.length === 2) {
+            ano = "20" + ano;
           }
 
           dia =
@@ -38,20 +53,7 @@ export default function ProductionChart() {
             "/" +
             partes[1].padStart(2, "0") +
             "/" +
-            partes[2];
-        }
-      } else if (dia.includes("-")) {
-        const partes = dia
-          .substring(0, 10)
-          .split("-");
-
-        if (partes.length === 3) {
-          dia =
-            partes[2] +
-            "/" +
-            partes[1] +
-            "/" +
-            partes[0];
+            ano;
         }
       }
 
@@ -61,32 +63,30 @@ export default function ProductionChart() {
           .replace(",", ".")
       );
 
-      agrupado[dia] =
-        (agrupado[dia] || 0) + quantidade;
+      agrupado[dia] = (agrupado[dia] || 0) + quantidade;
     });
 
-    const dias = Object.keys(agrupado).sort(
-      (a, b) => {
-        const da = a
-          .split("/")
-          .reverse()
-          .join("-");
+    // Ordena corretamente sem depender do navegador
+    const dias = Object.keys(agrupado).sort((a, b) => {
+      const [diaA, mesA, anoA] = a.split("/").map(Number);
+      const [diaB, mesB, anoB] = b.split("/").map(Number);
 
-        const db = b
-          .split("/")
-          .reverse()
-          .join("-");
+      const dataA = new Date(
+        anoA,
+        mesA - 1,
+        diaA
+      ).getTime();
 
-        return (
-          new Date(da).getTime() -
-          new Date(db).getTime()
-        );
-      }
-    );
+      const dataB = new Date(
+        anoB,
+        mesB - 1,
+        diaB
+      ).getTime();
 
-    const valores = dias.map(
-      (d) => agrupado[d]
-    );
+      return dataA - dataB;
+    });
+
+    const valores = dias.map((d) => agrupado[d]);
 
     return {
       backgroundColor: "transparent",
@@ -112,7 +112,9 @@ export default function ProductionChart() {
 
       xAxis: {
         type: "category",
+
         data: dias,
+
         boundaryGap: false,
 
         axisLine: {
@@ -129,6 +131,7 @@ export default function ProductionChart() {
           color: "#BDC1D6",
           fontSize: 12,
           rotate: 30,
+          formatter: (value: string) => value,
         },
       },
 
@@ -187,13 +190,11 @@ export default function ProductionChart() {
               [
                 {
                   offset: 0,
-                  color:
-                    "rgba(80,250,123,0.35)",
+                  color: "rgba(80,250,123,0.35)",
                 },
                 {
                   offset: 1,
-                  color:
-                    "rgba(80,250,123,0.03)",
+                  color: "rgba(80,250,123,0.03)",
                 },
               ]
             ),

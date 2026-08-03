@@ -12,7 +12,13 @@ export interface DashboardIndicators {
 export interface EstimativaEspecie {
   especie: string;
   arvores: number;
+
+  arvoresMedidas: number;
+
   volumeComercial: number;
+
+  volumeFlorestal: number;
+
   mediaArvore: number;
 }
 
@@ -122,6 +128,8 @@ export function processDashboardData(
 
   let medicao =
     getSheet(data, "MEDIÇÃO");
+    console.log("Cabeçalhos da MEDIÇÃO:");
+console.log(Object.keys(medicao[0] ?? {}));
 
   const justificadas =
     getSheet(data, "JUSTIFICADAS");
@@ -175,6 +183,11 @@ export function processDashboardData(
       "COMERCIAL M3",
       "COMERCIAL",
     ]) ?? "Comercial M3";
+    const colunaFlorestalMedicao =
+  findColumn(medicao, [
+    "FLORESTAL M3",
+    "FLORESTAL",
+  ]) ?? "Florestal M3";
 
   const colunaArvoresMedicao =
     findColumn(medicao, [
@@ -263,13 +276,21 @@ export function processDashboardData(
       ]);
 
     const colunaEspecieArraste =
-      findColumn(arraste, [
-        "ESPÉCIE",
-        "ESPECIE",
-      ]);
+  findColumn(arraste, [
+    "ESPÉCIE",
+    "ESPECIE",
+  ]);
+
+const colunaDataArraste =
+  findColumn(arraste, [
+    "DATA",
+  ]);
 
     arraste =
       arraste.filter((row) => {
+
+        
+        
 
         if (
           filters.operador &&
@@ -297,6 +318,34 @@ export function processDashboardData(
         ) {
           return false;
         }
+        if (
+  filters.data &&
+  colunaDataArraste
+) {
+  const valor = String(
+    row[colunaDataArraste] ?? ""
+  ).trim();
+
+  const partes = valor.split("/");
+
+  if (partes.length === 3) {
+    const dia = partes[0].padStart(2, "0");
+    const mes = partes[1].padStart(2, "0");
+
+    let ano = partes[2];
+
+    if (ano.length === 2) {
+      ano = "20" + ano;
+    }
+
+    const dataRegistro =
+      `${ano}-${mes}-${dia}`;
+
+    if (dataRegistro !== filters.data) {
+      return false;
+    }
+  }
+}
 
         return true;
 
@@ -312,7 +361,18 @@ export function processDashboardData(
         "UT INVENTÁRIO",
         "UT INVENTARIO",
       ]) ?? "UT Inventário";
-          medicao =
+         const colunaDataMedicao = findColumn(medicao, [
+  "DATA PATIO",
+  
+  
+]);
+console.log("Filtro:", filters.data);
+console.log("Coluna:", colunaDataMedicao);
+if (colunaDataMedicao) {
+  console.log("Valor da linha:", medicao[0]?.[colunaDataMedicao]);
+}
+      medicao =
+          
       medicao.filter((row) => {
 
         if (
@@ -338,7 +398,34 @@ export function processDashboardData(
         ) {
           return false;
         }
+if (
+  filters.data &&
+  colunaDataMedicao
+) {
+  const valor = String(
+    row[colunaDataMedicao] ?? ""
+  ).trim();
 
+  const partes = valor.split("/");
+
+  if (partes.length === 3) {
+    const dia = partes[0].padStart(2, "0");
+    const mes = partes[1].padStart(2, "0");
+
+    let ano = partes[2];
+
+    if (ano.length === 2) {
+      ano = "20" + ano;
+    }
+
+    const dataRegistro =
+      `${ano}-${mes}-${dia}`;
+
+    if (dataRegistro !== filters.data) {
+      return false;
+    }
+  }
+}
         return true;
 
       });
@@ -457,13 +544,14 @@ export function processDashboardData(
   // ===============================
 
   const mapaMedicao =
-    new Map<
-      string,
-      {
-        comercial: number;
-        arvoresMedicao: number;
-      }
-    >();
+  new Map<
+    string,
+    {
+      comercial: number;
+      florestal: number;
+      arvoresMedicao: number;
+    }
+  >();
       for (const row of medicao) {
 
     const especie =
@@ -477,6 +565,10 @@ export function processDashboardData(
       toNumber(
         row[colunaComercialMedicao]
       );
+      const florestal =
+  toNumber(
+    row[colunaFlorestalMedicao]
+  );
 
     const arvoresMedicao =
       toNumber(
@@ -484,13 +576,14 @@ export function processDashboardData(
       );
 
     const atual =
-      mapaMedicao.get(especie) ?? {
-        comercial: 0,
-        arvoresMedicao: 0,
-      };
-
-    atual.comercial += comercial;
-    atual.arvoresMedicao += arvoresMedicao;
+  mapaMedicao.get(especie) ?? {
+    comercial: 0,
+    florestal: 0,
+    arvoresMedicao: 0,
+  };
+atual.comercial += comercial;
+atual.florestal += florestal;
+atual.arvoresMedicao += arvoresMedicao;
 
     mapaMedicao.set(
       especie,
@@ -509,10 +602,11 @@ export function processDashboardData(
       .map(([especie, arvores]) => {
 
         const dados =
-          mapaMedicao.get(especie) ?? {
-            comercial: 0,
-            arvoresMedicao: 0,
-          };
+  mapaMedicao.get(especie) ?? {
+    comercial: 0,
+    florestal: 0,
+    arvoresMedicao: 0,
+  };
 
         const mediaArvore =
           dados.arvoresMedicao > 0
@@ -520,19 +614,21 @@ export function processDashboardData(
               dados.arvoresMedicao
             : 0;
 
-        return {
-          especie,
+       return {
+  especie,
 
-          // vem da derrubada
-          arvores,
+  arvores,
 
-          // volume previsto
-          volumeComercial:
-            arvores * mediaArvore,
+  arvoresMedidas: dados.arvoresMedicao,
 
-          // média da medição
-          mediaArvore,
-        };
+  volumeComercial:
+    dados.comercial,
+
+  volumeFlorestal:
+    dados.florestal,
+
+  mediaArvore,
+};
 
       })
       .sort(

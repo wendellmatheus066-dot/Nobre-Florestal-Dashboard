@@ -121,9 +121,9 @@ export default function Sidebar({
 
           </div>
 
-          <nav className="mt-8 flex-1 overflow-y-auto px-3">
+          <nav className="mt-8 flex-1 overflow-y-auto px-4">
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-5">
 
               {menus.map((item) => {
                 const Icon = item.icon;

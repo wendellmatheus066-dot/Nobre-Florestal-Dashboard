@@ -16,13 +16,57 @@ export default function ProductionChart() {
     filters.arraste
   );
 
+  // Apenas para teste (pode apagar depois)
+  if (dashboard.arraste.length > 0) {
+    console.log("Data Patio:", dashboard.arraste[0]["Data Patio"]);
+    console.log("Tipo:", typeof dashboard.arraste[0]["Data Patio"]);
+  } else {
+    console.log("Arraste vazio");
+  }
+
   const option = useMemo(() => {
     const agrupado = new Map<string, number>();
 
     dashboard.arraste.forEach((row: any) => {
-      const dataPatio = String(row["Data Patio"] ?? "").trim();
+      if (!row) return;
+
+      let dataPatio = String(row["Data Patio"] ?? "").trim();
 
       if (!dataPatio) return;
+
+      // Padroniza yyyy-mm-dd -> dd/MM/yyyy
+      if (dataPatio.includes("-")) {
+        const partes = dataPatio.substring(0, 10).split("-");
+
+        if (partes.length === 3) {
+          dataPatio =
+            partes[2].padStart(2, "0") +
+            "/" +
+            partes[1].padStart(2, "0") +
+            "/" +
+            partes[0];
+        }
+      }
+
+      // Padroniza dd/MM/yy -> dd/MM/yyyy
+      else if (dataPatio.includes("/")) {
+        const partes = dataPatio.substring(0, 10).split("/");
+
+        if (partes.length === 3) {
+          let ano = partes[2];
+
+          if (ano.length === 2) {
+            ano = "20" + ano;
+          }
+
+          dataPatio =
+            partes[0].padStart(2, "0") +
+            "/" +
+            partes[1].padStart(2, "0") +
+            "/" +
+            ano;
+        }
+      }
 
       const quantidade = Number(
         String(row["qtd"] ?? 0)
@@ -36,7 +80,16 @@ export default function ProductionChart() {
       );
     });
 
-    const dias = [...agrupado.keys()].sort();
+    const dias = [...agrupado.keys()].sort((a, b) => {
+      const [diaA, mesA, anoA] = a.split("/").map(Number);
+      const [diaB, mesB, anoB] = b.split("/").map(Number);
+
+      return (
+        new Date(anoA, mesA - 1, diaA).getTime() -
+        new Date(anoB, mesB - 1, diaB).getTime()
+      );
+    });
+
     const valores = dias.map((dia) => agrupado.get(dia) ?? 0);
 
     return {
@@ -83,6 +136,7 @@ export default function ProductionChart() {
         axisLabel: {
           color: "#BDC1D6",
           fontSize: 12,
+          formatter: (value: string) => value,
         },
       },
 

@@ -1,9 +1,11 @@
 import * as XLSX from "xlsx";
 
 function formatCell(value: any) {
-  if (!value) return "";
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
 
-  // Caso venha como objeto Date
+  // Objeto Date
   if (value instanceof Date) {
     const dia = String(value.getDate()).padStart(2, "0");
     const mes = String(value.getMonth() + 1).padStart(2, "0");
@@ -12,22 +14,52 @@ function formatCell(value: any) {
     return `${dia}/${mes}/${ano}`;
   }
 
-  // Caso venha como número serial do Excel
+  // Número serial do Excel
   if (typeof value === "number") {
     if (value > 30000 && value < 60000) {
-      const date = XLSX.SSF.parse_date_code(value);
+      const data = XLSX.SSF.parse_date_code(value);
 
-      if (date) {
-        const dia = String(date.d).padStart(2, "0");
-        const mes = String(date.m).padStart(2, "0");
-        const ano = date.y;
+      if (data) {
+        const dia = String(data.d).padStart(2, "0");
+        const mes = String(data.m).padStart(2, "0");
+        const ano = data.y;
 
         return `${dia}/${mes}/${ano}`;
       }
     }
+
+    return String(value);
   }
 
-  return String(value).trim();
+  const texto = String(value).trim();
+
+  // Formato americano: 7/30/26 ou 7/30/2026
+  const usa = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+
+  if (usa) {
+    let mes = Number(usa[1]);
+    let dia = Number(usa[2]);
+    let ano = Number(usa[3]);
+
+    if (ano < 100) {
+      ano += 2000;
+    }
+
+    // Se o segundo número for maior que 12, é MM/DD
+    if (dia > 12) {
+      return `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}/${ano}`;
+    }
+
+    // Se o primeiro número for maior que 12, já está DD/MM
+    if (mes > 12) {
+      return `${String(mes).padStart(2, "0")}/${String(dia).padStart(2, "0")}/${ano}`;
+    }
+
+    // Mantém DD/MM por padrão
+    return `${String(mes).padStart(2, "0")}/${String(dia).padStart(2, "0")}/${ano}`;
+  }
+
+  return texto;
 }
 
 export async function readExcel(file: File) {
@@ -45,7 +77,7 @@ export async function readExcel(file: File) {
 
     const rows = XLSX.utils.sheet_to_json(sheet, {
       defval: "",
-      raw: true,
+      raw: false,
     });
 
     data[sheetName.toUpperCase()] = rows.map((row: any) => {
