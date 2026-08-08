@@ -33,42 +33,67 @@ export default function Arraste() {
   const { data } = useExcel();
   const { filters } = useFilters();
 
+  // ==========================================
+  // PROCESSAMENTO DOS DADOS
+  // ==========================================
+
   const dashboard = processDashboardData(
     data,
     filters.arraste
   );
 
-  const registros = processarArraste(dashboard.arraste);
+  // ==========================================
+  // PROCESSAMENTO DO ARRASTE
+  // ==========================================
 
-  // ESTA LINHA ESTAVA FALTANDO
-  const stats = calcularStatsArraste(registros);
+  const registros = processarArraste(
+    dashboard.arraste
+  );
+
+  const stats =
+    calcularStatsArraste(registros);
+
+  // ==========================================
+  // INDICADORES DO ARRASTE
+  // ==========================================
+
+  const diasTrabalhados =
+    dashboard.indicadoresArraste.dias;
 
   const mediaDiaria =
-    stats.dias > 0
-      ? (stats.producaoTotal / stats.dias).toFixed(1)
-      : "0";
+    dashboard.indicadoresArraste.media;
 
   return (
     <MainLayout>
-      <div className="pt-8">
-        <Container>
-          <Header
-            title="Dashboard de Arraste"
-            subtitle="Sistema de Gestão Florestal - NOBRE FLORESTAL"
-          />
+      <div className="flex min-h-screen flex-col">
+        <Header title="Arraste" />
 
+        <Container>
           <div className="h-6" />
+
+          {/* ==========================================
+              FILTROS
+          ========================================== */}
 
           <FilterBar tipo="arraste" />
 
           <div className="h-8" />
 
+          {/* ==========================================
+              CARDS
+          ========================================== */}
+
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+
+            {/* ÁRVORES ARRASTADAS */}
+
             <KpiCard
               title="Árvores Arrastadas"
               value={stats.producaoTotal}
               icon={<Trees size={28} />}
             />
+
+            {/* OPERADORES */}
 
             <KpiCard
               title="Operadores"
@@ -76,11 +101,15 @@ export default function Arraste() {
               icon={<Users size={28} />}
             />
 
+            {/* DIAS TRABALHADOS */}
+
             <KpiCard
               title="Dias Trabalhados"
-              value={stats.dias}
+              value={diasTrabalhados}
               icon={<CalendarDays size={28} />}
             />
+
+            {/* UTS */}
 
             <KpiCard
               title="UT's"
@@ -88,34 +117,54 @@ export default function Arraste() {
               icon={<TrendingUp size={28} />}
             />
 
+            {/* MÉDIA DIÁRIA */}
+
             <KpiCard
               title="Média Diária"
               value={mediaDiaria}
               icon={<TrendingUp size={28} />}
             />
 
+            {/* ESPÉCIES */}
+
             <KpiCard
               title="Espécies"
               value={stats.especies}
               icon={<Leaf size={28} />}
             />
+
           </div>
 
           <div className="h-8" />
 
+          {/* ==========================================
+              GRÁFICOS PRINCIPAIS
+          ========================================== */}
+
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+
             <ProductionChart />
+
             <RankingChart />
+
           </div>
 
           <div className="h-6" />
 
+          {/* ==========================================
+              GRÁFICOS SECUNDÁRIOS
+          ========================================== */}
+
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+
             <UTChart />
+
             <MotivoChart />
+
           </div>
 
           <div className="h-10" />
+
         </Container>
       </div>
     </MainLayout>

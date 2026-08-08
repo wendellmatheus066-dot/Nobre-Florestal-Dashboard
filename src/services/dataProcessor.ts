@@ -1,5 +1,9 @@
 import type { DashboardFilters } from "../context/FilterContext";
 
+// ==========================================
+// TIPOS
+// ==========================================
+
 export interface DashboardIndicators {
   producaoDiaria: number;
   producaoTotal: number;
@@ -12,13 +16,9 @@ export interface DashboardIndicators {
 export interface EstimativaEspecie {
   especie: string;
   arvores: number;
-
   arvoresMedidas: number;
-
   volumeComercial: number;
-
   volumeFlorestal: number;
-
   mediaArvore: number;
 }
 
@@ -29,11 +29,19 @@ export interface DashboardResult {
   medicao: any[];
   justificadas: any[];
   restantes: any[];
-
   estimativaEspecies: EstimativaEspecie[];
-
   indicadores: DashboardIndicators;
+
+  indicadoresArraste: {
+    total: number;
+    media: number;
+    dias: number;
+  };
 }
+
+// ==========================================
+// NORMALIZA TEXTO
+// ==========================================
 
 function normalize(text: any) {
   return String(text ?? "")
@@ -43,6 +51,10 @@ function normalize(text: any) {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// ==========================================
+// LOCALIZA PLANILHA
+// ==========================================
 
 function getSheet(
   data: Record<string, any[]>,
@@ -55,11 +67,17 @@ function getSheet(
   return key ? data[key] : [];
 }
 
+// ==========================================
+// LOCALIZA COLUNA
+// ==========================================
+
 function findColumn(
   rows: any[],
   aliases: string[]
 ) {
-  if (!rows.length) return null;
+  if (!rows.length) {
+    return null;
+  }
 
   const headers = Object.keys(rows[0]);
 
@@ -82,6 +100,10 @@ function findColumn(
   return null;
 }
 
+// ==========================================
+// CONVERTE NÚMERO
+// ==========================================
+
 function toNumber(value: any) {
   if (
     value === null ||
@@ -100,17 +122,137 @@ function toNumber(value: any) {
         .replace(",", ".")
     );
 
-    return isNaN(numero)
-      ? 0
-      : numero;
+    return isNaN(numero) ? 0 : numero;
   }
 
   const numero = Number(texto);
 
-  return isNaN(numero)
-    ? 0
-    : numero;
+  return isNaN(numero) ? 0 : numero;
 }
+
+// ==========================================
+// CONVERTE DATA PARA O PADRÃO DO FILTRO
+//
+// Filtro do navegador:
+// YYYY-MM-DD
+//
+// Dados do Supabase:
+// MM/DD/YY
+//
+// Exemplo:
+// 8/4/26 -> 2026-08-04
+// 8/5/26 -> 2026-08-05
+// 7/30/26 -> 2026-07-30
+// ==========================================
+
+function normalizarData(valor: any): string {
+  if (
+    valor === null ||
+    valor === undefined ||
+    valor === ""
+  ) {
+    return "";
+  }
+
+  const texto = String(valor).trim();
+
+  // Já está no padrão correto
+  if (
+    /^\d{4}-\d{2}-\d{2}$/.test(texto)
+  ) {
+    return texto;
+  }
+
+  // Data com /
+  if (texto.includes("/")) {
+    const partes = texto.split("/");
+
+    if (partes.length !== 3) {
+      return "";
+    }
+
+    const primeiro = Number(partes[0]);
+    const segundo = Number(partes[1]);
+
+    let ano = partes[2];
+
+    if (
+      isNaN(primeiro) ||
+      isNaN(segundo) ||
+      isNaN(Number(ano))
+    ) {
+      return "";
+    }
+
+    if (ano.length === 2) {
+      ano = "20" + ano;
+    }
+
+    let mes: number;
+    let dia: number;
+
+    // Exemplo:
+    // 30/7/26
+    // Primeiro número não pode ser mês
+    if (primeiro > 12) {
+      dia = primeiro;
+      mes = segundo;
+    }
+
+    // Exemplo:
+    // 7/30/26
+    // Segundo número não pode ser mês
+    else if (segundo > 12) {
+      mes = primeiro;
+      dia = segundo;
+    }
+
+    // Quando os dois são <= 12,
+    // os dados atuais do Supabase são MM/DD.
+    else {
+      mes = primeiro;
+      dia = segundo;
+    }
+
+    if (
+      mes < 1 ||
+      mes > 12 ||
+      dia < 1 ||
+      dia > 31
+    ) {
+      return "";
+    }
+
+    return (
+      `${ano}-` +
+      `${String(mes).padStart(2, "0")}-` +
+      `${String(dia).padStart(2, "0")}`
+    );
+  }
+
+  return "";
+}
+// ==========================================
+// COMPARA DATA
+// ==========================================
+
+function correspondeData(
+  valor: any,
+  filtro: string
+) {
+  if (!filtro) {
+    return true;
+  }
+
+  const dataNormalizada =
+    normalizarData(valor);
+
+  return dataNormalizada === filtro;
+}
+
+// ==========================================
+// FUNÇÃO PRINCIPAL
+// ==========================================
 
 export function processDashboardData(
   data: Record<string, any[]>,
@@ -128,14 +270,16 @@ export function processDashboardData(
 
   let medicao =
     getSheet(data, "MEDIÇÃO");
-    console.log("Cabeçalhos da MEDIÇÃO:");
-console.log(Object.keys(medicao[0] ?? {}));
 
   const justificadas =
     getSheet(data, "JUSTIFICADAS");
 
   const restantes =
     getSheet(data, "RESTANTES");
+
+  // ========================================
+  // COLUNAS DA PRODUÇÃO
+  // ========================================
 
   const colunaQuantidade =
     findColumn(producaoOriginal, [
@@ -172,6 +316,10 @@ console.log(Object.keys(medicao[0] ?? {}));
       "DATA",
     ]);
 
+  // ========================================
+  // COLUNAS DA MEDIÇÃO
+  // ========================================
+
   const colunaEspecieMedicao =
     findColumn(medicao, [
       "ESPÉCIE",
@@ -183,11 +331,12 @@ console.log(Object.keys(medicao[0] ?? {}));
       "COMERCIAL M3",
       "COMERCIAL",
     ]) ?? "Comercial M3";
-    const colunaFlorestalMedicao =
-  findColumn(medicao, [
-    "FLORESTAL M3",
-    "FLORESTAL",
-  ]) ?? "Florestal M3";
+
+  const colunaFlorestalMedicao =
+    findColumn(medicao, [
+      "FLORESTAL M3",
+      "FLORESTAL",
+    ]) ?? "Florestal M3";
 
   const colunaArvoresMedicao =
     findColumn(medicao, [
@@ -195,161 +344,194 @@ console.log(Object.keys(medicao[0] ?? {}));
       "QTDA",
     ]) ?? "qtd a";
 
+  // ========================================
+  // COLUNAS DO ARRASTE
+  // ========================================
+
+  const colunaQuantidadeArraste =
+    findColumn(arraste, [
+      "QTD",
+      "QUANT.",
+      "QUANT",
+      "QUANTIDADE",
+      "VOLUME",
+      "ARVORES",
+      "ÁRVORES",
+    ]);
+
+  const colunaOperadorArraste =
+    findColumn(arraste, [
+      "SKIDEIRO PATIO",
+      "SKIDEIRO PÁTIO",
+      "SKIDEIRO",
+      "OPERADOR",
+    ]);
+
+  const colunaUTArraste =
+    findColumn(arraste, [
+      "UT",
+    ]);
+
+  const colunaEspecieArraste =
+    findColumn(arraste, [
+      "ESPÉCIE",
+      "ESPECIE",
+    ]);
+
+  const colunaDataArraste =
+    findColumn(arraste, [
+      "DATA PATIO",
+      "DATA PÁTIO",
+      "DATA",
+    ]);
+
+  console.log(
+    "COLUNA DATA ARRASTE:",
+    colunaDataArraste
+  );
+
+  console.log(
+    "COLUNA QUANTIDADE ARRASTE:",
+    colunaQuantidadeArraste
+  );
+
+  // ========================================
+  // CÓPIA DA PRODUÇÃO
+  // ========================================
+
   let producao = [
-    ...producaoOriginal
+    ...producaoOriginal,
   ];
+
+  // ========================================
+  // FILTRO PRINCIPAL
+  // ========================================
 
   if (filters) {
 
-    producao =
-      producao.filter((row) => {
+    // ======================================
+    // PRODUÇÃO
+    // ======================================
 
-        if (
-          filters.operador &&
-          colunaOperador &&
-          String(row[colunaOperador]).trim() !==
-            filters.operador.trim()
-        ) {
-          return false;
-        }
+    producao = producao.filter((row) => {
 
-        if (
-          filters.ut &&
-          colunaUT &&
-          String(row[colunaUT]).trim() !==
-            filters.ut.trim()
-        ) {
-          return false;
-        }
-
-        if (
-          filters.especie &&
-          colunaEspecie &&
-          String(row[colunaEspecie]).trim() !==
-            filters.especie.trim()
-        ) {
-          return false;
-        }
       if (
-  filters.data &&
-  colunaData
-) {
-  const valor = String(
-    row[colunaData] ?? ""
-  ).trim();
+        filters.operador &&
+        colunaOperador &&
+        String(
+          row[colunaOperador] ?? ""
+        ).trim() !==
+          filters.operador.trim()
+      ) {
+        return false;
+      }
 
-  const partesRegistro = valor.split("/");
+      if (
+        filters.ut &&
+        colunaUT &&
+        String(
+          row[colunaUT] ?? ""
+        ).trim() !==
+          filters.ut.trim()
+      ) {
+        return false;
+      }
 
-  if (partesRegistro.length === 3) {
-    const dia = partesRegistro[0].padStart(2, "0");
-    const mes = partesRegistro[1].padStart(2, "0");
+      if (
+        filters.especie &&
+        colunaEspecie &&
+        String(
+          row[colunaEspecie] ?? ""
+        ).trim() !==
+          filters.especie.trim()
+      ) {
+        return false;
+      }
 
-    let ano = partesRegistro[2];
-
-    if (ano.length === 2) {
-      ano = "20" + ano;
-    }
-
-    const dataRegistro =
-      `${ano}-${mes}-${dia}`;
-
-    if (dataRegistro !== filters.data) {
-      return false;
-    }
-  }
-}
-
-        return true;
-
-      });
-
-    const colunaOperadorArraste =
-      findColumn(arraste, [
-        "SKIDEIRO PATIO",
-        "SKIDEIRO",
-        "OPERADOR",
-      ]);
-
-    const colunaUTArraste =
-      findColumn(arraste, [
-        "UT",
-      ]);
-
-    const colunaEspecieArraste =
-  findColumn(arraste, [
-    "ESPÉCIE",
-    "ESPECIE",
-  ]);
-
-const colunaDataArraste =
-  findColumn(arraste, [
-    "DATA",
-  ]);
-
-    arraste =
-      arraste.filter((row) => {
-
-        
-        
-
+      if (
+        filters.data &&
+        colunaData
+      ) {
         if (
-          filters.operador &&
-          colunaOperadorArraste &&
-          String(row[colunaOperadorArraste]).trim() !==
-            filters.operador.trim()
+          !correspondeData(
+            row[colunaData],
+            filters.data
+          )
         ) {
           return false;
         }
+      }
 
+      return true;
+    });
+
+    // ======================================
+    // FILTRO ARRASTE
+    // ======================================
+
+    arraste = arraste.filter((row) => {
+
+      if (
+        filters.operador &&
+        colunaOperadorArraste &&
+        String(
+          row[
+            colunaOperadorArraste
+          ] ?? ""
+        ).trim() !==
+          filters.operador.trim()
+      ) {
+        return false;
+      }
+
+      if (
+        filters.ut &&
+        colunaUTArraste &&
+        String(
+          row[
+            colunaUTArraste
+          ] ?? ""
+        ).trim() !==
+          filters.ut.trim()
+      ) {
+        return false;
+      }
+
+      if (
+        filters.especie &&
+        colunaEspecieArraste &&
+        String(
+          row[
+            colunaEspecieArraste
+          ] ?? ""
+        ).trim() !==
+          filters.especie.trim()
+      ) {
+        return false;
+      }
+
+      if (
+        filters.data &&
+        colunaDataArraste
+      ) {
         if (
-          filters.ut &&
-          colunaUTArraste &&
-          String(row[colunaUTArraste]).trim() !==
-            filters.ut.trim()
+          !correspondeData(
+            row[
+              colunaDataArraste
+            ],
+            filters.data
+          )
         ) {
           return false;
         }
+      }
 
-        if (
-          filters.especie &&
-          colunaEspecieArraste &&
-          String(row[colunaEspecieArraste]).trim() !==
-            filters.especie.trim()
-        ) {
-          return false;
-        }
-        if (
-  filters.data &&
-  colunaDataArraste
-) {
-  const valor = String(
-    row[colunaDataArraste] ?? ""
-  ).trim();
+      return true;
+    });
 
-  const partes = valor.split("/");
-
-  if (partes.length === 3) {
-    const dia = partes[0].padStart(2, "0");
-    const mes = partes[1].padStart(2, "0");
-
-    let ano = partes[2];
-
-    if (ano.length === 2) {
-      ano = "20" + ano;
-    }
-
-    const dataRegistro =
-      `${ano}-${mes}-${dia}`;
-
-    if (dataRegistro !== filters.data) {
-      return false;
-    }
-  }
-}
-
-        return true;
-
-      });
+    // ======================================
+    // COLUNAS DA MEDIÇÃO
+    // ======================================
 
     const colunaEquipeMedicao =
       findColumn(medicao, [
@@ -361,76 +543,84 @@ const colunaDataArraste =
         "UT INVENTÁRIO",
         "UT INVENTARIO",
       ]) ?? "UT Inventário";
-         const colunaDataMedicao = findColumn(medicao, [
-  "DATA PATIO",
-  
-  
-]);
-console.log("Filtro:", filters.data);
-console.log("Coluna:", colunaDataMedicao);
-if (colunaDataMedicao) {
-  console.log("Valor da linha:", medicao[0]?.[colunaDataMedicao]);
-}
-      medicao =
-          
-      medicao.filter((row) => {
 
+    const colunaDataMedicao =
+      findColumn(medicao, [
+        "DATA",
+        "DATA PATIO",
+        "DATA PÁTIO",
+      ]);
+
+    console.log(
+      "COLUNA DATA MEDIÇÃO:",
+      colunaDataMedicao
+    );
+
+    // ======================================
+    // FILTRO MEDIÇÃO
+    // ======================================
+
+    medicao = medicao.filter((row) => {
+
+      if (
+        filters.operador &&
+        String(
+          row[
+            colunaEquipeMedicao
+          ] ?? ""
+        ).trim() !==
+          filters.operador.trim()
+      ) {
+        return false;
+      }
+
+      if (
+        filters.ut &&
+        String(
+          row[
+            colunaUTMedicao
+          ] ?? ""
+        ).trim() !==
+          filters.ut.trim()
+      ) {
+        return false;
+      }
+
+      if (
+        filters.especie &&
+        String(
+          row[
+            colunaEspecieMedicao
+          ] ?? ""
+        ).trim() !==
+          filters.especie.trim()
+      ) {
+        return false;
+      }
+
+      if (
+        filters.data &&
+        colunaDataMedicao
+      ) {
         if (
-          filters.operador &&
-          String(row[colunaEquipeMedicao] ?? "").trim()
-          !== filters.operador.trim()
+          !correspondeData(
+            row[
+              colunaDataMedicao
+            ],
+            filters.data
+          )
         ) {
           return false;
         }
+      }
 
-        if (
-          filters.ut &&
-          String(row[colunaUTMedicao] ?? "").trim()
-          !== filters.ut.trim()
-        ) {
-          return false;
-        }
-
-        if (
-          filters.especie &&
-          String(row[colunaEspecieMedicao] ?? "").trim()
-          !== filters.especie.trim()
-        ) {
-          return false;
-        }
-if (
-  filters.data &&
-  colunaDataMedicao
-) {
-  const valor = String(
-    row[colunaDataMedicao] ?? ""
-  ).trim();
-
-  const partes = valor.split("/");
-
-  if (partes.length === 3) {
-    const dia = partes[0].padStart(2, "0");
-    const mes = partes[1].padStart(2, "0");
-
-    let ano = partes[2];
-
-    if (ano.length === 2) {
-      ano = "20" + ano;
-    }
-
-    const dataRegistro =
-      `${ano}-${mes}-${dia}`;
-
-    if (dataRegistro !== filters.data) {
-      return false;
-    }
+      return true;
+    });
   }
-}
-        return true;
 
-      });
-
-  }
+  // ==========================================
+  // INDICADORES
+  // ==========================================
 
   let producaoTotal = 0;
 
@@ -446,21 +636,34 @@ if (
   const producaoPorData =
     new Map<string, number>();
 
-  for (const row of producao) {
+  // ==========================================
+  // PROCESSA PRODUÇÃO
+  // ==========================================
+
+  for (
+    const row of producao
+  ) {
 
     const quantidade =
       colunaQuantidade
-        ? toNumber(row[colunaQuantidade])
+        ? toNumber(
+            row[
+              colunaQuantidade
+            ]
+          )
         : 0;
 
-    producaoTotal += quantidade;
+    producaoTotal +=
+      quantidade;
 
     if (
       colunaOperador &&
       row[colunaOperador]
     ) {
       operadores.add(
-        String(row[colunaOperador]).trim()
+        String(
+          row[colunaOperador]
+        ).trim()
       );
     }
 
@@ -468,18 +671,31 @@ if (
       colunaData &&
       row[colunaData]
     ) {
+      const dataOriginal =
+        String(
+          row[colunaData]
+        ).trim();
 
-      const data =
-        String(row[colunaData]).trim();
+      const dataNormalizada =
+        normalizarData(
+          dataOriginal
+        );
 
-      dias.add(data);
+      if (dataNormalizada) {
 
-      producaoPorData.set(
-        data,
-        (producaoPorData.get(data) ?? 0)
-        + quantidade
-      );
+        dias.add(
+          dataNormalizada
+        );
 
+        producaoPorData.set(
+          dataNormalizada,
+          (
+            producaoPorData.get(
+              dataNormalizada
+            ) ?? 0
+          ) + quantidade
+        );
+      }
     }
 
     if (
@@ -487,158 +703,404 @@ if (
       row[colunaEspecie]
     ) {
       especies.add(
-        String(row[colunaEspecie]).trim()
+        String(
+          row[colunaEspecie]
+        ).trim()
       );
     }
-
   }
+    // ==========================================
+  // INDICADORES DO ARRASTE
+  // ==========================================
+
+  const diasArraste =
+    new Set<string>();
+
+  const producaoArrastePorData =
+    new Map<string, number>();
+
+  let totalArraste = 0;
+
+  // Processa o ARRASTE já filtrado.
+  // Assim, quando houver filtro de data,
+  // os indicadores também respeitam a data.
+  for (const row of arraste) {
+    if (!row) {
+      continue;
+    }
+
+    const valorData =
+      colunaDataArraste
+        ? row[colunaDataArraste]
+        : row["Data Patio"];
+
+    const dataNormalizada =
+      normalizarData(valorData);
+
+    if (!dataNormalizada) {
+      continue;
+    }
+
+    const quantidade =
+      colunaQuantidadeArraste
+        ? toNumber(
+            row[colunaQuantidadeArraste]
+          )
+        : 0;
+
+    totalArraste += quantidade;
+
+    diasArraste.add(
+      dataNormalizada
+    );
+
+    producaoArrastePorData.set(
+      dataNormalizada,
+      (
+        producaoArrastePorData.get(
+          dataNormalizada
+        ) ?? 0
+      ) + quantidade
+    );
+  }
+
+  const mediaArraste =
+    diasArraste.size > 0
+      ? Math.round(
+          totalArraste /
+          diasArraste.size
+        )
+      : 0;
+
+  console.log(
+    "================================="
+  );
+
+  console.log(
+    "INDICADORES ARRASTE"
+  );
+
+  console.log(
+    "Total Arraste:",
+    totalArraste
+  );
+
+  console.log(
+    "Dias Arraste:",
+    diasArraste.size
+  );
+
+  console.log(
+    "Média Arraste:",
+    mediaArraste
+  );
+
+  console.log(
+    "================================="
+  );
+
+  // ==========================================
+  // PRODUÇÃO DIÁRIA
+  // ==========================================
 
   let producaoDiaria = 0;
 
-  if (producaoPorData.size > 0) {
+  if (
+    producaoPorData.size > 0
+  ) {
+    const datasOrdenadas =
+      [
+        ...producaoPorData.keys(),
+      ].sort();
 
     const ultimaData =
-      [...producaoPorData.keys()]
-        .sort()
-        .pop();
+      datasOrdenadas[
+        datasOrdenadas.length - 1
+      ];
 
     if (ultimaData) {
       producaoDiaria =
-        producaoPorData.get(ultimaData) ?? 0;
+        producaoPorData.get(
+          ultimaData
+        ) ?? 0;
     }
-
   }
 
-  // ===============================
-  // ÁRVORES DERRUBADAS (PRODUÇÃO)
-  // ===============================
+  // ==========================================
+  // ÁRVORES DERRUBADAS
+  // ==========================================
 
   const mapaArvores =
     new Map<string, number>();
 
-  for (const row of producao) {
+  for (
+    const row of producao
+  ) {
 
     const especie =
       String(
-        row[colunaEspecie ?? ""]
-        ?? ""
+        row[
+          colunaEspecie ?? ""
+        ] ?? ""
       ).trim();
 
-    if (!especie) continue;
+    if (!especie) {
+      continue;
+    }
 
     const quantidade =
       colunaQuantidade
-        ? toNumber(row[colunaQuantidade])
+        ? toNumber(
+            row[
+              colunaQuantidade
+            ]
+          )
         : 1;
 
     mapaArvores.set(
       especie,
-      (mapaArvores.get(especie) ?? 0)
-      + quantidade
+      (
+        mapaArvores.get(
+          especie
+        ) ?? 0
+      ) + quantidade
     );
-
   }
 
-  // ===============================
-  // MÉDIA DA MEDIÇÃO
-  // ===============================
+  // ==========================================
+  // MEDIÇÃO
+  // ==========================================
 
   const mapaMedicao =
-  new Map<
-    string,
-    {
-      comercial: number;
-      florestal: number;
-      arvoresMedicao: number;
-    }
-  >();
-      for (const row of medicao) {
+    new Map<
+      string,
+      {
+        comercial: number;
+        florestal: number;
+        arvoresMedicao: number;
+      }
+    >();
+
+  for (
+    const row of medicao
+  ) {
 
     const especie =
       String(
-        row[colunaEspecieMedicao] ?? ""
+        row[
+          colunaEspecieMedicao
+        ] ?? ""
       ).trim();
 
-    if (!especie) continue;
+    if (!especie) {
+      continue;
+    }
 
     const comercial =
       toNumber(
-        row[colunaComercialMedicao]
+        row[
+          colunaComercialMedicao
+        ]
       );
-      const florestal =
-  toNumber(
-    row[colunaFlorestalMedicao]
-  );
+
+    const florestal =
+      toNumber(
+        row[
+          colunaFlorestalMedicao
+        ]
+      );
 
     const arvoresMedicao =
       toNumber(
-        row[colunaArvoresMedicao]
+        row[
+          colunaArvoresMedicao
+        ]
       );
 
     const atual =
-  mapaMedicao.get(especie) ?? {
-    comercial: 0,
-    florestal: 0,
-    arvoresMedicao: 0,
-  };
-atual.comercial += comercial;
-atual.florestal += florestal;
-atual.arvoresMedicao += arvoresMedicao;
+      mapaMedicao.get(
+        especie
+      ) ?? {
+        comercial: 0,
+        florestal: 0,
+        arvoresMedicao: 0,
+      };
+
+    atual.comercial +=
+      comercial;
+
+    atual.florestal +=
+      florestal;
+
+    atual.arvoresMedicao +=
+      arvoresMedicao;
 
     mapaMedicao.set(
       especie,
       atual
     );
-
   }
 
-  // ===============================
-  // ESTIMATIVA FINAL
-  // DERRUBADA × MÉDIA MEDIÇÃO
-  // ===============================
+  // ==========================================
+  // ESTIMATIVA POR ESPÉCIE
+  // ==========================================
 
-  const estimativaEspecies: EstimativaEspecie[] =
-    Array.from(mapaArvores.entries())
-      .map(([especie, arvores]) => {
+  const estimativaEspecies:
+    EstimativaEspecie[] =
+    Array.from(
+      mapaArvores.entries()
+    )
+      .map(
+        ([
+          especie,
+          arvores,
+        ]) => {
 
-        const dados =
-  mapaMedicao.get(especie) ?? {
-    comercial: 0,
-    florestal: 0,
-    arvoresMedicao: 0,
-  };
+          const dados =
+            mapaMedicao.get(
+              especie
+            ) ?? {
+              comercial: 0,
+              florestal: 0,
+              arvoresMedicao: 0,
+            };
 
-        const mediaArvore =
-          dados.arvoresMedicao > 0
-            ? dados.comercial /
-              dados.arvoresMedicao
-            : 0;
+          const mediaArvore =
+            dados.arvoresMedicao > 0
+              ? dados.comercial /
+                dados.arvoresMedicao
+              : 0;
 
-       return {
-  especie,
+          return {
+            especie,
 
-  arvores,
+            arvores,
 
-  arvoresMedidas: dados.arvoresMedicao,
+            arvoresMedidas:
+              dados.arvoresMedicao,
 
-  volumeComercial:
-    dados.comercial,
+            volumeComercial:
+              dados.comercial,
 
-  volumeFlorestal:
-    dados.florestal,
+            volumeFlorestal:
+              dados.florestal,
 
-  mediaArvore,
-};
-
-      })
+            mediaArvore,
+          };
+        }
+      )
       .sort(
         (a, b) =>
           b.volumeComercial -
           a.volumeComercial
       );
 
-  return {
+  // ==========================================
+  // TOTAL VOLUME COMERCIAL
+  // ==========================================
 
+  const volumeComercialTotal =
+    estimativaEspecies.reduce(
+      (
+        total,
+        item
+      ) =>
+        total +
+        Number(
+          item.volumeComercial ?? 0
+        ),
+      0
+    );
+
+  // ==========================================
+  // TOTAL VOLUME FLORESTAL
+  // ==========================================
+
+  const volumeFlorestalTotal =
+    estimativaEspecies.reduce(
+      (
+        total,
+        item
+      ) =>
+        total +
+        Number(
+          item.volumeFlorestal ?? 0
+        ),
+      0
+    );
+
+  // ==========================================
+  // TOTAL ÁRVORES MEDIDAS
+  // ==========================================
+
+  const arvoresMedidasTotal =
+    estimativaEspecies.reduce(
+      (
+        total,
+        item
+      ) =>
+        total +
+        Number(
+          item.arvoresMedidas ?? 0
+        ),
+      0
+    );
+      // ==========================================
+  // LOGS DE CONFERÊNCIA
+  // ==========================================
+
+  console.log(
+    "================================="
+  );
+
+  console.log(
+    "DASHBOARD PROCESSADO"
+  );
+
+  console.log(
+    "Produção:",
+    producao.length
+  );
+
+  console.log(
+    "Arraste:",
+    arraste.length
+  );
+
+  console.log(
+    "Medição:",
+    medicao.length
+  );
+
+  console.log(
+    "Produção total:",
+    producaoTotal
+  );
+
+  console.log(
+    "Volume comercial:",
+    volumeComercialTotal
+  );
+
+  console.log(
+    "Volume florestal:",
+    volumeFlorestalTotal
+  );
+
+  console.log(
+    "Árvores medidas:",
+    arvoresMedidasTotal
+  );
+
+  console.log(
+    "================================="
+  );
+
+  // ==========================================
+  // RETORNO FINAL
+  // ==========================================
+
+  return {
     producao,
 
     geral,
@@ -654,7 +1116,6 @@ atual.arvoresMedicao += arvoresMedicao;
     estimativaEspecies,
 
     indicadores: {
-
       producaoDiaria,
 
       producaoTotal,
@@ -675,9 +1136,14 @@ atual.arvoresMedicao += arvoresMedicao;
 
       especies:
         especies.size,
-
     },
 
-  };
+    indicadoresArraste: {
+      total: totalArraste,
 
+      media: mediaArraste,
+
+      dias: diasArraste.size,
+    },
+  };
 }

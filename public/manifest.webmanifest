@@ -1,0 +1,17 @@
+{
+  "name": "TRK Analytics",
+  "short_name": "TRK",
+  "description": "Sistema de gestão e análise florestal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1117",
+  "theme_color": "#0B1117",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
