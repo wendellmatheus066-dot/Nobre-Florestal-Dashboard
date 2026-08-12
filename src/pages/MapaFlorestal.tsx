@@ -5,6 +5,7 @@ import {
   Popup,
   useMap,
   GeoJSON,
+  Pane,
 } from "react-leaflet";
 
 import { useEffect, useState } from "react";
@@ -67,21 +68,42 @@ export default function MapaFlorestal() {
     };
   }, [navigate]);
 
-useEffect(() => {
-  fetch("/mapas/uts.geojson")
-    .then((response) => response.json())
-    .then((json) => {
-  console.log("UTs carregadas:", json);
-  console.log("Primeira feature:", json.features[0]);
-  console.log("Geometria:", json.features[0].geometry);
-  console.log("Propriedades:", json.features[0].properties);
+  useEffect(() => {
+    fetch("/mapas/uts.geojson")
+      .then((response) => response.json())
+      .then((json) => {
+        console.log("UTs carregadas:", json);
+        console.log("Primeira feature:", json.features[0]);
+        console.log(
+          "Geometria:",
+          json.features[0].geometry
+        );
+        console.log(
+          "Propriedades:",
+          json.features[0].properties
+        );
 
-  setUtsGeoJson(json);
-})
-    .catch((erro) => {
-      console.error("Erro ao carregar UTs:", erro);
-    });
-}, []);
+        setUtsGeoJson(json);
+      })
+      .catch((erro) => {
+        console.error("Erro ao carregar UTs:", erro);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch("/mapas/upa13_uts.geojson")
+      .then((response) => response.json())
+      .then((json) => {
+        console.log("UPA 13 carregada:", json);
+        setUpa13GeoJson(json);
+      })
+      .catch((erro) => {
+        console.error(
+          "Erro ao carregar UPA 13:",
+          erro
+        );
+      });
+  }, []);
 
   const { data } = useExcelContext();
 
@@ -89,8 +111,12 @@ useEffect(() => {
   const arraste = data["ARRASTE"] || [];
   const medicao = data["MEDIÇÃO"] || [];
   const inventario = data["INVENTÁRIO"] || [];
-  const [utsGeoJson, setUtsGeoJson] = useState<any>(null);
-  
+
+  const [utsGeoJson, setUtsGeoJson] =
+    useState<any>(null);
+
+  const [upa13GeoJson, setUpa13GeoJson] =
+    useState<any>(null);
 
   function limparNumero(valor: any) {
     if (!valor) return "";
@@ -134,17 +160,62 @@ useEffect(() => {
     );
   });
 
-  medicao.forEach((arvore: any) => {
-    mapaArvores.set(
-      limparNumero(arvore["Nº ÁRVORE"]),
-      {
-        ...arvore,
-        STATUS: "MEDIÇÃO",
-      }
-    );
-  });
+  const qtdTorasPorArvore = new Map();
 
-  const pontosMapa: any[] = [];
+medicao.forEach((arvore: any) => {
+  const numero = limparNumero(
+    arvore["Nº ÁRVORE"]
+  );
+
+  const qtd = Number(
+    String(arvore["qtd"] || "0")
+      .replace(",", ".")
+  ) || 0;
+
+  qtdTorasPorArvore.set(
+    numero,
+    (qtdTorasPorArvore.get(numero) || 0) + qtd
+  );
+});
+
+
+
+medicao.forEach((arvore: any) => {
+  const numero = limparNumero(
+    arvore["Nº ÁRVORE"]
+  );
+
+  qtdTorasPorArvore.set(
+    numero,
+    (qtdTorasPorArvore.get(numero) || 0) + 1
+  );
+});
+
+const quantidadeTorasMedicao = new Map();
+
+medicao.forEach((arvore: any) => {
+  const numero = limparNumero(arvore["Nº ÁRVORE"]);
+
+  quantidadeTorasMedicao.set(
+    numero,
+    (quantidadeTorasMedicao.get(numero) || 0) + 1
+  );
+});
+
+medicao.forEach((arvore: any) => {
+  const numero = limparNumero(arvore["Nº ÁRVORE"]);
+
+  mapaArvores.set(
+    numero,
+    {
+      ...arvore,
+      STATUS: "MEDIÇÃO",
+      QTD_TORAS:
+        quantidadeTorasMedicao.get(numero) || 0,
+    }
+  );
+});
+    const pontosMapa: any[] = [];
 
   mapaArvores.forEach((arvore: any) => {
     const dadosInventario =
@@ -158,24 +229,46 @@ useEffect(() => {
 
     pontosMapa.push({
       ...arvore,
+
       LATITUDE:
         dadosInventario.LATITUDE,
+
       LONGITUDE:
         dadosInventario.LONGITUDE,
+
       ESPECIE:
         dadosInventario[
           "NOME COMUM"
         ],
+
       CAP:
         dadosInventario[
           "CAP (CM)"
         ],
+
       UPA: dadosInventario.UPA,
-      UT: dadosInventario["Nº UT"],
+
+      UT:
+        dadosInventario["Nº UT"],
+        MOTOSERRISTA:
+  arvore["Motoserrista Corte"],
+  SKIDEIRO_PATIO:
+  arvore["Skideiro Patio"],
+
+EQUIPE:
+  arvore["Equipe"],
+  QTD_TORAS:
+  arvore["qtd"],
+
+
       VOLUME_TOTAL:
-        Number(
-          arvore["COMERCIAL M3"]
-        ) || 0,
+  Number(
+    String(
+      arvore["Comercial M3"] ??
+      dadosInventario["Comercial M3"] ??
+      "0"
+    ).replace(",", ".")
+  ) || 0,
     });
   });
 
@@ -246,7 +339,8 @@ useEffect(() => {
                 shadow-xl
               "
             >
-                            <div className="border-b border-white/10 px-3 py-2">
+
+              <div className="border-b border-white/10 px-3 py-2">
 
                 <h2 className="text-center text-sm font-semibold text-white">
                   🌲 Operação
@@ -325,128 +419,266 @@ useEffect(() => {
               </div>
 
             </div>
-
-            <div className="h-full overflow-hidden rounded-2xl border border-[#44475A]">
+                        <div className="h-full overflow-hidden rounded-2xl border border-[#44475A]">
 
               <MapContainer
-  key={location.pathname}
-  center={[-3.290908, -56.151795]}
-  zoom={16}
-  className="h-full w-full"
->
+                key={location.pathname}
+                center={[-3.290908, -56.151795]}
+                zoom={16}
+                className="h-full w-full"
+              >
 
                 <TileLayer
                   url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
                   attribution="Google Satellite"
                 />
+
                 {utsGeoJson && (
-  <GeoJSON
-    data={utsGeoJson}
-    style={() => ({
-      color: "#00FF00",
-      weight: 2,
-      opacity: 1,
-      fillColor: "#00FF00",
-      fillOpacity: 0.05,
-    })}
-  />
-)}
- 
+                  <GeoJSON
+                    data={utsGeoJson}
+                    style={() => ({
+                      color: "#00FF00",
+                      weight: 2,
+                      opacity: 1,
+                      fillColor: "#00FF00",
+                      fillOpacity: 0.05,
+                    })}
+                  />
+                )}
 
-                <AjustarMapa pontos={pontosMapa} />
+                {upa13GeoJson && (
+                  <Pane
+                    name="upa13Pane"
+                    style={{
+                      zIndex: 350,
+                    }}
+                  >
 
-                {pontosMapa.map((arvore: any, index: number) => {
+                    <GeoJSON
+                      data={upa13GeoJson}
+                      style={() => ({
+                        color: "#4CAF50",
+                        weight: 1.5,
+                        opacity: 1,
+                        fillColor: "#90EE90",
+                        fillOpacity: 0.25,
+                      })}
 
-                  let cor = "#EF4444";
+                      onEachFeature={(
+                        feature,
+                        layer
+                      ) => {
 
-                  if (arvore.STATUS === "ARRASTE") {
-                    cor = "#FACC15";
-                  }
+                        const ut =
+                          feature.properties?.UT ||
+                          feature.properties?.UTS ||
+                          "UT";
 
-                  if (arvore.STATUS === "MEDIÇÃO") {
-                    cor = "#3B82F6";
-                  }
+                        const area =
+                          Number(
+                            feature.properties?.AREA ||
+                            0
+                          );
 
-                  return (
+                        
 
-                    <CircleMarker
-                      key={index}
-                      center={[
-                        Number(arvore.LATITUDE),
-                        Number(arvore.LONGITUDE),
-                      ]}
-                      radius={3}
-                      pathOptions={{
-                        color: "#FFFFFF",
-                        weight: 1,
-                        fillColor: cor,
-                        fillOpacity: 1,
-                      }}
-                    >
-
-                      <Popup>
-
-                        <div className="min-w-[220px]">
-
-                          <div className="mb-2 border-b pb-2">
-
-                            <strong className="text-base">
-                              {arvore.STATUS === "DERRUBADA" && "🔴 Derrubada"}
-                              {arvore.STATUS === "ARRASTE" && "🟡 Arraste"}
-                              {arvore.STATUS === "MEDIÇÃO" && "🔵 Medição"}
+                        layer.bindPopup(`
+                          <div style="min-width: 150px">
+                            <strong style="font-size: 16px;">
+                              🌲 ${ut}
                             </strong>
 
+                            <br />
+
+                            <span>
+                              Área:
+                              ${area.toFixed(2)}
+                              ha
+                            </span>
                           </div>
+                        `);
+                      }}
+                    />
 
-                          <div className="space-y-1 text-sm">
+                  </Pane>
+                )}
 
-                            <div>
-                              <strong>Árvore:</strong>{" "}
-                              {arvore["Nº ÁRVORE"]}
+                <AjustarMapa
+                  pontos={pontosMapa}
+                />
+
+                {pontosMapa.map(
+                  (
+                    arvore: any,
+                    index: number
+                  ) => {
+
+                    let cor = "#EF4444";
+
+                    if (
+                      arvore.STATUS ===
+                      "ARRASTE"
+                    ) {
+                      cor = "#FACC15";
+                    }
+
+                    if (
+                      arvore.STATUS ===
+                      "MEDIÇÃO"
+                    ) {
+                      cor = "#3B82F6";
+                    }
+
+                    return (
+                      <CircleMarker
+                        key={index}
+                        center={[
+                          Number(
+                            arvore.LATITUDE
+                          ),
+                          Number(
+                            arvore.LONGITUDE
+                          ),
+                        ]}
+                        radius={3}
+                        pathOptions={{
+                          color: "#FFFFFF",
+                          weight: 1,
+                          fillColor: cor,
+                          fillOpacity: 1,
+                        }}
+                      >
+
+                        <Popup>
+
+                          <div className="min-w-[220px]">
+
+                            <div className="mb-2 border-b pb-2">
+
+                              <strong className="text-base">
+
+                                {arvore.STATUS ===
+                                  "DERRUBADA" &&
+                                  "🔴 Derrubada"}
+                                  {arvore.STATUS === "DERRUBADA" && (
+  <div>
+    <strong>Motoserrista:</strong>{" "}
+    <span className="font-normal">
+      {arvore.MOTOSERRISTA || "Não informado"}
+    </span>
+  </div>
+)}
+
+{arvore.STATUS === "ARRASTE" && (
+  <div>
+    <strong>Skideiro Patio:</strong>{" "}
+    <span className="font-normal">
+      {arvore.SKIDEIRO_PATIO || "Não informado"}
+    </span>
+  </div>
+)}
+
+{arvore.STATUS === "MEDIÇÃO" && (
+  <div>
+    <strong>Equipe:</strong>{" "}
+    <span className="font-normal">
+      {arvore.EQUIPE || "Não informado"}
+    </span>
+  </div>
+)}
+
+
+                                {arvore.STATUS ===
+                                  "ARRASTE" &&
+                                  "🟡 Arraste"}
+
+                                {arvore.STATUS ===
+                                  "MEDIÇÃO" &&
+                                  "🔵 Medição"}
+
+                              </strong>
+
                             </div>
 
-                            <div>
-                              <strong>Espécie:</strong>{" "}
-                              {arvore.ESPECIE}
-                            </div>
+                            <div className="space-y-1 text-sm">
 
-                            <div>
-                              <strong>CAP:</strong>{" "}
-                              {arvore.CAP} cm
-                            </div>
-
-                            <div>
-                              <strong>UPA:</strong>{" "}
-                              {arvore.UPA}
-                            </div>
-
-                            <div>
-                              <strong>UT:</strong>{" "}
-                              {arvore.UT}
-                            </div>
-
-                            {arvore.STATUS === "MEDIÇÃO" && (
-
-                              <div className="mt-2 border-t pt-2">
-
-                                <strong>Volume Comercial:</strong>{" "}
-                                {arvore.VOLUME_TOTAL.toFixed(2)} m³
-
+                              <div>
+                                <strong>
+                                  Árvore:
+                                </strong>{" "}
+                                {
+                                  arvore[
+                                    "Nº ÁRVORE"
+                                  ]
+                                }
                               </div>
 
-                            )}
+                              <div>
+                                <strong>
+                                  Espécie:
+                                </strong>{" "}
+                                {
+                                  arvore.ESPECIE
+                                }
+                              </div>
+
+                              <div>
+                                <strong>
+                                  CAP:
+                                </strong>{" "}
+                                {
+                                  arvore.CAP
+                                }{" "}
+                                cm
+                              </div>
+                                                            <div>
+                                <strong>
+                                  UPA:
+                                </strong>{" "}
+                                {
+                                  arvore.UPA
+                                }
+                              </div>
+
+                              <div>
+                                <strong>
+                                  UT:
+                                </strong>{" "}
+                                {
+                                  arvore.UT
+                                }
+                              </div>
+
+                              {arvore.STATUS ===
+                                "MEDIÇÃO" && (
+
+                                <div className="mt-2 border-t pt-2">
+
+                                  <strong>
+                                    Volume Comercial:
+                                  </strong>{" "}
+
+                                  {
+                                    arvore.VOLUME_TOTAL.toFixed(
+                                      2
+                                    )
+                                  }{" "}
+                                  m³
+
+                                </div>
+
+                              )}
+
+                            </div>
 
                           </div>
 
-                        </div>
+                        </Popup>
 
-                      </Popup>
-
-                    </CircleMarker>
-
-                  );
-
-                })}
+                      </CircleMarker>
+                    );
+                  }
+                )}
 
               </MapContainer>
 
@@ -457,9 +689,6 @@ useEffect(() => {
         </Container>
 
       </div>
-
     </MainLayout>
-
   );
-
 }
