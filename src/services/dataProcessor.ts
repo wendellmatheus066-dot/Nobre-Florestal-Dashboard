@@ -11,6 +11,7 @@ export interface DashboardIndicators {
   operadores: number;
   dias: number;
   especies: number;
+  arvores: number;
 }
 
 export interface EstimativaEspecie {
@@ -132,17 +133,6 @@ function toNumber(value: any) {
 
 // ==========================================
 // CONVERTE DATA PARA O PADRÃO DO FILTRO
-//
-// Filtro do navegador:
-// YYYY-MM-DD
-//
-// Dados do Supabase:
-// MM/DD/YY
-//
-// Exemplo:
-// 8/4/26 -> 2026-08-04
-// 8/5/26 -> 2026-08-05
-// 7/30/26 -> 2026-07-30
 // ==========================================
 
 function normalizarData(valor: any): string {
@@ -156,14 +146,12 @@ function normalizarData(valor: any): string {
 
   const texto = String(valor).trim();
 
-  // Já está no padrão correto
   if (
     /^\d{4}-\d{2}-\d{2}$/.test(texto)
   ) {
     return texto;
   }
 
-  // Data com /
   if (texto.includes("/")) {
     const partes = texto.split("/");
 
@@ -191,25 +179,13 @@ function normalizarData(valor: any): string {
     let mes: number;
     let dia: number;
 
-    // Exemplo:
-    // 30/7/26
-    // Primeiro número não pode ser mês
     if (primeiro > 12) {
       dia = primeiro;
       mes = segundo;
-    }
-
-    // Exemplo:
-    // 7/30/26
-    // Segundo número não pode ser mês
-    else if (segundo > 12) {
+    } else if (segundo > 12) {
       mes = primeiro;
       dia = segundo;
-    }
-
-    // Quando os dois são <= 12,
-    // os dados atuais do Supabase são MM/DD.
-    else {
+    } else {
       mes = primeiro;
       dia = segundo;
     }
@@ -232,6 +208,7 @@ function normalizarData(valor: any): string {
 
   return "";
 }
+
 // ==========================================
 // COMPARA DATA
 // ==========================================
@@ -273,6 +250,9 @@ export function processDashboardData(
 
   const justificadas =
     getSheet(data, "JUSTIFICADAS");
+
+  let arv =
+    getSheet(data, "MEDIÇÃO");
 
   const restantes =
     getSheet(data, "RESTANTES");
@@ -326,6 +306,16 @@ export function processDashboardData(
       "ESPECIE",
     ]) ?? "Espécie";
 
+  const colunaNumeroArvoreArv =
+    findColumn(medicao, [
+      "Nº ÁRVORE",
+      "NO ÁRVORE",
+      "Nº ARVORE",
+      "NO ARVORE",
+      "NUMERO ARVORE",
+      "NÚMERO ÁRVORE",
+    ]) ?? "Nº ÁRVORE";
+
   const colunaComercialMedicao =
     findColumn(medicao, [
       "COMERCIAL M3",
@@ -338,11 +328,34 @@ export function processDashboardData(
       "FLORESTAL",
     ]) ?? "Florestal M3";
 
-  const colunaArvoresMedicao =
-    findColumn(medicao, [
-      "QTD A",
-      "QTDA",
-    ]) ?? "qtd a";
+  // ========================================
+  // COLUNAS DA ARV
+  // ========================================
+
+  const colunaEspecieArv =
+    findColumn(arv, [
+      "ESPÉCIE",
+      "ESPECIE",
+    ]) ?? "Espécie";
+
+  const colunaEquipeArv =
+    findColumn(arv, [
+      "EQUIPE",
+    ]) ?? "Equipe";
+
+  const colunaUTArv =
+    findColumn(arv, [
+      "UT INVENTÁRIO",
+      "UT INVENTARIO",
+      "UT",
+    ]) ?? "UT Inventário";
+
+  const colunaDataArv =
+    findColumn(arv, [
+      "DATA PATIO",
+      "DATA PÁTIO",
+      "DATA",
+    ]);
 
   // ========================================
   // COLUNAS DO ARRASTE
@@ -616,6 +629,62 @@ export function processDashboardData(
 
       return true;
     });
+
+    // ======================================
+    // FILTRO ARV
+    // ======================================
+
+    arv = arv.filter((row) => {
+
+      if (
+        filters.operador &&
+        colunaEquipeArv &&
+        String(
+          row[colunaEquipeArv] ?? ""
+        ).trim() !==
+          filters.operador.trim()
+      ) {
+        return false;
+      }
+
+      if (
+        filters.ut &&
+        colunaUTArv &&
+        String(
+          row[colunaUTArv] ?? ""
+        ).trim() !==
+          filters.ut.trim()
+      ) {
+        return false;
+      }
+
+      if (
+        filters.especie &&
+        colunaEspecieArv &&
+        String(
+          row[colunaEspecieArv] ?? ""
+        ).trim() !==
+          filters.especie.trim()
+      ) {
+        return false;
+      }
+
+      if (
+        filters.data &&
+        colunaDataArv
+      ) {
+        if (
+          !correspondeData(
+            row[colunaDataArv],
+            filters.data
+          )
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
   }
 
   // ==========================================
@@ -709,7 +778,8 @@ export function processDashboardData(
       );
     }
   }
-    // ==========================================
+
+  // ==========================================
   // INDICADORES DO ARRASTE
   // ==========================================
 
@@ -721,10 +791,8 @@ export function processDashboardData(
 
   let totalArraste = 0;
 
-  // Processa o ARRASTE já filtrado.
-  // Assim, quando houver filtro de data,
-  // os indicadores também respeitam a data.
   for (const row of arraste) {
+
     if (!row) {
       continue;
     }
@@ -808,6 +876,7 @@ export function processDashboardData(
   if (
     producaoPorData.size > 0
   ) {
+
     const datasOrdenadas =
       [
         ...producaoPorData.keys(),
@@ -910,13 +979,6 @@ export function processDashboardData(
         ]
       );
 
-    const arvoresMedicao =
-      toNumber(
-        row[
-          colunaArvoresMedicao
-        ]
-      );
-
     const atual =
       mapaMedicao.get(
         especie
@@ -932,13 +994,68 @@ export function processDashboardData(
     atual.florestal +=
       florestal;
 
-    atual.arvoresMedicao +=
-      arvoresMedicao;
-
     mapaMedicao.set(
       especie,
       atual
     );
+  }
+
+  // ==========================================
+  // ÁRVORES MEDIDAS
+  // ==========================================
+  //
+  // REGRA:
+  // Cada Nº ÁRVORE diferente na aba MEDIÇÃO
+  // representa uma árvore medida.
+  //
+  // Não usamos "qtd a".
+  // Não contamos linhas.
+  // Não contamos toras repetidas.
+  //
+  // Se a mesma árvore aparecer várias vezes,
+  // ela continua sendo apenas 1 árvore medida.
+  // ==========================================
+
+  const mapaArvoresMedidas =
+    new Map<string, Set<string>>();
+
+  for (const row of medicao) {
+
+    const especie =
+      String(
+        row[
+          colunaEspecieMedicao
+        ] ?? ""
+      ).trim();
+
+    const numeroArvore =
+      String(
+        row[
+          colunaNumeroArvoreArv
+        ] ?? ""
+      ).trim();
+
+    if (
+      !especie ||
+      !numeroArvore
+    ) {
+      continue;
+    }
+
+    if (
+      !mapaArvoresMedidas.has(
+        especie
+      )
+    ) {
+      mapaArvoresMedidas.set(
+        especie,
+        new Set<string>()
+      );
+    }
+
+    mapaArvoresMedidas
+      .get(especie)!
+      .add(numeroArvore);
   }
 
   // ==========================================
@@ -965,10 +1082,18 @@ export function processDashboardData(
               arvoresMedicao: 0,
             };
 
+          // Número de árvores únicas medidas
+          const arvoresMedidasArv =
+            mapaArvoresMedidas.get(
+              especie
+            )?.size ?? 0;
+
+          // Média de volume comercial
+          // por árvore realmente medida.
           const mediaArvore =
-            dados.arvoresMedicao > 0
+            arvoresMedidasArv > 0
               ? dados.comercial /
-                dados.arvoresMedicao
+                arvoresMedidasArv
               : 0;
 
           return {
@@ -977,7 +1102,7 @@ export function processDashboardData(
             arvores,
 
             arvoresMedidas:
-              dados.arvoresMedicao,
+              arvoresMedidasArv,
 
             volumeComercial:
               dados.comercial,
@@ -1045,7 +1170,8 @@ export function processDashboardData(
         ),
       0
     );
-      // ==========================================
+
+  // ==========================================
   // LOGS DE CONFERÊNCIA
   // ==========================================
 
@@ -1136,6 +1262,14 @@ export function processDashboardData(
 
       especies:
         especies.size,
+
+      arvores:
+        estimativaEspecies.reduce(
+          (total, item) =>
+            total +
+            Number(item.arvores ?? 0),
+          0
+        ),
     },
 
     indicadoresArraste: {

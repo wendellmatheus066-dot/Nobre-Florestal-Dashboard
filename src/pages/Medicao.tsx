@@ -25,7 +25,6 @@ import {
 } from "../processors/medicao";
 
 export default function Medicao() {
-
   const { data } = useExcel();
 
   const { filters } = useFilters();
@@ -46,11 +45,8 @@ export default function Medicao() {
   console.log("STATS MEDIÇÃO:", stats);
 
   return (
-
     <MainLayout>
-
       <div className="pt-8 w-full">
-
         <Container>
 
           <Header
@@ -95,7 +91,7 @@ export default function Medicao() {
 
             <KpiCard
               title="Árvores"
-              value={stats.arvores}
+              value={dashboard.indicadores.arvores}
               icon={<Trees size={28} />}
             />
 
@@ -130,11 +126,7 @@ export default function Medicao() {
           </div>
 
         </Container>
-
       </div>
-
     </MainLayout>
-
   );
-
 }
