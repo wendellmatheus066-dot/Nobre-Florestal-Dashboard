@@ -6,9 +6,13 @@ function limparNumero(valor: any) {
   }
 
   return String(valor)
-    .replace(".0", "")
-    .trim();
+    .trim()
+    .replace(/\.0$/, "");
 }
+
+// ============================
+// BUSCAR TABELA COMPLETA
+// ============================
 
 async function buscarTabelaSupabase(tabela: string) {
   const todos: any[] = [];
@@ -19,7 +23,7 @@ async function buscarTabelaSupabase(tabela: string) {
     while (true) {
       const { data, error } = await supabase
         .from(tabela)
-        .select("*")
+        .select("dados")
         .order("id", {
           ascending: true,
         })
@@ -35,7 +39,10 @@ async function buscarTabelaSupabase(tabela: string) {
 
       todos.push(...data);
 
-      console.log(`${tabela} página ${inicio}:`, data.length);
+      console.log(
+        `${tabela} página ${inicio}:`,
+        data.length
+      );
 
       if (data.length < tamanho) {
         break;
@@ -44,11 +51,18 @@ async function buscarTabelaSupabase(tabela: string) {
       inicio += tamanho;
     }
 
-    console.log(`${tabela} TOTAL:`, todos.length);
+    console.log(
+      `${tabela} TOTAL:`,
+      todos.length
+    );
 
     return todos.map((item) => item.dados);
   } catch (error) {
-    console.error(`Erro buscando ${tabela}:`, error);
+    console.error(
+      `Erro buscando ${tabela}:`,
+      error
+    );
+
     return [];
   }
 }
@@ -65,61 +79,97 @@ async function buscarInventarioFiltrado(
   }
 
   try {
-    console.log("Buscando inventário...");
+    console.log(
+      "Buscando inventário filtrado..."
+    );
 
-    const todos: any[] = [];
-    const tamanho = 1000;
-    let inicio = 0;
+    // Remove duplicados e limpa os números
+    const numerosLimpos = [
+      ...new Set(
+        numeros
+          .map((numero) =>
+            limparNumero(numero)
+          )
+          .filter(Boolean)
+      ),
+    ];
 
-    while (true) {
-      const { data, error } = await supabase
-        .from("inventario")
-        .select("*")
-        .order("id", {
-          ascending: true,
-        })
-        .range(inicio, inicio + tamanho - 1);
+    console.log(
+      "Árvores para buscar:",
+      numerosLimpos.length
+    );
+
+    const resultados: any[] = [];
+
+    // ==================================================
+    // Fazemos em lotes para não estourar a URL da consulta
+    // ==================================================
+
+    const tamanhoLote = 500;
+
+    for (
+      let inicio = 0;
+      inicio < numerosLimpos.length;
+      inicio += tamanhoLote
+    ) {
+      const lote = numerosLimpos.slice(
+        inicio,
+        inicio + tamanhoLote
+      );
+
+      console.log(
+        `Buscando lote ${inicio} - ${
+          inicio + lote.length
+        }`
+      );
+
+      const { data, error } =
+        await supabase
+          .from("inventario")
+          .select("dados")
+          .filter(
+            "dados->>Nº ÁRVORE",
+            "in",
+            `(${lote
+              .map(
+                (numero) =>
+                  `"${numero.replace(
+                    /"/g,
+                    '\\"'
+                  )}"`
+              )
+              .join(",")})`
+          );
 
       if (error) {
         throw error;
       }
 
-      if (!data || data.length === 0) {
-        break;
+      if (data) {
+        resultados.push(...data);
       }
 
-      todos.push(...data);
-
-      console.log(`inventario página ${inicio}:`, data.length);
-
-      if (data.length < tamanho) {
-        break;
-      }
-
-      inicio += tamanho;
+      console.log(
+        `Resultado do lote: ${
+          data?.length ?? 0
+        }`
+      );
     }
 
-    console.log("TOTAL INVENTARIO BUSCADO:", todos.length);
-
-    const numerosLimpos = numeros.map((numero) =>
-      limparNumero(numero)
+    console.log(
+      "INVENTÁRIO ENCONTRADO:",
+      resultados.length
     );
 
-    const filtrado = todos.filter((item) => {
-      const dados = item.dados || {};
-
-      const numeroInventario = limparNumero(
-        dados["Nº ÁRVORE"]
-      );
-
-      return numerosLimpos.includes(numeroInventario);
-    });
-
-    console.log("INVENTÁRIO ENCONTRADO:", filtrado.length);
-
-    return filtrado.map((item) => item.dados);
+    return resultados.map(
+      (item) => item.dados
+    );
   } catch (error) {
-    console.error("Erro inventário:", error);
+    console.error(
+      "Erro inventário:",
+      error
+    );
+
     return [];
   }
 }
@@ -129,7 +179,9 @@ async function buscarInventarioFiltrado(
 // ============================
 
 export async function buscarProducaoSupabase() {
-  return buscarTabelaSupabase("producao");
+  return buscarTabelaSupabase(
+    "producao"
+  );
 }
 
 // ============================
@@ -137,7 +189,9 @@ export async function buscarProducaoSupabase() {
 // ============================
 
 export async function buscarArrasteSupabase() {
-  return buscarTabelaSupabase("arraste");
+  return buscarTabelaSupabase(
+    "arraste"
+  );
 }
 
 // ============================
@@ -145,7 +199,19 @@ export async function buscarArrasteSupabase() {
 // ============================
 
 export async function buscarMedicaoSupabase() {
-  return buscarTabelaSupabase("medicao");
+  return buscarTabelaSupabase(
+    "medicao"
+  );
+}
+
+// ============================
+// JUSTIFICADAS
+// ============================
+
+export async function buscarJustificadasSupabase() {
+  return buscarTabelaSupabase(
+    "justificadas"
+  );
 }
 
 // ============================
@@ -156,10 +222,14 @@ export async function buscarInventarioSupabase(
   numeros: string[] = []
 ) {
   if (numeros.length > 0) {
-    return buscarInventarioFiltrado(numeros);
+    return buscarInventarioFiltrado(
+      numeros
+    );
   }
 
-  return buscarTabelaSupabase("inventario");
+  return buscarTabelaSupabase(
+    "inventario"
+  );
 }
 
 // ============================
@@ -168,12 +238,17 @@ export async function buscarInventarioSupabase(
 
 export async function buscarUltimaImportacao() {
   try {
-    const { data, error } = await supabase
-      .from("configuracoes2")
-      .select("chave, valor");
+    const { data, error } =
+      await supabase
+        .from("configuracoes2")
+        .select("chave, valor");
 
     if (error) {
-      console.error("Erro buscando última importação:", error);
+      console.error(
+        "Erro buscando última importação:",
+        error
+      );
+
       return null;
     }
 
@@ -183,12 +258,19 @@ export async function buscarUltimaImportacao() {
 
     const registro = data.find(
       (item: any) =>
-        item.chave === "ultima_importacao"
+        item.chave ===
+        "ultima_importacao"
     );
 
-    return registro?.valor ?? null;
+    return (
+      registro?.valor ?? null
+    );
   } catch (error) {
-    console.error("Erro inesperado:", error);
+    console.error(
+      "Erro inesperado:",
+      error
+    );
+
     return null;
   }
 }

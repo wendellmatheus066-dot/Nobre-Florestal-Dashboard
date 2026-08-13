@@ -1,0 +1,11 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_MvNvlNCot6khCvPp4K9kgLC9ITmk",
+      "name": "nobre-florestal-dashboard",
+      "directory": ".",
+      "orgId": "team_F1RlR5K2pBXtvkRdQNJ4AQHY"
+    }
+  ]
+}

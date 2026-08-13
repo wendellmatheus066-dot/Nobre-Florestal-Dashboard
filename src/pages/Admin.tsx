@@ -5,7 +5,9 @@ import {
   useRef,
 } from "react";
 
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+} from "react-router-dom";
 
 import {
   Upload,
@@ -20,12 +22,20 @@ import * as XLSX from "xlsx";
 
 import MainLayout from "../components/layout/MainLayout";
 
-import { useAuth } from "../context/AuthContext";
+import {
+  useAuth,
+} from "../context/AuthContext";
 
-import { salvarPlanilha } from "../services/uploadExcelSupabase";
+import {
+  salvarPlanilha,
+} from "../services/uploadExcelSupabase";
 
 export default function Admin() {
-  const { isAdmin, logout } = useAuth();
+
+  const {
+    isAdmin,
+    logout,
+  } = useAuth();
 
   const navigate = useNavigate();
 
@@ -35,9 +45,11 @@ export default function Admin() {
   const [tipoImportacao, setTipoImportacao] =
     useState("inventario");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] =
+    useState(false);
 
   const fileInputRef =
     useRef<HTMLInputElement>(null);
@@ -50,7 +62,8 @@ export default function Admin() {
   function handleFileChange(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
-    const file = event.target.files?.[0];
+    const file =
+      event.target.files?.[0];
 
     if (!file) return;
 
@@ -59,82 +72,196 @@ export default function Admin() {
   }
 
   async function handleImport() {
-        if (!selectedFile) {
+
+    if (!selectedFile) {
       alert("Selecione um arquivo");
       return;
     }
 
     try {
+
       setLoading(true);
 
-      const buffer = await selectedFile.arrayBuffer();
+      const buffer =
+        await selectedFile.arrayBuffer();
 
-      const workbook = XLSX.read(buffer, {
-        type: "array",
-        cellDates: true,
-      });
+      const workbook =
+        XLSX.read(buffer, {
+          type: "array",
+          cellDates: true,
+        });
 
-      console.log("ABAS:", workbook.SheetNames);
+      console.log(
+        "ABAS ENCONTRADAS:",
+        workbook.SheetNames
+      );
 
-      if (tipoImportacao === "inventario") {
-        const primeiraAba = workbook.SheetNames[0];
+      // ========================================
+      // INVENTÁRIO
+      // ========================================
 
-        const dados = XLSX.utils.sheet_to_json(
-          workbook.Sheets[primeiraAba],
-          {
-            raw: false,
-            defval: "",
-          }
-        );
+      if (
+        tipoImportacao === "inventario"
+      ) {
 
-        await salvarPlanilha("inventario", dados);
-      }
+        const primeiraAba =
+          workbook.SheetNames[0];
 
-      if (tipoImportacao === "operacao") {
-        for (const aba of workbook.SheetNames) {
-          const sheet = workbook.Sheets[aba];
-
-          const dados = XLSX.utils.sheet_to_json(
-            sheet,
+        const dados =
+          XLSX.utils.sheet_to_json(
+            workbook.Sheets[primeiraAba],
             {
               raw: false,
               defval: "",
             }
           );
 
-          const nome = aba
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toUpperCase();
+        console.log(
+          "Importando INVENTÁRIO:",
+          dados.length
+        );
 
-          console.log("Importando:", nome, dados.length);
+        await salvarPlanilha(
+          "inventario",
+          dados
+        );
+      }
 
-          if (nome === "PRODUCAO") {
-            await salvarPlanilha("producao", dados);
+      // ========================================
+      // OPERAÇÃO
+      // ========================================
+
+      if (
+        tipoImportacao === "operacao"
+      ) {
+
+        for (
+          const aba of workbook.SheetNames
+        ) {
+
+          const sheet =
+            workbook.Sheets[aba];
+
+          const dados =
+            XLSX.utils.sheet_to_json(
+              sheet,
+              {
+                raw: false,
+                defval: "",
+              }
+            );
+
+          const nome =
+            aba
+              .normalize("NFD")
+              .replace(
+                /[\u0300-\u036f]/g,
+                ""
+              )
+              .toUpperCase();
+
+          console.log(
+            "Importando:",
+            nome,
+            dados.length
+          );
+
+          // ==================================
+          // PRODUÇÃO
+          // ==================================
+
+          if (
+            nome === "PRODUCAO"
+          ) {
+
+            await salvarPlanilha(
+              "producao",
+              dados
+            );
+
           }
 
-          if (nome === "ARRASTE") {
-            await salvarPlanilha("arraste", dados);
+          // ==================================
+          // ARRASTE
+          // ==================================
+
+          if (
+            nome === "ARRASTE"
+          ) {
+
+            await salvarPlanilha(
+              "arraste",
+              dados
+            );
+
           }
 
-          if (nome === "MEDICAO") {
-            await salvarPlanilha("medicao", dados);
+          // ==================================
+          // MEDIÇÃO
+          // ==================================
+
+          if (
+            nome === "MEDICAO"
+          ) {
+
+            await salvarPlanilha(
+              "medicao",
+              dados
+            );
+
+          }
+
+          // ==================================
+          // JUSTIFICADAS
+          // ==================================
+
+          if (
+            nome === "JUSTIFICADAS"
+          ) {
+
+            console.log(
+              "JUSTIFICADAS ENCONTRADAS:",
+              dados.length
+            );
+
+            await salvarPlanilha(
+              "justificadas",
+              dados
+            );
+
+            console.log(
+              "JUSTIFICADAS ENVIADAS AO SUPABASE:",
+              dados.length
+            );
           }
         }
       }
 
       setSuccess(true);
+
     } catch (error) {
-      console.error("ERRO IMPORTAÇÃO:", error);
-      alert("Erro na importação");
+
+      console.error(
+        "ERRO IMPORTAÇÃO:",
+        error
+      );
+
+      alert(
+        "Erro na importação. Veja o console."
+      );
+
     } finally {
+
       setLoading(false);
+
     }
   }
 
   if (isAdmin) {
+
     return (
       <MainLayout>
+
         <div
           className="
             mx-auto
@@ -144,7 +271,9 @@ export default function Admin() {
             py-12
           "
         >
+
           <div className="mb-12">
+
             <p
               className="
                 text-sm
@@ -178,6 +307,7 @@ export default function Admin() {
             >
               Gerencie importações de planilhas e mantenha os dados do sistema atualizados.
             </p>
+
           </div>
 
           <div
@@ -188,6 +318,7 @@ export default function Admin() {
               xl:grid-cols-4
             "
           >
+
             <InfoCard
               icon={<UserCheck size={26} />}
               titulo="Administrador"
@@ -212,9 +343,14 @@ export default function Admin() {
             <InfoCard
               icon={<CalendarDays size={26} />}
               titulo="Arquivo"
-              valor={selectedFile ? "Carregado" : "--"}
+              valor={
+                selectedFile
+                  ? "Carregado"
+                  : "--"
+              }
               cor="text-[#F1FA8C]"
             />
+
           </div>
 
           <div
@@ -227,6 +363,7 @@ export default function Admin() {
               p-10
             "
           >
+
             <h2
               className="
                 mb-6
@@ -241,7 +378,9 @@ export default function Admin() {
             <select
               value={tipoImportacao}
               onChange={(e) =>
-                setTipoImportacao(e.target.value)
+                setTipoImportacao(
+                  e.target.value
+                )
               }
               className="
                 w-full
@@ -256,13 +395,15 @@ export default function Admin() {
                 text-white
               "
             >
+
               <option value="inventario">
                 🌳 Inventário
               </option>
 
               <option value="operacao">
-                🚛 Derruba / Arraste / Medição
+                🚛 Derruba / Arraste / Medição / Justificadas
               </option>
+
             </select>
 
             <input
@@ -296,10 +437,15 @@ export default function Admin() {
                 hover:border-[#50FA7B]
               "
             >
+
               <Upload size={24} />
+
               Selecionar Excel
+
             </button>
-                        {selectedFile && (
+
+            {selectedFile && (
+
               <div
                 className="
                   mt-8
@@ -310,6 +456,7 @@ export default function Admin() {
                   p-10
                 "
               >
+
                 <h3
                   className="
                     text-3xl
@@ -344,14 +491,19 @@ export default function Admin() {
                     disabled:opacity-50
                   "
                 >
+
                   {loading
                     ? "Importando..."
                     : "Importar Dados"}
+
                 </button>
+
               </div>
+
             )}
 
             {success && (
+
               <div
                 className="
                   mt-8
@@ -362,6 +514,7 @@ export default function Admin() {
                   p-6
                 "
               >
+
                 <h3
                   className="
                     text-xl
@@ -380,11 +533,17 @@ export default function Admin() {
                 >
                   Dados enviados para o Supabase com sucesso.
                 </p>
+
               </div>
+
             )}
 
             <button
-              onClick={() => navigate("/admin/usuarios")}
+              onClick={() =>
+                navigate(
+                  "/admin/usuarios"
+                )
+              }
               className="
                 mt-8
                 flex
@@ -401,8 +560,11 @@ export default function Admin() {
                 hover:bg-cyan-300
               "
             >
+
               <UserCheck size={22} />
+
               Gerenciar Usuários
+
             </button>
 
             <button
@@ -423,11 +585,17 @@ export default function Admin() {
                 hover:bg-red-600
               "
             >
+
               <LogOut size={22} />
+
               Sair da Administração
+
             </button>
+
           </div>
+
         </div>
+
       </MainLayout>
     );
   }
