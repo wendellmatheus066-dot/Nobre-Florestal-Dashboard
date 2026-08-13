@@ -23,6 +23,10 @@ import Container from "../components/layout/Container";
 
 import { useExcelContext } from "../context/ExcelContext";
 
+// ========================================
+// AJUSTAR MAPA
+// ========================================
+
 function AjustarMapa({ pontos }: any) {
   const mapa = useMap();
 
@@ -42,12 +46,28 @@ function AjustarMapa({ pontos }: any) {
   return null;
 }
 
+// ========================================
+// MAPA FLORESTAL
+// ========================================
+
 export default function MapaFlorestal() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Fecha automaticamente o mapa quando o Safari
-  // vai para segundo plano (corrige o bug do iPhone)
+  // ========================================
+  // ESTADOS DOS GEOJSON
+  // ========================================
+
+  const [utsGeoJson, setUtsGeoJson] =
+    useState<any>(null);
+
+  const [upa13GeoJson, setUpa13GeoJson] =
+    useState<any>(null);
+
+  // ========================================
+  // FECHAR MAPA NO SAFARI
+  // ========================================
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
@@ -68,33 +88,47 @@ export default function MapaFlorestal() {
     };
   }, [navigate]);
 
+  // ========================================
+  // CARREGAR UTs
+  // ========================================
+
   useEffect(() => {
     fetch("/mapas/uts.geojson")
       .then((response) => response.json())
       .then((json) => {
-        console.log("UTs carregadas:", json);
-        console.log("Primeira feature:", json.features[0]);
         console.log(
-          "Geometria:",
-          json.features[0].geometry
+          "UTs carregadas:",
+          json
         );
+
         console.log(
-          "Propriedades:",
-          json.features[0].properties
+          "Primeira feature:",
+          json.features?.[0]
         );
 
         setUtsGeoJson(json);
       })
       .catch((erro) => {
-        console.error("Erro ao carregar UTs:", erro);
+        console.error(
+          "Erro ao carregar UTs:",
+          erro
+        );
       });
   }, []);
+
+  // ========================================
+  // CARREGAR UPA 13
+  // ========================================
 
   useEffect(() => {
     fetch("/mapas/upa13_uts.geojson")
       .then((response) => response.json())
       .then((json) => {
-        console.log("UPA 13 carregada:", json);
+        console.log(
+          "UPA 13 carregada:",
+          json
+        );
+
         setUpa13GeoJson(json);
       })
       .catch((erro) => {
@@ -105,26 +139,47 @@ export default function MapaFlorestal() {
       });
   }, []);
 
+  // ========================================
+  // DADOS
+  // ========================================
+
   const { data } = useExcelContext();
 
-  const producao = data["PRODUÇÃO"] || [];
-  const arraste = data["ARRASTE"] || [];
-  const medicao = data["MEDIÇÃO"] || [];
-  const inventario = data["INVENTÁRIO"] || [];
+  const producao =
+    data["PRODUÇÃO"] || [];
 
-  const [utsGeoJson, setUtsGeoJson] =
-    useState<any>(null);
+  const arraste =
+    data["ARRASTE"] || [];
 
-  const [upa13GeoJson, setUpa13GeoJson] =
-    useState<any>(null);
+  const medicao =
+    data["MEDIÇÃO"] || [];
+
+  const justificadas =
+    data["JUSTIFICADAS"] || [];
+
+  const inventario =
+    data["INVENTÁRIO"] || [];
+
+  // ========================================
+  // LIMPAR NÚMERO
+  // ========================================
 
   function limparNumero(valor: any) {
-    if (!valor) return "";
+    if (
+      valor === undefined ||
+      valor === null
+    ) {
+      return "";
+    }
 
     return String(valor)
-      .replace(".0", "")
-      .trim();
+      .trim()
+      .replace(/\.0$/, "");
   }
+
+  // ========================================
+  // INVENTÁRIO
+  // ========================================
 
   const mapaInventario = new Map();
 
@@ -134,15 +189,34 @@ export default function MapaFlorestal() {
     );
 
     if (numero) {
-      mapaInventario.set(numero, arvore);
+      mapaInventario.set(
+        numero,
+        arvore
+      );
     }
   });
 
+  // ========================================
+  // MAPA DAS ÁRVORES
+  // ========================================
+
   const mapaArvores = new Map();
 
+  // ========================================
+  // DERRUBADA
+  // ========================================
+
   producao.forEach((arvore: any) => {
+    const numero = limparNumero(
+      arvore["Nº ÁRVORE"]
+    );
+
+    if (!numero) {
+      return;
+    }
+
     mapaArvores.set(
-      limparNumero(arvore["Nº ÁRVORE"]),
+      numero,
       {
         ...arvore,
         STATUS: "DERRUBADA",
@@ -150,9 +224,21 @@ export default function MapaFlorestal() {
     );
   });
 
+  // ========================================
+  // ARRASTE
+  // ========================================
+
   arraste.forEach((arvore: any) => {
+    const numero = limparNumero(
+      arvore["Nº ÁRVORE"]
+    );
+
+    if (!numero) {
+      return;
+    }
+
     mapaArvores.set(
-      limparNumero(arvore["Nº ÁRVORE"]),
+      numero,
       {
         ...arvore,
         STATUS: "ARRASTE",
@@ -160,135 +246,265 @@ export default function MapaFlorestal() {
     );
   });
 
-  const qtdTorasPorArvore = new Map();
+  // ========================================
+  // QUANTIDADE DE TORAS
+  // ========================================
 
-medicao.forEach((arvore: any) => {
-  const numero = limparNumero(
-    arvore["Nº ÁRVORE"]
-  );
+  const quantidadeTorasMedicao =
+    new Map();
 
-  const qtd = Number(
-    String(arvore["qtd"] || "0")
-      .replace(",", ".")
-  ) || 0;
+  medicao.forEach((arvore: any) => {
+    const numero = limparNumero(
+      arvore["Nº ÁRVORE"]
+    );
 
-  qtdTorasPorArvore.set(
-    numero,
-    (qtdTorasPorArvore.get(numero) || 0) + qtd
-  );
-});
-
-
-
-medicao.forEach((arvore: any) => {
-  const numero = limparNumero(
-    arvore["Nº ÁRVORE"]
-  );
-
-  qtdTorasPorArvore.set(
-    numero,
-    (qtdTorasPorArvore.get(numero) || 0) + 1
-  );
-});
-
-const quantidadeTorasMedicao = new Map();
-
-medicao.forEach((arvore: any) => {
-  const numero = limparNumero(arvore["Nº ÁRVORE"]);
-
-  quantidadeTorasMedicao.set(
-    numero,
-    (quantidadeTorasMedicao.get(numero) || 0) + 1
-  );
-});
-
-medicao.forEach((arvore: any) => {
-  const numero = limparNumero(arvore["Nº ÁRVORE"]);
-
-  mapaArvores.set(
-    numero,
-    {
-      ...arvore,
-      STATUS: "MEDIÇÃO",
-      QTD_TORAS:
-        quantidadeTorasMedicao.get(numero) || 0,
+    if (!numero) {
+      return;
     }
-  );
-});
-    const pontosMapa: any[] = [];
 
-  mapaArvores.forEach((arvore: any) => {
-    const dadosInventario =
-      mapaInventario.get(
-        limparNumero(
-          arvore["Nº ÁRVORE"]
-        )
+    quantidadeTorasMedicao.set(
+      numero,
+      (quantidadeTorasMedicao.get(
+        numero
+      ) || 0) + 1
+    );
+  });
+
+  // ========================================
+  // MEDIÇÃO
+  // ========================================
+
+  medicao.forEach((arvore: any) => {
+    const numero = limparNumero(
+      arvore["Nº ÁRVORE"]
+    );
+
+    if (!numero) {
+      return;
+    }
+
+    mapaArvores.set(
+      numero,
+      {
+        ...arvore,
+        STATUS: "MEDIÇÃO",
+        QTD_TORAS:
+          quantidadeTorasMedicao.get(
+            numero
+          ) || 0,
+      }
+    );
+  });
+
+  // ========================================
+  // JUSTIFICADAS
+  // ========================================
+  //
+  // A coluna correta da tabela
+  // JUSTIFICADAS é:
+  //
+  // "Nr. Árvore"
+  //
+  // A justificativa entra por último.
+  // Portanto, se a mesma árvore estiver
+  // em outra operação, JUSTIFICADA terá
+  // prioridade.
+  // ========================================
+
+  justificadas.forEach((arvore: any) => {
+    const numero = limparNumero(
+      arvore["Nr. Árvore"]
+    );
+
+    if (!numero) {
+      console.warn(
+        "JUSTIFICADA SEM Nr. Árvore:",
+        arvore
       );
 
-    if (!dadosInventario) return;
+      return;
+    }
 
-    pontosMapa.push({
-      ...arvore,
+    console.log(
+      "JUSTIFICADA PROCESSADA:",
+      numero
+    );
 
-      LATITUDE:
-        dadosInventario.LATITUDE,
+    mapaArvores.set(
+      numero,
+      {
+        ...arvore,
 
-      LONGITUDE:
-        dadosInventario.LONGITUDE,
+        "Nº ÁRVORE": numero,
 
-      ESPECIE:
-        dadosInventario[
-          "NOME COMUM"
-        ],
+        STATUS: "JUSTIFICADA",
 
-      CAP:
-        dadosInventario[
-          "CAP (CM)"
-        ],
-
-      UPA: dadosInventario.UPA,
-
-      UT:
-        dadosInventario["Nº UT"],
-        MOTOSERRISTA:
-  arvore["Motoserrista Corte"],
-  SKIDEIRO_PATIO:
-  arvore["Skideiro Patio"],
-
-EQUIPE:
-  arvore["Equipe"],
-  QTD_TORAS:
-  arvore["qtd"],
-
-
-      VOLUME_TOTAL:
-  Number(
-    String(
-      arvore["Comercial M3"] ??
-      dadosInventario["Comercial M3"] ??
-      "0"
-    ).replace(",", ".")
-  ) || 0,
-    });
+        MOTIVO_JUSTIFICATIVA:
+          arvore["Motivo"] || "",
+      }
+    );
   });
+
+  // ========================================
+  // MONTAR PONTOS DO MAPA
+  // ========================================
+
+  const pontosMapa: any[] = [];
+
+  mapaArvores.forEach(
+    (arvore: any) => {
+      const numero = limparNumero(
+        arvore["Nº ÁRVORE"]
+      );
+
+      const dadosInventario =
+        mapaInventario.get(numero);
+
+      if (!dadosInventario) {
+        if (
+          arvore.STATUS ===
+          "JUSTIFICADA"
+        ) {
+          console.warn(
+            "JUSTIFICADA NÃO ENCONTRADA NO INVENTÁRIO:",
+            numero
+          );
+        }
+
+        return;
+      }
+
+      pontosMapa.push({
+        ...arvore,
+
+        LATITUDE:
+          dadosInventario.LATITUDE,
+
+        LONGITUDE:
+          dadosInventario.LONGITUDE,
+
+        ESPECIE:
+          dadosInventario[
+            "NOME COMUM"
+          ],
+
+        CAP:
+          dadosInventario[
+            "CAP (CM)"
+          ],
+
+        UPA:
+          dadosInventario.UPA,
+
+        UT:
+          dadosInventario[
+            "Nº UT"
+          ],
+
+        MOTOSERRISTA:
+          arvore[
+            "Motoserrista Corte"
+          ],
+
+        SKIDEIRO_PATIO:
+          arvore[
+            "Skideiro Patio"
+          ],
+
+        EQUIPE:
+          arvore["Equipe"],
+
+        QTD_TORAS:
+          arvore["qtd"],
+
+        VOLUME_TOTAL:
+          Number(
+            String(
+              arvore[
+                "Comercial M3"
+              ] ??
+                dadosInventario[
+                  "Comercial M3"
+                ] ??
+                "0"
+            ).replace(",", ".")
+          ) || 0,
+      });
+    }
+  );
+
+  // ========================================
+  // TOTAIS
+  // ========================================
 
   const totalDerrubada =
     pontosMapa.filter(
       (p) =>
-        p.STATUS === "DERRUBADA"
+        p.STATUS ===
+        "DERRUBADA"
     ).length;
 
   const totalArraste =
     pontosMapa.filter(
       (p) =>
-        p.STATUS === "ARRASTE"
+        p.STATUS ===
+        "ARRASTE"
     ).length;
 
   const totalMedicao =
     pontosMapa.filter(
       (p) =>
-        p.STATUS === "MEDIÇÃO"
+        p.STATUS ===
+        "MEDIÇÃO"
     ).length;
+
+  const totalJustificadas =
+    pontosMapa.filter(
+      (p) =>
+        p.STATUS ===
+        "JUSTIFICADA"
+    ).length;
+
+  // ========================================
+  // DEBUG
+  // ========================================
+
+  console.log(
+    "=============================="
+  );
+
+  console.log(
+    "TOTAL DERRUBADA:",
+    totalDerrubada
+  );
+
+  console.log(
+    "TOTAL ARRASTE:",
+    totalArraste
+  );
+
+  console.log(
+    "TOTAL MEDIÇÃO:",
+    totalMedicao
+  );
+
+  console.log(
+    "TOTAL JUSTIFICADAS:",
+    totalJustificadas
+  );
+
+  console.log(
+    "TOTAL MAPA:",
+    pontosMapa.length
+  );
+
+  console.log(
+    "=============================="
+  );
+
+  // ========================================
+  // TELA
+  // ========================================
 
   return (
     <MainLayout>
@@ -297,16 +513,24 @@ EQUIPE:
 
           <Header
             title="Mapa Operacional"
-            subtitle="Derrubada • Arraste • Medição"
+            subtitle="Derrubada • Arraste • Medição • Justificadas"
           />
 
           <div className="h-6" />
 
           <div className="relative h-[600px]">
 
+            {/* ========================================
+                BOTÃO VOLTAR
+            ======================================== */}
+
             <button
-              onClick={() => navigate(-1)}
-              style={{ zIndex: 99999 }}
+              onClick={() =>
+                navigate(-1)
+              }
+              style={{
+                zIndex: 99999,
+              }}
               className="
                 absolute
                 top-20
@@ -321,8 +545,14 @@ EQUIPE:
                 shadow-xl
               "
             >
-              <ArrowLeft size={24} />
+              <ArrowLeft
+                size={24}
+              />
             </button>
+
+            {/* ========================================
+                PAINEL DE OPERAÇÃO
+            ======================================== */}
 
             <div
               className="
@@ -341,14 +571,14 @@ EQUIPE:
             >
 
               <div className="border-b border-white/10 px-3 py-2">
-
                 <h2 className="text-center text-sm font-semibold text-white">
                   🌲 Operação
                 </h2>
-
               </div>
 
               <div className="space-y-2 px-3 py-2">
+
+                {/* DERRUBADA */}
 
                 <div className="flex items-center justify-between">
 
@@ -368,6 +598,8 @@ EQUIPE:
 
                 </div>
 
+                {/* ARRASTE */}
+
                 <div className="flex items-center justify-between">
 
                   <div className="flex items-center gap-2">
@@ -385,6 +617,8 @@ EQUIPE:
                   </span>
 
                 </div>
+
+                {/* MEDIÇÃO */}
 
                 <div className="flex items-center justify-between">
 
@@ -404,7 +638,29 @@ EQUIPE:
 
                 </div>
 
+                {/* JUSTIFICADAS */}
+
+                <div className="flex items-center justify-between">
+
+                  <div className="flex items-center gap-2">
+
+                    <span className="h-3 w-3 rounded-full bg-purple-500" />
+
+                    <span className="text-[13px] text-white/90">
+                      Justificadas
+                    </span>
+
+                  </div>
+
+                  <span className="text-sm font-semibold text-white">
+                    {totalJustificadas}
+                  </span>
+
+                </div>
+
               </div>
+
+              {/* TOTAL */}
 
               <div className="flex items-center justify-between border-t border-white/10 px-3 py-2">
 
@@ -419,32 +675,63 @@ EQUIPE:
               </div>
 
             </div>
-                        <div className="h-full overflow-hidden rounded-2xl border border-[#44475A]">
+
+            {/* ========================================
+                MAPA
+            ======================================== */}
+
+            <div
+              className="
+                h-full
+                overflow-hidden
+                rounded-2xl
+                border
+                border-[#44475A]
+              "
+            >
 
               <MapContainer
-                key={location.pathname}
-                center={[-3.290908, -56.151795]}
+                key={
+                  location.pathname
+                }
+                center={[
+                  -3.290908,
+                  -56.151795,
+                ]}
                 zoom={16}
                 className="h-full w-full"
               >
+
+                {/* SATÉLITE */}
 
                 <TileLayer
                   url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
                   attribution="Google Satellite"
                 />
 
+                {/* ========================================
+                    UTs
+                ======================================== */}
+
                 {utsGeoJson && (
                   <GeoJSON
                     data={utsGeoJson}
                     style={() => ({
-                      color: "#00FF00",
+                      color:
+                        "#00FF00",
                       weight: 2,
                       opacity: 1,
-                      fillColor: "#00FF00",
-                      fillOpacity: 0.05,
+                      fillColor:
+                        "#00FF00",
+                      fillOpacity:
+                        0.05,
                     })}
                   />
                 )}
+
+                {/* ========================================
+                    UPA 13
+                ======================================== */}
 
                 {upa13GeoJson && (
                   <Pane
@@ -455,57 +742,77 @@ EQUIPE:
                   >
 
                     <GeoJSON
-                      data={upa13GeoJson}
+                      data={
+                        upa13GeoJson
+                      }
                       style={() => ({
-                        color: "#4CAF50",
+                        color:
+                          "#4CAF50",
                         weight: 1.5,
                         opacity: 1,
-                        fillColor: "#90EE90",
-                        fillOpacity: 0.25,
+                        fillColor:
+                          "#90EE90",
+                        fillOpacity:
+                          0.25,
                       })}
-
                       onEachFeature={(
                         feature,
                         layer
                       ) => {
 
                         const ut =
-                          feature.properties?.UT ||
-                          feature.properties?.UTS ||
+                          feature
+                            .properties
+                            ?.UT ||
+                          feature
+                            .properties
+                            ?.UTS ||
                           "UT";
 
                         const area =
                           Number(
-                            feature.properties?.AREA ||
-                            0
+                            feature
+                              .properties
+                              ?.AREA ||
+                              0
                           );
 
-                        
+                        layer.bindPopup(
+                          `
+                            <div style="min-width: 150px">
+                              <strong style="font-size: 16px;">
+                                🌲 ${ut}
+                              </strong>
 
-                        layer.bindPopup(`
-                          <div style="min-width: 150px">
-                            <strong style="font-size: 16px;">
-                              🌲 ${ut}
-                            </strong>
+                              <br />
 
-                            <br />
-
-                            <span>
-                              Área:
-                              ${area.toFixed(2)}
-                              ha
-                            </span>
-                          </div>
-                        `);
+                              <span>
+                                Área:
+                                ${area.toFixed(
+                                  2
+                                )}
+                                ha
+                              </span>
+                            </div>
+                          `
+                        );
                       }}
                     />
 
                   </Pane>
                 )}
 
+                {/* ========================================
+                    AJUSTAR MAPA
+                ======================================== */}
+
                 <AjustarMapa
                   pontos={pontosMapa}
                 />
+
+                {/* ========================================
+                    PONTOS DAS ÁRVORES
+                ======================================== */}
 
                 {pontosMapa.map(
                   (
@@ -513,21 +820,201 @@ EQUIPE:
                     index: number
                   ) => {
 
-                    let cor = "#EF4444";
+                    let cor =
+                      "#EF4444";
 
                     if (
                       arvore.STATUS ===
                       "ARRASTE"
                     ) {
-                      cor = "#FACC15";
+                      cor =
+                        "#FACC15";
                     }
 
                     if (
                       arvore.STATUS ===
                       "MEDIÇÃO"
                     ) {
-                      cor = "#3B82F6";
+                      cor =
+                        "#3B82F6";
                     }
+
+                    if (
+                      arvore.STATUS ===
+                      "JUSTIFICADA"
+                    ) {
+                      cor =
+                        "#A855F7";
+                    }
+
+                    const popupConteudo = (
+                      <Popup>
+                        <div className="min-w-[220px]">
+
+                          <div className="mb-2 border-b pb-2">
+
+                            <strong className="text-base">
+
+                              {arvore.STATUS ===
+                                "DERRUBADA" &&
+                                "🔴 Derrubada"}
+
+                              {arvore.STATUS ===
+                                "ARRASTE" &&
+                                "🟡 Arraste"}
+
+                              {arvore.STATUS ===
+                                "MEDIÇÃO" &&
+                                "🔵 Medição"}
+
+                              {arvore.STATUS ===
+                                "JUSTIFICADA" &&
+                                "🟣 Justificada"}
+
+                            </strong>
+
+                            {/* DERRUBADA */}
+
+                            {arvore.STATUS ===
+                              "DERRUBADA" && (
+                              <div>
+
+                                <strong>
+                                  Motoserrista:
+                                </strong>{" "}
+
+                                <span className="font-normal">
+                                  {arvore.MOTOSERRISTA ||
+                                    "Não informado"}
+                                </span>
+
+                              </div>
+                            )}
+
+                            {/* ARRASTE */}
+
+                            {arvore.STATUS ===
+                              "ARRASTE" && (
+                              <div>
+
+                                <strong>
+                                  Skideiro Patio:
+                                </strong>{" "}
+
+                                <span className="font-normal">
+                                  {arvore.SKIDEIRO_PATIO ||
+                                    "Não informado"}
+                                </span>
+
+                              </div>
+                            )}
+
+                            {/* MEDIÇÃO */}
+
+                            {arvore.STATUS ===
+                              "MEDIÇÃO" && (
+                              <div>
+
+                                <strong>
+                                  Equipe:
+                                </strong>{" "}
+
+                                <span className="font-normal">
+                                  {arvore.EQUIPE ||
+                                    "Não informado"}
+                                </span>
+
+                              </div>
+                            )}
+
+                          </div>
+
+                          <div className="space-y-1 text-sm">
+
+                            <div>
+                              <strong>
+                                Árvore:
+                              </strong>{" "}
+                              {
+                                arvore[
+                                  "Nº ÁRVORE"
+                                ]
+                              }
+                            </div>
+
+                            <div>
+                              <strong>
+                                Espécie:
+                              </strong>{" "}
+                              {arvore.ESPECIE}
+                            </div>
+
+                            <div>
+                              <strong>
+                                CAP:
+                              </strong>{" "}
+                              {arvore.CAP} cm
+                            </div>
+
+                            <div>
+                              <strong>
+                                UPA:
+                              </strong>{" "}
+                              {arvore.UPA}
+                            </div>
+
+                            <div>
+                              <strong>
+                                UT:
+                              </strong>{" "}
+                              {arvore.UT}
+                            </div>
+
+                            {/* MOTIVO DA JUSTIFICATIVA */}
+
+                            {arvore.STATUS ===
+                              "JUSTIFICADA" && (
+                              <div className="mt-2 border-t pt-2">
+
+                                <strong>
+                                  Motivo:
+                                </strong>{" "}
+
+                                <span className="font-normal">
+                                  {arvore.MOTIVO_JUSTIFICATIVA ||
+                                    arvore[
+                                      "Motivo"
+                                    ] ||
+                                    "Não informado"}
+                                </span>
+
+                              </div>
+                            )}
+
+                            {/* VOLUME */}
+
+                            {arvore.STATUS ===
+                              "MEDIÇÃO" && (
+                              <div className="mt-2 border-t pt-2">
+
+                                <strong>
+                                  Volume Comercial:
+                                </strong>{" "}
+
+                                {Number(
+                                  arvore.VOLUME_TOTAL ||
+                                    0
+                                ).toFixed(2)}{" "}
+                                m³
+
+                              </div>
+                            )}
+
+                          </div>
+
+                        </div>
+                      </Popup>
+                    );
 
                     return (
                       <CircleMarker
@@ -542,139 +1029,15 @@ EQUIPE:
                         ]}
                         radius={3}
                         pathOptions={{
-                          color: "#FFFFFF",
+                          color:
+                            "#FFFFFF",
                           weight: 1,
-                          fillColor: cor,
+                          fillColor:
+                            cor,
                           fillOpacity: 1,
                         }}
                       >
-
-                        <Popup>
-
-                          <div className="min-w-[220px]">
-
-                            <div className="mb-2 border-b pb-2">
-
-                              <strong className="text-base">
-
-                                {arvore.STATUS ===
-                                  "DERRUBADA" &&
-                                  "🔴 Derrubada"}
-                                  {arvore.STATUS === "DERRUBADA" && (
-  <div>
-    <strong>Motoserrista:</strong>{" "}
-    <span className="font-normal">
-      {arvore.MOTOSERRISTA || "Não informado"}
-    </span>
-  </div>
-)}
-
-{arvore.STATUS === "ARRASTE" && (
-  <div>
-    <strong>Skideiro Patio:</strong>{" "}
-    <span className="font-normal">
-      {arvore.SKIDEIRO_PATIO || "Não informado"}
-    </span>
-  </div>
-)}
-
-{arvore.STATUS === "MEDIÇÃO" && (
-  <div>
-    <strong>Equipe:</strong>{" "}
-    <span className="font-normal">
-      {arvore.EQUIPE || "Não informado"}
-    </span>
-  </div>
-)}
-
-
-                                {arvore.STATUS ===
-                                  "ARRASTE" &&
-                                  "🟡 Arraste"}
-
-                                {arvore.STATUS ===
-                                  "MEDIÇÃO" &&
-                                  "🔵 Medição"}
-
-                              </strong>
-
-                            </div>
-
-                            <div className="space-y-1 text-sm">
-
-                              <div>
-                                <strong>
-                                  Árvore:
-                                </strong>{" "}
-                                {
-                                  arvore[
-                                    "Nº ÁRVORE"
-                                  ]
-                                }
-                              </div>
-
-                              <div>
-                                <strong>
-                                  Espécie:
-                                </strong>{" "}
-                                {
-                                  arvore.ESPECIE
-                                }
-                              </div>
-
-                              <div>
-                                <strong>
-                                  CAP:
-                                </strong>{" "}
-                                {
-                                  arvore.CAP
-                                }{" "}
-                                cm
-                              </div>
-                                                            <div>
-                                <strong>
-                                  UPA:
-                                </strong>{" "}
-                                {
-                                  arvore.UPA
-                                }
-                              </div>
-
-                              <div>
-                                <strong>
-                                  UT:
-                                </strong>{" "}
-                                {
-                                  arvore.UT
-                                }
-                              </div>
-
-                              {arvore.STATUS ===
-                                "MEDIÇÃO" && (
-
-                                <div className="mt-2 border-t pt-2">
-
-                                  <strong>
-                                    Volume Comercial:
-                                  </strong>{" "}
-
-                                  {
-                                    arvore.VOLUME_TOTAL.toFixed(
-                                      2
-                                    )
-                                  }{" "}
-                                  m³
-
-                                </div>
-
-                              )}
-
-                            </div>
-
-                          </div>
-
-                        </Popup>
-
+                        {popupConteudo}
                       </CircleMarker>
                     );
                   }
@@ -687,7 +1050,6 @@ EQUIPE:
           </div>
 
         </Container>
-
       </div>
     </MainLayout>
   );
