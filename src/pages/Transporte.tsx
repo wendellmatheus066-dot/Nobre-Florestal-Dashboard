@@ -1286,7 +1286,7 @@ export default function Transporte() {
             <div className="relative border-b border-[#44475A] px-6 pb-4 pt-5">
               <div className="flex w-full flex-col items-center justify-center text-center">
                 <h2 className="text-xl font-black tracking-tight text-white">
-                  Produção por Cliente
+                  Vol. Transportado Por Cliente
                 </h2>
                 <p className="mt-1 text-xs text-[#9AA1BA]">
                  
@@ -1483,7 +1483,7 @@ export default function Transporte() {
             <div className="relative border-b border-[#44475A] px-6 pb-4 pt-5">
               <div className="flex w-full flex-col items-center justify-center text-center">
                 <h2 className="text-xl font-black tracking-tight text-white">
-                  Produção por Espécie
+                  Vol. Transportado por Espécie
                 </h2>
                 <p className="mt-1 text-xs text-[#9AA1BA]">
                   Volume comercial transportado por espécie
@@ -1595,7 +1595,7 @@ export default function Transporte() {
             <div className="relative border-b border-[#44475A] px-6 pb-4 pt-5">
               <div className="flex w-full flex-col items-center justify-center text-center">
                 <h2 className="text-xl font-black tracking-tight text-white">
-                  Produção por UT
+                  Vol. transportado por UT
                 </h2>
                 <p className="mt-1 text-xs text-[#9AA1BA]">
                   Volume comercial transportado por UT
