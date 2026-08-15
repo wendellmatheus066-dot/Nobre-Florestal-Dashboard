@@ -2,7 +2,6 @@ import {
   MapContainer,
   TileLayer,
   CircleMarker,
-  Marker,
   Popup,
   useMap,
   GeoJSON,
