@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../components/layout/MainLayout";
+import ReactECharts from "echarts-for-react";
 import { supabase } from "../lib/supabase";
 
 import {
@@ -154,7 +155,10 @@ export default function Transporte() {
         const dados =
           mapa.get(motorista)!;
 
-        dados.viagens += 1;
+        // =========================================
+        // TORAS
+        // Cada registro da base representa uma tora.
+        // =========================================
         dados.toras += 1;
 
         dados.florestal += numero(
@@ -168,6 +172,46 @@ export default function Transporte() {
             linha["Comercial M³"] ??
             linha["Comercial"]
         );
+      }
+
+      // =========================================
+      // VIAGENS = ROMANEIOS/NFs ÚNICOS POR MOTORISTA
+      // =========================================
+      const viagensPorMotorista = new Map<string, Set<string>>();
+
+      for (const linha of registros) {
+        const motorista =
+          pegar(
+            linha,
+            "Motorista",
+            "MOTORISTA"
+          ) || "SEM MOTORISTA";
+
+        const romaneio = pegar(
+          linha,
+          "Romaneio",
+          "ROMANEIO",
+          "NF",
+          "Nf",
+          "Nota Fiscal",
+          "NOTA FISCAL"
+        ).trim();
+
+        if (!viagensPorMotorista.has(motorista)) {
+          viagensPorMotorista.set(motorista, new Set<string>());
+        }
+
+        if (romaneio) {
+          viagensPorMotorista.get(motorista)!.add(romaneio);
+        }
+      }
+
+      for (const [nome, romaneios] of viagensPorMotorista) {
+        const motorista = mapa.get(nome);
+
+        if (motorista) {
+          motorista.viagens = romaneios.size;
+        }
       }
 
       for (const motorista of mapa.values()) {
@@ -248,6 +292,43 @@ export default function Transporte() {
 
       return Array.from(mapa.entries())
         .map(([nome, volume]) => ({ nome, volume }))
+        .sort((a, b) => b.volume - a.volume)
+        .slice(0, 10);
+    }, [registros]);
+
+
+  const graficoClientes =
+    useMemo(() => {
+      const mapa = new Map<string, { nome: string; volume: number; toras: number }>();
+
+      for (const linha of registros) {
+        const cliente =
+          pegar(
+            linha,
+            "cliente",
+            "Cliente",
+            "CLIENTE"
+          ).trim() || "SEM CLIENTE";
+
+        const volume = numero(
+          linha["Comercial M3"] ??
+            linha["Comercial M³"] ??
+            linha["Comercial"]
+        );
+
+        const atual = mapa.get(cliente) || {
+          nome: cliente,
+          volume: 0,
+          toras: 0,
+        };
+
+        atual.volume += volume;
+        atual.toras += 1;
+
+        mapa.set(cliente, atual);
+      }
+
+      return Array.from(mapa.values())
         .sort((a, b) => b.volume - a.volume)
         .slice(0, 10);
     }, [registros]);
@@ -409,7 +490,7 @@ export default function Transporte() {
           </div>
 
           <p className="mt-2 text-sm text-[#BDC1D6]">
-            Acompanhamento dos transportes por motorista e romaneio.
+            
           </p>
 
         </div>
@@ -797,7 +878,7 @@ export default function Transporte() {
                 text-[#BDC1D6]
                 text-center
               ">
-                Produção acumulada por motorista
+                
               </p>
 
             </div>
@@ -1197,81 +1278,469 @@ export default function Transporte() {
         {/* GRÁFICOS DE TRANSPORTE */}
         {/* ========================================= */}
 
-        <div className="mx-auto grid w-full max-w-[1250px] grid-cols-1 gap-5 lg:grid-cols-2">
+<div className="mx-auto grid w-full max-w-[1250px] grid-cols-1 gap-6 lg:grid-cols-2">
 
-          {/* POR ESPÉCIE */}
+          {/* PRODUÇÃO POR CLIENTE */}
+          <div className="rgb-card overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] shadow-[0_12px_35px_rgba(0,0,0,0.20)] lg:col-span-2">
 
-          <div className="rgb-card overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.14)]">
+            <div className="relative border-b border-[#44475A] px-6 pb-4 pt-5">
+              <div className="flex w-full flex-col items-center justify-center text-center">
+                <h2 className="text-xl font-black tracking-tight text-white">
+                  Produção por Cliente
+                </h2>
+                <p className="mt-1 text-xs text-[#9AA1BA]">
+                 
+                </p>
+              </div>
 
-            <div className="mb-5 text-center">
-              <h2 className="text-xl font-black text-white">Produção por Espécie</h2>
-              <p className="mt-1 text-xs text-[#BDC1D6]">Volume comercial transportado por espécie</p>
+              <div className="absolute right-5 top-1/2 flex max-w-[48%] -translate-y-1/2 items-center justify-end gap-2">
+                <div className="shrink-0 rounded-xl bg-[#282A36] px-3 py-2 text-right">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-[#7F87A8]">
+                    Total de Toras
+                  </p>
+                  <p className="mt-0.5 text-sm font-black text-white">
+                    {totalToras}
+                  </p>
+                </div>
+
+                {graficoClientes.length > 0 && (
+                  <div className="shrink-0 rounded-xl bg-[#282A36] px-3 py-2 text-right">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-[#7F87A8]">
+                      Maior produção
+                    </p>
+                    <p className="mt-0.5 text-sm font-black text-[#FFB86C]">
+                      {graficoClientes[0].volume.toFixed(2)} m³
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {graficoEspecies.length === 0 ? (
-                <p className="py-8 text-center text-sm text-[#7F87A8]">Nenhuma espécie encontrada nos dados de transporte.</p>
+            <div className="px-4 pb-4 pt-2 sm:px-5">
+              {graficoClientes.length === 0 ? (
+                <div className="flex h-[390px] items-center justify-center text-sm text-[#7F87A8]">
+                  Nenhum cliente encontrado nos dados de transporte.
+                </div>
               ) : (
-                graficoEspecies.map((item) => {
-                  const max = graficoEspecies[0]?.volume || 1;
-                  const percentual = (item.volume / max) * 100;
+                <ReactECharts
+                  option={{
+                    animation: true,
+                    animationDuration: 700,
+                    grid: {
+                      left: 48,
+                      right: 18,
+                      top: 58,
+                      bottom: 80,
+                      containLabel: true,
+                    },
+                    tooltip: {
+                      trigger: "axis",
+                      axisPointer: { type: "shadow" },
+                      backgroundColor: "#21222C",
+                      borderColor: "#44475A",
+                      textStyle: { color: "#FFFFFF", fontWeight: 700 },
+                      formatter: (params: any[]) => {
+                        const nome = params[0]?.name ?? "";
+                        const volume = params.find((item: any) => item.seriesName === "Volume Comercial (m³)");
+                        const toras = params.find((item: any) => item.seriesName === "Total de Toras");
 
-                  return (
-                    <div key={item.nome}>
-                      <div className="mb-1 flex items-center justify-between gap-3">
-                        <span className="truncate text-xs font-bold text-white">{item.nome}</span>
-                        <span className="shrink-0 text-xs font-bold text-[#50FA7B]">{item.volume.toFixed(2)} m³</span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-[#282A36]">
-                        <div
-                          className="h-full rounded-full bg-[#50FA7B] transition-all duration-500"
-                          style={{ width: `${percentual}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
+                        return [
+                          `<b>${nome}</b>`,
+                          volume
+                            ? `Volume Comercial: <b>${Number(volume.value).toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })} m³</b>`
+                            : "",
+                          toras
+                            ? `Total de Toras: <b>${Number(toras.value).toLocaleString("pt-BR")}</b>`
+                            : "",
+                        ].filter(Boolean).join("<br/>");
+                      },
+                    },
+                    legend: {
+                      top: 8,
+                      left: 12,
+                      right: "auto",
+                      itemWidth: 18,
+                      itemHeight: 10,
+                      itemGap: 16,
+                      textStyle: {
+                        color: "#BDC1D6",
+                        fontSize: 10,
+                        fontWeight: 700,
+                      },
+                    },
+                    xAxis: {
+                      type: "category",
+                      data: graficoClientes.map((item) => item.nome),
+                      axisLabel: {
+                        color: "#BDC1D6",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        interval: 0,
+                        rotate: graficoClientes.length > 4 ? 28 : 0,
+                        formatter: (value: string) =>
+                          value.length > 14 ? `${value.slice(0, 14)}…` : value,
+                      },
+                      axisLine: { lineStyle: { color: "#4A5168" } },
+                      axisTick: { show: false },
+                    },
+                    yAxis: [
+                      {
+                        type: "value",
+                        name: "",
+                        position: "left",
+                        nameTextStyle: {
+                          color: "#FFB86C",
+                          fontWeight: 700,
+                        },
+                        axisLabel: {
+                          color: "#FFB86C",
+                          fontSize: 10,
+                          formatter: (value: number) => `${value}`,
+                        },
+                        splitLine: {
+                          lineStyle: {
+                            color: "rgba(255,255,255,0.055)",
+                          },
+                        },
+                        axisLine: { show: false },
+                      },
+                      {
+                        type: "value",
+                        name: "",
+                        position: "right",
+                        nameTextStyle: {
+                          color: "#50FA7B",
+                          fontWeight: 700,
+                        },
+                        axisLabel: {
+                          color: "#50FA7B",
+                          fontSize: 10,
+                          formatter: (value: number) => `${value}`,
+                        },
+                        splitLine: {
+                          show: false,
+                        },
+                        axisLine: { show: false },
+                      },
+                    ],
+                    series: [
+                      {
+                        name: "Volume Comercial (m³)",
+                        type: "bar",
+                        yAxisIndex: 0,
+                        data: graficoClientes.map((item) => item.volume),
+                        barMaxWidth: 34,
+                        barGap: "15%",
+                        itemStyle: {
+                          borderRadius: [8, 8, 2, 2],
+                          color: {
+                            type: "linear",
+                            x: 0,
+                            y: 0,
+                            x2: 0,
+                            y2: 1,
+                            colorStops: [
+                              { offset: 0, color: "#FFB86C" },
+                              { offset: 1, color: "#BD93F9" },
+                            ],
+                          },
+                        },
+                        label: {
+                          show: true,
+                          position: "top",
+                          color: "#FFB86C",
+                          fontSize: 10,
+                          fontWeight: 900,
+                          formatter: (params: any) =>
+                            Number(params.value).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }),
+                        },
+                      },
+                      {
+                        name: "Total de Toras",
+                        type: "bar",
+                        yAxisIndex: 1,
+                        data: graficoClientes.map((item) => item.toras),
+                        barMaxWidth: 34,
+                        itemStyle: {
+                          borderRadius: [8, 8, 2, 2],
+                          color: {
+                            type: "linear",
+                            x: 0,
+                            y: 0,
+                            x2: 0,
+                            y2: 1,
+                            colorStops: [
+                              { offset: 0, color: "#8BE9FD" },
+                              { offset: 1, color: "#50FA7B" },
+                            ],
+                          },
+                        },
+                        label: {
+                          show: true,
+                          position: "top",
+                          color: "#50FA7B",
+                          fontSize: 10,
+                          fontWeight: 900,
+                          formatter: (params: any) => `${params.value}`,
+                        },
+                      },
+                    ],
+                  }}
+                  style={{ height: "430px", width: "100%" }}
+                  opts={{ renderer: "canvas" }}
+                />
               )}
             </div>
-
           </div>
 
+          {/* PRODUÇÃO POR ESPÉCIE */}
+          <div className="rgb-card overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] shadow-[0_12px_35px_rgba(0,0,0,0.20)]">
 
-          {/* POR UT */}
+            <div className="relative border-b border-[#44475A] px-6 pb-4 pt-5">
+              <div className="flex w-full flex-col items-center justify-center text-center">
+                <h2 className="text-xl font-black tracking-tight text-white">
+                  Produção por Espécie
+                </h2>
+                <p className="mt-1 text-xs text-[#9AA1BA]">
+                  Volume comercial transportado por espécie
+                </p>
+              </div>
 
-          <div className="rgb-card overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.14)]">
-
-            <div className="mb-5 text-center">
-              <h2 className="text-xl font-black text-white">Produção por UT</h2>
-              <p className="mt-1 text-xs text-[#BDC1D6]">Volume comercial transportado por UT</p>
-            </div>
-
-            <div className="space-y-3">
-              {graficoUT.length === 0 ? (
-                <p className="py-8 text-center text-sm text-[#7F87A8]">Nenhuma UT encontrada nos dados de transporte.</p>
-              ) : (
-                graficoUT.map((item) => {
-                  const max = graficoUT[0]?.volume || 1;
-                  const percentual = (item.volume / max) * 100;
-
-                  return (
-                    <div key={item.nome}>
-                      <div className="mb-1 flex items-center justify-between gap-3">
-                        <span className="truncate text-xs font-bold text-white">UT {item.nome}</span>
-                        <span className="shrink-0 text-xs font-bold text-[#8BE9FD]">{item.volume.toFixed(2)} m³</span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-[#282A36]">
-                        <div
-                          className="h-full rounded-full bg-[#8BE9FD] transition-all duration-500"
-                          style={{ width: `${percentual}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
+              {graficoEspecies.length > 0 && (
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 shrink-0 rounded-xl bg-[#282A36] px-3 py-2 text-right">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-[#7F87A8]">
+                    Maior produção
+                  </p>
+                  <p className="mt-0.5 text-sm font-black text-[#50FA7B]">
+                    {graficoEspecies[0].volume.toFixed(2)} m³
+                  </p>
+                </div>
               )}
             </div>
 
+            <div className="px-4 pb-4 pt-2 sm:px-5">
+              {graficoEspecies.length === 0 ? (
+                <div className="flex h-[390px] items-center justify-center text-sm text-[#7F87A8]">
+                  Nenhuma espécie encontrada nos dados de transporte.
+                </div>
+              ) : (
+                <ReactECharts
+                  option={{
+                    animation: true,
+                    animationDuration: 700,
+                    grid: {
+                      left: 48,
+                      right: 18,
+                      top: 30,
+                      bottom: 72,
+                      containLabel: true,
+                    },
+                    tooltip: {
+                      trigger: "axis",
+                      axisPointer: { type: "shadow" },
+                      backgroundColor: "#21222C",
+                      borderColor: "#44475A",
+                      textStyle: { color: "#FFFFFF", fontWeight: 700 },
+                      formatter: (params: any[]) => {
+                        const p = params[0];
+                        return `${p.name}<br/><b>${Number(p.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³</b>`;
+                      },
+                    },
+                    xAxis: {
+                      type: "category",
+                      data: graficoEspecies.map((item) => item.nome),
+                      axisLabel: {
+                        color: "#BDC1D6",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        interval: 0,
+                        rotate: graficoEspecies.length > 6 ? 28 : 0,
+                      },
+                      axisLine: { lineStyle: { color: "#4A5168" } },
+                      axisTick: { show: false },
+                    },
+                    yAxis: {
+                      type: "value",
+                      name: "m³",
+                      nameTextStyle: { color: "#7F87A8", fontWeight: 700 },
+                      axisLabel: {
+                        color: "#7F87A8",
+                        fontSize: 10,
+                        formatter: (value: number) => `${value}`,
+                      },
+                      splitLine: {
+                        lineStyle: { color: "rgba(255,255,255,0.055)" },
+                      },
+                      axisLine: { show: false },
+                    },
+                    series: [{
+                      name: "Comercial",
+                      type: "bar",
+                      data: graficoEspecies.map((item) => item.volume),
+                      barMaxWidth: 42,
+                      barMinHeight: 4,
+                      itemStyle: {
+                        borderRadius: [8, 8, 2, 2],
+                        color: {
+                          type: "linear",
+                          x: 0,
+                          y: 0,
+                          x2: 0,
+                          y2: 1,
+                          colorStops: [
+                            { offset: 0, color: "#8BE9FD" },
+                            { offset: 1, color: "#50FA7B" },
+                          ],
+                        },
+                      },
+                      label: {
+                        show: true,
+                        position: "top",
+                        color: "#50FA7B",
+                        fontSize: 10,
+                        fontWeight: 900,
+                        formatter: (params: any) => `${Number(params.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                      },
+                      emphasis: {
+                        itemStyle: {
+                          shadowBlur: 18,
+                          shadowColor: "rgba(80,250,123,0.30)",
+                        },
+                      },
+                    }],
+                  }}
+                  style={{ height: "390px", width: "100%" }}
+                  opts={{ renderer: "canvas" }}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* PRODUÇÃO POR UT */}
+          <div className="rgb-card overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] shadow-[0_12px_35px_rgba(0,0,0,0.20)]">
+
+            <div className="relative border-b border-[#44475A] px-6 pb-4 pt-5">
+              <div className="flex w-full flex-col items-center justify-center text-center">
+                <h2 className="text-xl font-black tracking-tight text-white">
+                  Produção por UT
+                </h2>
+                <p className="mt-1 text-xs text-[#9AA1BA]">
+                  Volume comercial transportado por UT
+                </p>
+              </div>
+
+              {graficoUT.length > 0 && (
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 shrink-0 rounded-xl bg-[#282A36] px-3 py-2 text-right">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-[#7F87A8]">
+                    Maior produção
+                  </p>
+                  <p className="mt-0.5 text-sm font-black text-[#8BE9FD]">
+                    {graficoUT[0].volume.toFixed(2)} m³
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="px-4 pb-4 pt-2 sm:px-5">
+              {graficoUT.length === 0 ? (
+                <div className="flex h-[390px] items-center justify-center text-sm text-[#7F87A8]">
+                  Nenhuma UT encontrada nos dados de transporte.
+                </div>
+              ) : (
+                <ReactECharts
+                  option={{
+                    animation: true,
+                    animationDuration: 700,
+                    grid: {
+                      left: 48,
+                      right: 18,
+                      top: 30,
+                      bottom: 62,
+                      containLabel: true,
+                    },
+                    tooltip: {
+                      trigger: "axis",
+                      axisPointer: { type: "shadow" },
+                      backgroundColor: "#21222C",
+                      borderColor: "#44475A",
+                      textStyle: { color: "#FFFFFF", fontWeight: 700 },
+                      formatter: (params: any[]) => {
+                        const p = params[0];
+                        return `${p.name}<br/><b>${Number(p.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³</b>`;
+                      },
+                    },
+                    xAxis: {
+                      type: "category",
+                      data: graficoUT.map((item) => `UT ${item.nome}`),
+                      axisLabel: {
+                        color: "#BDC1D6",
+                        fontSize: 10,
+                        fontWeight: 800,
+                        interval: 0,
+                      },
+                      axisLine: { lineStyle: { color: "#4A5168" } },
+                      axisTick: { show: false },
+                    },
+                    yAxis: {
+                      type: "value",
+                      name: "m³",
+                      nameTextStyle: { color: "#7F87A8", fontWeight: 700 },
+                      axisLabel: {
+                        color: "#7F87A8",
+                        fontSize: 10,
+                      },
+                      splitLine: {
+                        lineStyle: { color: "rgba(255,255,255,0.055)" },
+                      },
+                      axisLine: { show: false },
+                    },
+                    series: [{
+                      name: "Comercial",
+                      type: "bar",
+                      data: graficoUT.map((item) => item.volume),
+                      barMaxWidth: 48,
+                      barMinHeight: 4,
+                      itemStyle: {
+                        borderRadius: [8, 8, 2, 2],
+                        color: {
+                          type: "linear",
+                          x: 0,
+                          y: 0,
+                          x2: 0,
+                          y2: 1,
+                          colorStops: [
+                            { offset: 0, color: "#BD93F9" },
+                            { offset: 1, color: "#8BE9FD" },
+                          ],
+                        },
+                      },
+                      label: {
+                        show: true,
+                        position: "top",
+                        color: "#8BE9FD",
+                        fontSize: 10,
+                        fontWeight: 900,
+                        formatter: (params: any) => `${Number(params.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                      },
+                      emphasis: {
+                        itemStyle: {
+                          shadowBlur: 18,
+                          shadowColor: "rgba(139,233,253,0.30)",
+                        },
+                      },
+                    }],
+                  }}
+                  style={{ height: "390px", width: "100%" }}
+                  opts={{ renderer: "canvas" }}
+                />
+              )}
+            </div>
           </div>
 
         </div>

@@ -2,6 +2,7 @@ import {
   MapContainer,
   TileLayer,
   CircleMarker,
+  Marker,
   Popup,
   useMap,
   GeoJSON,
@@ -9,6 +10,7 @@ import {
 } from "react-leaflet";
 
 import { useEffect, useState } from "react";
+
 
 import { ArrowLeft } from "lucide-react";
 
@@ -22,6 +24,9 @@ import Header from "../components/layout/Header";
 import Container from "../components/layout/Container";
 
 import { useExcelContext } from "../context/ExcelContext";
+
+// ESTRADAS PRINCIPAIS - SHAPE UPA 13
+const ESTRADAS_PRINCIPAIS = {"type":"FeatureCollection","name":"estradas_principais","crs":{"type":"name","properties":{"name":"urn:ogc:def:crs:OGC:1.3:CRS84"}},"features":[{"type":"Feature","properties":{"Id":0,"Km":4.20709841295},"geometry":{"type":"LineString","coordinates":[[-56.185280564932064,-3.286195324779991],[-56.14741461484557,-3.28616358047128]]}},{"type":"Feature","properties":{"Id":0,"Km":6.46483624827},"geometry":{"type":"LineString","coordinates":[[-56.18303374004854,-3.286193825179197],[-56.18303338980898,-3.277237845918971],[-56.151922391155125,-3.27721220743144],[-56.151924641745595,-3.274538086510204],[-56.151929921626625,-3.268255969244821],[-56.14986546276688,-3.266257455088868],[-56.14867606910549,-3.264748582209051],[-56.14720512269404,-3.260504381301066]]}},{"type":"Feature","properties":{"Id":0,"Km":11.8041634512},"geometry":{"type":"LineString","coordinates":[[-56.1615179567031,-3.446615371153155],[-56.13197766866198,-3.446588792731245],[-56.1320013010891,-3.420416383776091],[-56.132005599433114,-3.414848904422923],[-56.13202970095653,-3.411128711975126],[-56.132602243532816,-3.410077225677857],[-56.13355570779361,-3.406239549507978],[-56.133464095877144,-3.405099702838682],[-56.133037239061,-3.403040980881554],[-56.13242027963131,-3.400503404647007],[-56.13202163393682,-3.397735875089872],[-56.132094203037894,-3.392269765027702],[-56.133047234557,-3.39183980835436],[-56.134000478381815,-3.39117050913258],[-56.13457261985984,-3.390548734870019],[-56.13485896678866,-3.389926703659018],[-56.13485956217466,-3.389256547605367],[-56.13471734578787,-3.38849052677741],[-56.13443219039131,-3.387772246063044],[-56.13419462492264,-3.387101876386143],[-56.133766318501934,-3.386670677128317],[-56.13300467293175,-3.386143441780093],[-56.13209997032123,-3.385797807423272],[-56.13210045343367,-3.3852551010428],[-56.13210084806862,-3.384811721294145],[-56.13210178518478,-3.383758619580441],[-56.13169412087196,-3.382569922781526],[-56.13146847642592,-3.381887596812184],[-56.131409479696956,-3.381277223066946],[-56.13151019751931,-3.38081324595885],[-56.13478047069854,-3.373454740183583]]}}]};
 
 // ========================================
 // AJUSTAR MAPA
@@ -576,7 +581,7 @@ export default function MapaFlorestal() {
                 </h2>
               </div>
 
-              <div className="space-y-2 px-3 py-2">
+              <div className="space-y-1.5 px-3 py-2">
 
                 {/* DERRUBADA */}
 
@@ -644,7 +649,7 @@ export default function MapaFlorestal() {
 
                   <div className="flex items-center gap-2">
 
-                    <span className="h-3 w-3 rounded-full bg-purple-500" />
+                    <span className="h-3 w-3 rounded-full bg-[#A855F7]"></span>
 
                     <span className="text-[13px] text-white/90">
                       Justificadas
@@ -656,6 +661,24 @@ export default function MapaFlorestal() {
                     {totalJustificadas}
                   </span>
 
+                </div>
+
+                {/* ESTRADAS PRINCIPAIS */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="block w-4"
+                      style={{
+                        height: "1.5px",
+                        backgroundColor: "#FF3030",
+                        opacity: 0.55,
+                        borderRadius: "9999px",
+                      }}
+                    />
+                    <span className="text-[13px] text-white/90">
+                      Estrada Principal
+                    </span>
+                  </div>
                 </div>
 
               </div>
@@ -708,6 +731,26 @@ export default function MapaFlorestal() {
                   url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
                   attribution="Google Satellite"
                 />
+
+                {/* ========================================
+                    ESTRADAS PRINCIPAIS
+                ======================================== */}
+
+                <Pane
+                  name="estradasPrincipaisPane"
+                  style={{ zIndex: 800 }}
+                >
+                  <GeoJSON
+                    data={ESTRADAS_PRINCIPAIS as any}
+                    style={() => ({
+                      color: "#FF3030",
+                      weight: 1.1,
+                      opacity: 0.45,
+                      lineCap: "round",
+                      lineJoin: "round",
+                    })}
+                  />
+                </Pane>
 
                 {/* ========================================
                     UTs
@@ -1027,14 +1070,14 @@ export default function MapaFlorestal() {
                             arvore.LONGITUDE
                           ),
                         ]}
-                        radius={3}
+                        radius={2}
                         pathOptions={{
                           color:
                             "#FFFFFF",
-                          weight: 1,
+                          weight: 0.7,
                           fillColor:
                             cor,
-                          fillOpacity: 1,
+                          fillOpacity: 0.95,
                         }}
                       >
                         {popupConteudo}

@@ -85,7 +85,7 @@ export default function EstimativaMadeira({
           </h2>
 
           <p className="text-sm text-gray-400">
-            Árvores derrubadas e volume estimado por espécie
+          
           </p>
         </div>
 

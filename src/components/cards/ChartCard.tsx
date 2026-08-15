@@ -82,7 +82,7 @@ export default function ChartCard({
             </h2>
 
             <p className="text-sm text-[#8F93A8]">
-              Atualizado automaticamente
+              
             </p>
 
           </div>

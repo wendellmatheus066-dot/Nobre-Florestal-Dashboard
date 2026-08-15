@@ -206,7 +206,7 @@ export default function FilterBar({
             </h2>
 
             <p className="text-sm text-slate-400">
-              Os dados são atualizados automaticamente.
+              
             </p>
           </div>
 
