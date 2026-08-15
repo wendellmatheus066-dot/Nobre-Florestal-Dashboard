@@ -1096,263 +1096,165 @@ export default function Transporte() {
 
 
           {/* ================================================= */}
-          {/* CELULAR - CARDS INDIVIDUAIS */}
+          {/* CELULAR - TABELA COMPACTA */}
           {/* ================================================= */}
 
           <div className="block md:hidden">
 
-            {motoristas.map(
-              (item, index) => (
+            <div className="w-full overflow-x-auto">
 
-                <div
-                  key={item.motorista}
-                  className="
-                    border-b
-                    border-[#44475A]
-                    p-4
-                    last:border-b-0
-                  "
-                >
+              <table className="min-w-[700px] w-full table-fixed">
 
-                  {/* MOTORISTA */}
+                <thead>
 
-                  <div className="
-                    mb-4
-                    flex
-                    min-w-0
-                    items-center
-                    gap-3
-                  ">
+                  <tr className="border-b border-[#44475A]">
 
-                    <div className="
-                      flex
-                      h-10
-                      w-10
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-xl
-                      bg-[#282A36]
-                    ">
+                    <th className="w-[32%] px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#7F87A8]">
+                      Motorista
+                    </th>
 
-                      <Truck
-                        size={18}
-                        className={
-                          index === 0
-                            ? "text-[#50FA7B]"
-                            : "text-[#8BE9FD]"
-                        }
-                      />
+                    <th className="w-[13%] px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#7F87A8]">
+                      Viagens
+                    </th>
 
-                    </div>
+                    <th className="w-[13%] px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#7F87A8]">
+                      Toras
+                    </th>
 
-                    <div className="min-w-0">
+                    <th className="w-[14%] px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#7F87A8]">
+                      Florestal
+                    </th>
 
-                      <p className="
-                        text-[10px]
-                        font-semibold
-                        uppercase
-                        tracking-wide
-                        text-[#7F87A8]
-                      ">
-                        Motorista
-                      </p>
+                    <th className="w-[14%] px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#7F87A8]">
+                      Comercial
+                    </th>
 
-                      <p className="
-                        break-words
-                        text-sm
+                    <th className="w-[14%] px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#7F87A8]">
+                      Média
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {motoristas.map((item, index) => (
+
+                    <tr
+                      key={item.motorista}
+                      className="
+                        border-b
+                        border-[#44475A]
+                        last:border-0
+                      "
+                    >
+
+                      <td className="px-3 py-2">
+
+                        <div className="flex items-center gap-2">
+
+                          <div className="
+                            flex
+                            h-7
+                            w-7
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-lg
+                            bg-[#282A36]
+                          ">
+
+                            <Truck
+                              size={14}
+                              className={
+                                index === 0
+                                  ? "text-[#50FA7B]"
+                                  : "text-[#8BE9FD]"
+                              }
+                            />
+
+                          </div>
+
+                          <span className="
+                            whitespace-nowrap
+                            text-xs
+                            font-bold
+                            text-white
+                          ">
+                            {item.motorista}
+                          </span>
+
+                        </div>
+
+                      </td>
+
+                      <td className="
+                        px-2
+                        py-2
+                        text-center
+                        text-xs
                         font-bold
-                        leading-5
-                        text-white
-                      ">
-                        {item.motorista}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* INDICADORES */}
-
-                  <div className="
-                    grid
-                    grid-cols-2
-                    gap-2
-                  ">
-
-                    {/* VIAGENS */}
-
-                    <div className="
-                      rounded-xl
-                      bg-[#282A36]
-                      p-3
-                      text-center
-                    ">
-
-                      <p className="
-                        text-[10px]
-                        font-semibold
-                        uppercase
-                        text-[#7F87A8]
-                      ">
-                        Viagens
-                      </p>
-
-                      <p className="
-                        mt-1
-                        text-lg
-                        font-black
                         text-white
                       ">
                         {item.viagens}
-                      </p>
+                      </td>
 
-                    </div>
-
-
-                    {/* TORAS */}
-
-                    <div className="
-                      rounded-xl
-                      bg-[#282A36]
-                      p-3
-                      text-center
-                    ">
-
-                      <p className="
-                        text-[10px]
-                        font-semibold
-                        uppercase
-                        text-[#7F87A8]
-                      ">
-                        Toras
-                      </p>
-
-                      <p className="
-                        mt-1
-                        text-lg
-                        font-black
+                      <td className="
+                        px-2
+                        py-2
+                        text-center
+                        text-xs
                         text-white
                       ">
                         {item.toras}
-                      </p>
+                      </td>
 
-                    </div>
-
-
-                    {/* FLORESTAL */}
-
-                    <div className="
-                      rounded-xl
-                      bg-[#282A36]
-                      p-3
-                      text-center
-                    ">
-
-                      <p className="
-                        text-[10px]
-                        font-semibold
-                        uppercase
-                        text-[#50FA7B]
-                      ">
-                        Florestal
-                      </p>
-
-                      <p className="
-                        mt-1
-                        text-base
-                        font-black
+                      <td className="
+                        whitespace-nowrap
+                        px-2
+                        py-2
+                        text-center
+                        text-xs
+                        font-bold
                         text-[#50FA7B]
                       ">
                         {item.florestal.toFixed(2)}
-                      </p>
+                      </td>
 
-                      <span className="
-                        text-[10px]
-                        text-[#50FA7B]
-                      ">
-                        m³
-                      </span>
-
-                    </div>
-
-
-                    {/* COMERCIAL */}
-
-                    <div className="
-                      rounded-xl
-                      bg-[#282A36]
-                      p-3
-                      text-center
-                    ">
-
-                      <p className="
-                        text-[10px]
-                        font-semibold
-                        uppercase
-                        text-[#8BE9FD]
-                      ">
-                        Comercial
-                      </p>
-
-                      <p className="
-                        mt-1
-                        text-base
-                        font-black
+                      <td className="
+                        whitespace-nowrap
+                        px-2
+                        py-2
+                        text-center
+                        text-xs
+                        font-bold
                         text-[#8BE9FD]
                       ">
                         {item.comercial.toFixed(2)}
-                      </p>
+                      </td>
 
-                      <span className="
-                        text-[10px]
-                        text-[#8BE9FD]
+                      <td className="
+                        whitespace-nowrap
+                        px-2
+                        py-2
+                        text-center
+                        text-xs
+                        font-bold
+                        text-[#FFB86C]
                       ">
-                        m³
-                      </span>
+                        {item.media.toFixed(2)}
+                      </td>
 
-                    </div>
+                    </tr>
 
-                  </div>
+                  ))}
 
+                </tbody>
 
-                  {/* MÉDIA */}
+              </table>
 
-                  <div className="
-                    mt-2
-                    flex
-                    items-center
-                    justify-between
-                    rounded-xl
-                    bg-[#282A36]
-                    px-4
-                    py-3
-                  ">
-
-                    <span className="
-                      text-[10px]
-                      font-semibold
-                      uppercase
-                      text-[#7F87A8]
-                    ">
-                      Média por viagem
-                    </span>
-
-                    <span className="
-                      text-base
-                      font-black
-                      text-[#FFB86C]
-                    ">
-                      {item.media.toFixed(2)} m³
-                    </span>
-
-                  </div>
-
-                </div>
-
-              )
-            )}
+            </div>
 
           </div>
 
