@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../components/layout/MainLayout";
 import { supabase } from "../lib/supabase";
+
 import {
   Truck,
   ClipboardList,
@@ -244,8 +245,10 @@ export default function Transporte() {
 
         dados.viagens += 1;
         dados.toras += item.toras;
+
         dados.florestal +=
           item.florestal;
+
         dados.comercial +=
           item.comercial;
       }
@@ -373,6 +376,7 @@ export default function Transporte() {
       <MainLayout>
         <div className="flex min-h-[50vh] items-center justify-center">
           <div className="text-center">
+
             <Truck
               size={36}
               className="mx-auto text-[#8BE9FD]"
@@ -381,6 +385,7 @@ export default function Transporte() {
             <p className="mt-3 text-sm font-semibold text-white">
               Carregando Transporte...
             </p>
+
           </div>
         </div>
       </MainLayout>
@@ -403,19 +408,44 @@ export default function Transporte() {
 
   return (
     <MainLayout>
-      
+
       <style>{`
+
         @keyframes trkRgbBorder {
-          0%   { box-shadow: 0 0 0 1px rgba(80,250,123,.75), 0 0 12px rgba(80,250,123,.18); }
-          33%  { box-shadow: 0 0 0 1px rgba(139,233,253,.75), 0 0 12px rgba(139,233,253,.18); }
-          66%  { box-shadow: 0 0 0 1px rgba(255,121,198,.75), 0 0 12px rgba(255,121,198,.18); }
-          100% { box-shadow: 0 0 0 1px rgba(80,250,123,.75), 0 0 12px rgba(80,250,123,.18); }
+
+          0% {
+            box-shadow:
+              0 0 0 1px rgba(80,250,123,.75),
+              0 0 12px rgba(80,250,123,.18);
+          }
+
+          33% {
+            box-shadow:
+              0 0 0 1px rgba(139,233,253,.75),
+              0 0 12px rgba(139,233,253,.18);
+          }
+
+          66% {
+            box-shadow:
+              0 0 0 1px rgba(255,121,198,.75),
+              0 0 12px rgba(255,121,198,.18);
+          }
+
+          100% {
+            box-shadow:
+              0 0 0 1px rgba(80,250,123,.75),
+              0 0 12px rgba(80,250,123,.18);
+          }
+
         }
 
         .rgb-card {
-          animation: trkRgbBorder 4s linear infinite;
+          animation:
+            trkRgbBorder 4s linear infinite;
         }
+
       `}</style>
+
 
       <div className="w-full max-w-[1450px] mx-auto px-6">
 
@@ -428,10 +458,12 @@ export default function Transporte() {
           <div className="flex items-center justify-center gap-3">
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#343746]">
+
               <Truck
                 size={25}
                 className="text-[#8BE9FD]"
               />
+
             </div>
 
             <div>
@@ -454,125 +486,402 @@ export default function Transporte() {
 
         </div>
 
+
         {/* ========================================= */}
         {/* CARDS */}
         {/* ========================================= */}
 
-        <div className="mx-auto mb-0 w-full max-w-[1250px] grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="
+          mx-auto
+          mb-0
+          w-full
+          max-w-[1250px]
+          grid
+          grid-cols-1
+          gap-5
+          sm:grid-cols-2
+          xl:grid-cols-5
+        ">
 
           {/* ROMANEIOS */}
-          <div className="rgb-card min-h-[104px] rounded-2xl border border-[#4A5168] bg-[#343746] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+
+          <div className="
+            rgb-card
+            min-h-[104px]
+            rounded-2xl
+            border
+            border-[#4A5168]
+            bg-[#343746]
+            px-4
+            py-3
+            shadow-[0_8px_24px_rgba(0,0,0,0.18)]
+          ">
+
             <div className="flex h-full items-center justify-center gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#282A36]">
-                <ClipboardList size={23} className="text-[#50FA7B]" />
+
+              <div className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-[#282A36]
+              ">
+
+                <ClipboardList
+                  size={23}
+                  className="text-[#50FA7B]"
+                />
+
               </div>
+
               <div className="min-w-0 text-center">
-                <p className="text-xs font-medium text-[#9AA1BA]">Romaneios</p>
+
+                <p className="text-xs font-medium text-[#9AA1BA]">
+                  Romaneios
+                </p>
+
                 <p className="mt-1 text-2xl font-black leading-none text-white">
                   {totalRomaneios}
                 </p>
+
               </div>
+
             </div>
+
           </div>
 
+
           {/* TORAS */}
-          <div className="rgb-card min-h-[104px] rounded-2xl border border-[#4A5168] bg-[#343746] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+
+          <div className="
+            rgb-card
+            min-h-[104px]
+            rounded-2xl
+            border
+            border-[#4A5168]
+            bg-[#343746]
+            px-4
+            py-3
+            shadow-[0_8px_24px_rgba(0,0,0,0.18)]
+          ">
+
             <div className="flex h-full items-center justify-center gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#282A36]">
-                <Truck size={23} className="text-[#8BE9FD]" />
+
+              <div className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-[#282A36]
+              ">
+
+                <Truck
+                  size={23}
+                  className="text-[#8BE9FD]"
+                />
+
               </div>
+
               <div className="min-w-0 text-center">
-                <p className="text-xs font-medium text-[#9AA1BA]">Toras</p>
+
+                <p className="text-xs font-medium text-[#9AA1BA]">
+                  Toras
+                </p>
+
                 <p className="mt-1 text-2xl font-black leading-none text-white">
                   {totalToras}
                 </p>
+
               </div>
+
             </div>
+
           </div>
+
 
           {/* FLORESTAL */}
-          <div className="rgb-card min-h-[104px] rounded-2xl border border-[#4A5168] bg-[#343746] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+
+          <div className="
+            rgb-card
+            min-h-[104px]
+            rounded-2xl
+            border
+            border-[#4A5168]
+            bg-[#343746]
+            px-4
+            py-3
+            shadow-[0_8px_24px_rgba(0,0,0,0.18)]
+          ">
+
             <div className="flex h-full items-center justify-center gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#282A36]">
-                <Truck size={23} className="text-[#50FA7B]" />
+
+              <div className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-[#282A36]
+              ">
+
+                <Truck
+                  size={23}
+                  className="text-[#50FA7B]"
+                />
+
               </div>
+
               <div className="min-w-0 text-center">
-                <p className="text-xs font-medium text-[#9AA1BA]">Florestal</p>
-                <p className="mt-1 whitespace-nowrap text-2xl font-black leading-none text-[#50FA7B]">
-                  {totalFlorestal.toFixed(2)}
-                  <span className="ml-1 text-xs">m³</span>
+
+                <p className="text-xs font-medium text-[#9AA1BA]">
+                  Florestal
                 </p>
+
+                <p className="
+                  mt-1
+                  whitespace-nowrap
+                  text-2xl
+                  font-black
+                  leading-none
+                  text-[#50FA7B]
+                ">
+
+                  {totalFlorestal.toFixed(2)}
+
+                  <span className="ml-1 text-xs">
+                    m³
+                  </span>
+
+                </p>
+
               </div>
+
             </div>
+
           </div>
+
 
           {/* COMERCIAL */}
-          <div className="rgb-card min-h-[104px] rounded-2xl border border-[#4A5168] bg-[#343746] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+
+          <div className="
+            rgb-card
+            min-h-[104px]
+            rounded-2xl
+            border
+            border-[#4A5168]
+            bg-[#343746]
+            px-4
+            py-3
+            shadow-[0_8px_24px_rgba(0,0,0,0.18)]
+          ">
+
             <div className="flex h-full items-center justify-center gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#282A36]">
-                <Truck size={23} className="text-[#8BE9FD]" />
+
+              <div className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-[#282A36]
+              ">
+
+                <Truck
+                  size={23}
+                  className="text-[#8BE9FD]"
+                />
+
               </div>
+
               <div className="min-w-0 text-center">
-                <p className="text-xs font-medium text-[#9AA1BA]">Comercial</p>
-                <p className="mt-1 whitespace-nowrap text-2xl font-black leading-none text-[#8BE9FD]">
-                  {totalComercial.toFixed(2)}
-                  <span className="ml-1 text-xs">m³</span>
+
+                <p className="text-xs font-medium text-[#9AA1BA]">
+                  Comercial
                 </p>
+
+                <p className="
+                  mt-1
+                  whitespace-nowrap
+                  text-2xl
+                  font-black
+                  leading-none
+                  text-[#8BE9FD]
+                ">
+
+                  {totalComercial.toFixed(2)}
+
+                  <span className="ml-1 text-xs">
+                    m³
+                  </span>
+
+                </p>
+
               </div>
+
             </div>
+
           </div>
 
+
           {/* MÉDIA */}
-          <div className="rgb-card min-h-[104px] rounded-2xl border border-[#4A5168] bg-[#343746] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+
+          <div className="
+            rgb-card
+            min-h-[104px]
+            rounded-2xl
+            border
+            border-[#4A5168]
+            bg-[#343746]
+            px-4
+            py-3
+            shadow-[0_8px_24px_rgba(0,0,0,0.18)]
+          ">
+
             <div className="flex h-full items-center justify-center gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#282A36]">
-                <Truck size={23} className="text-[#FFB86C]" />
+
+              <div className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-[#282A36]
+              ">
+
+                <Truck
+                  size={23}
+                  className="text-[#FFB86C]"
+                />
+
               </div>
+
               <div className="min-w-0 text-center">
-                <p className="text-xs font-medium text-[#9AA1BA]">Média / Romaneio</p>
-                <p className="mt-1 whitespace-nowrap text-2xl font-black leading-none text-[#FFB86C]">
-                  {mediaRomaneio.toFixed(2)}
-                  <span className="ml-1 text-xs">m³</span>
+
+                <p className="text-xs font-medium text-[#9AA1BA]">
+                  Média / Romaneio
                 </p>
+
+                <p className="
+                  mt-1
+                  whitespace-nowrap
+                  text-2xl
+                  font-black
+                  leading-none
+                  text-[#FFB86C]
+                ">
+
+                  {mediaRomaneio.toFixed(2)}
+
+                  <span className="ml-1 text-xs">
+                    m³
+                  </span>
+
+                </p>
+
               </div>
+
             </div>
+
           </div>
 
         </div>
 
-        {/* ESPAÇO REAL ENTRE OS CARDS E O DESEMPENHO */}
+
+        {/* ESPAÇO ENTRE OS CARDS E DESEMPENHO */}
+
         <div className="h-16" />
 
+
         {/* ========================================= */}
-        {/* MOTORISTAS */}
+        {/* DESEMPENHO DOS MOTORISTAS */}
         {/* ========================================= */}
 
-        <div className="rgb-card mx-auto w-full max-w-[1250px] rounded-2xl border border-[#44475A] bg-[#343746] overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.14)]">
+        <div className="
+          rgb-card
+          mx-auto
+          w-full
+          max-w-[1250px]
+          rounded-2xl
+          border
+          border-[#44475A]
+          bg-[#343746]
+          overflow-hidden
+          shadow-[0_8px_24px_rgba(0,0,0,0.14)]
+        ">
 
-          <div className="flex flex-col items-center justify-center gap-1.5 border-b border-[#44475A] px-4 py-2.5 text-center">
+          {/* CABEÇALHO */}
 
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#282A36]">
+          <div className="
+            flex
+            flex-col
+            items-center
+            justify-center
+            gap-1.5
+            border-b
+            border-[#44475A]
+            px-4
+            py-2.5
+            text-center
+          ">
+
+            <div className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-lg
+              bg-[#282A36]
+            ">
+
               <Truck
                 size={19}
                 className="text-[#50FA7B]"
               />
+
             </div>
 
             <div>
 
-              <h2 className="text-xl font-black text-white text-center">
+              <h2 className="
+                text-xl
+                font-black
+                text-white
+                text-center
+              ">
                 Desempenho dos Motoristas
               </h2>
 
-              <p className="text-xs text-[#BDC1D6] text-center">
-                
+              <p className="
+                text-xs
+                text-[#BDC1D6]
+                text-center
+              ">
+                Produção acumulada por motorista
               </p>
 
             </div>
 
           </div>
 
-          <div className="overflow-x-auto">
+
+          {/* ================================================= */}
+          {/* DESKTOP - TABELA */}
+          {/* ================================================= */}
+
+          <div className="hidden md:block overflow-x-auto">
 
             <table className="w-full table-fixed">
 
@@ -580,27 +889,76 @@ export default function Transporte() {
 
                 <tr className="border-b border-[#44475A]">
 
-                  <th className="w-[30%] px-2.5 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    w-[30%]
+                    px-2.5
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Motorista
                   </th>
 
-                  <th className="px-2.5 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    px-2.5
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Viagens
                   </th>
 
-                  <th className="px-2.5 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    px-2.5
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Toras
                   </th>
 
-                  <th className="px-2.5 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    px-2.5
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Florestal
                   </th>
 
-                  <th className="px-2.5 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    px-2.5
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Comercial
                   </th>
 
-                  <th className="px-2.5 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    px-2.5
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Média
                   </th>
 
@@ -612,6 +970,7 @@ export default function Transporte() {
 
                 {motoristas.map(
                   (item, index) => (
+
                     <tr
                       key={item.motorista}
                       className="
@@ -624,9 +983,26 @@ export default function Transporte() {
 
                       <td className="px-2.5 py-2 text-center">
 
-                        <div className="mx-auto grid w-full max-w-[430px] grid-cols-[40px_1fr] items-center gap-2">
+                        <div className="
+                          mx-auto
+                          grid
+                          w-full
+                          max-w-[430px]
+                          grid-cols-[40px_1fr]
+                          items-center
+                          gap-2
+                        ">
 
-                          <div className="flex h-7 w-7 items-center justify-center justify-self-center rounded-lg bg-[#282A36]">
+                          <div className="
+                            flex
+                            h-7
+                            w-7
+                            items-center
+                            justify-center
+                            justify-self-center
+                            rounded-lg
+                            bg-[#282A36]
+                          ">
 
                             <Truck
                               size={14}
@@ -639,7 +1015,13 @@ export default function Transporte() {
 
                           </div>
 
-                          <span className="text-left text-sm font-bold text-white whitespace-nowrap">
+                          <span className="
+                            text-left
+                            text-sm
+                            font-bold
+                            text-white
+                            whitespace-nowrap
+                          ">
                             {item.motorista}
                           </span>
 
@@ -647,27 +1029,62 @@ export default function Transporte() {
 
                       </td>
 
-                      <td className="px-2.5 py-2 text-center text-sm font-bold text-white">
+                      <td className="
+                        px-2.5
+                        py-2
+                        text-center
+                        text-sm
+                        font-bold
+                        text-white
+                      ">
                         {item.viagens}
                       </td>
 
-                      <td className="px-2.5 py-2 text-center text-sm text-white">
+                      <td className="
+                        px-2.5
+                        py-2
+                        text-center
+                        text-sm
+                        text-white
+                      ">
                         {item.toras}
                       </td>
 
-                      <td className="px-2.5 py-2 text-center text-sm font-bold text-[#50FA7B]">
+                      <td className="
+                        px-2.5
+                        py-2
+                        text-center
+                        text-sm
+                        font-bold
+                        text-[#50FA7B]
+                      ">
                         {item.florestal.toFixed(2)} m³
                       </td>
 
-                      <td className="px-2.5 py-2 text-center text-sm font-bold text-[#8BE9FD]">
+                      <td className="
+                        px-2.5
+                        py-2
+                        text-center
+                        text-sm
+                        font-bold
+                        text-[#8BE9FD]
+                      ">
                         {item.comercial.toFixed(2)} m³
                       </td>
 
-                      <td className="px-2.5 py-2 text-center text-sm font-bold text-[#FFB86C]">
+                      <td className="
+                        px-2.5
+                        py-2
+                        text-center
+                        text-sm
+                        font-bold
+                        text-[#FFB86C]
+                      ">
                         {item.media.toFixed(2)} m³
                       </td>
 
                     </tr>
+
                   )
                 )}
 
@@ -677,22 +1094,324 @@ export default function Transporte() {
 
           </div>
 
+
+          {/* ================================================= */}
+          {/* CELULAR - CARDS INDIVIDUAIS */}
+          {/* ================================================= */}
+
+          <div className="block md:hidden">
+
+            {motoristas.map(
+              (item, index) => (
+
+                <div
+                  key={item.motorista}
+                  className="
+                    border-b
+                    border-[#44475A]
+                    p-4
+                    last:border-b-0
+                  "
+                >
+
+                  {/* MOTORISTA */}
+
+                  <div className="
+                    mb-4
+                    flex
+                    min-w-0
+                    items-center
+                    gap-3
+                  ">
+
+                    <div className="
+                      flex
+                      h-10
+                      w-10
+                      shrink-0
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-[#282A36]
+                    ">
+
+                      <Truck
+                        size={18}
+                        className={
+                          index === 0
+                            ? "text-[#50FA7B]"
+                            : "text-[#8BE9FD]"
+                        }
+                      />
+
+                    </div>
+
+                    <div className="min-w-0">
+
+                      <p className="
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        tracking-wide
+                        text-[#7F87A8]
+                      ">
+                        Motorista
+                      </p>
+
+                      <p className="
+                        break-words
+                        text-sm
+                        font-bold
+                        leading-5
+                        text-white
+                      ">
+                        {item.motorista}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+
+                  {/* INDICADORES */}
+
+                  <div className="
+                    grid
+                    grid-cols-2
+                    gap-2
+                  ">
+
+                    {/* VIAGENS */}
+
+                    <div className="
+                      rounded-xl
+                      bg-[#282A36]
+                      p-3
+                      text-center
+                    ">
+
+                      <p className="
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        text-[#7F87A8]
+                      ">
+                        Viagens
+                      </p>
+
+                      <p className="
+                        mt-1
+                        text-lg
+                        font-black
+                        text-white
+                      ">
+                        {item.viagens}
+                      </p>
+
+                    </div>
+
+
+                    {/* TORAS */}
+
+                    <div className="
+                      rounded-xl
+                      bg-[#282A36]
+                      p-3
+                      text-center
+                    ">
+
+                      <p className="
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        text-[#7F87A8]
+                      ">
+                        Toras
+                      </p>
+
+                      <p className="
+                        mt-1
+                        text-lg
+                        font-black
+                        text-white
+                      ">
+                        {item.toras}
+                      </p>
+
+                    </div>
+
+
+                    {/* FLORESTAL */}
+
+                    <div className="
+                      rounded-xl
+                      bg-[#282A36]
+                      p-3
+                      text-center
+                    ">
+
+                      <p className="
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        text-[#50FA7B]
+                      ">
+                        Florestal
+                      </p>
+
+                      <p className="
+                        mt-1
+                        text-base
+                        font-black
+                        text-[#50FA7B]
+                      ">
+                        {item.florestal.toFixed(2)}
+                      </p>
+
+                      <span className="
+                        text-[10px]
+                        text-[#50FA7B]
+                      ">
+                        m³
+                      </span>
+
+                    </div>
+
+
+                    {/* COMERCIAL */}
+
+                    <div className="
+                      rounded-xl
+                      bg-[#282A36]
+                      p-3
+                      text-center
+                    ">
+
+                      <p className="
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        text-[#8BE9FD]
+                      ">
+                        Comercial
+                      </p>
+
+                      <p className="
+                        mt-1
+                        text-base
+                        font-black
+                        text-[#8BE9FD]
+                      ">
+                        {item.comercial.toFixed(2)}
+                      </p>
+
+                      <span className="
+                        text-[10px]
+                        text-[#8BE9FD]
+                      ">
+                        m³
+                      </span>
+
+                    </div>
+
+                  </div>
+
+
+                  {/* MÉDIA */}
+
+                  <div className="
+                    mt-2
+                    flex
+                    items-center
+                    justify-between
+                    rounded-xl
+                    bg-[#282A36]
+                    px-4
+                    py-3
+                  ">
+
+                    <span className="
+                      text-[10px]
+                      font-semibold
+                      uppercase
+                      text-[#7F87A8]
+                    ">
+                      Média por viagem
+                    </span>
+
+                    <span className="
+                      text-base
+                      font-black
+                      text-[#FFB86C]
+                    ">
+                      {item.media.toFixed(2)} m³
+                    </span>
+
+                  </div>
+
+                </div>
+
+              )
+            )}
+
+          </div>
+
         </div>
 
-        {/* ESPAÇO REAL ENTRE DESEMPENHO E ROMANEIOS */}
+
+        {/* ESPAÇO ENTRE DESEMPENHO E ROMANEIOS */}
+
         <div className="h-12" />
+
 
         {/* ========================================= */}
         {/* ROMANEIOS */}
         {/* ========================================= */}
 
-        <div className="rgb-card mx-auto w-full max-w-[1250px] rounded-2xl border border-[#44475A] bg-[#343746] overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.14)]">
+        <div className="
+          rgb-card
+          mx-auto
+          w-full
+          max-w-[1250px]
+          rounded-2xl
+          border
+          border-[#44475A]
+          bg-[#343746]
+          overflow-hidden
+          shadow-[0_8px_24px_rgba(0,0,0,0.14)]
+        ">
 
-          <div className="flex flex-col items-center justify-center gap-2 border-b border-[#44475A] px-3 py-2 text-center">
+          {/* CABEÇALHO */}
 
-            <div className="flex items-center justify-center gap-3">
+          <div className="
+            flex
+            flex-col
+            items-center
+            justify-center
+            gap-2
+            border-b
+            border-[#44475A]
+            px-3
+            py-2
+            text-center
+          ">
 
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#282A36]">
+            <div className="
+              flex
+              items-center
+              justify-center
+              gap-3
+            ">
+
+              <div className="
+                flex
+                h-9
+                w-9
+                items-center
+                justify-center
+                rounded-lg
+                bg-[#282A36]
+              ">
 
                 <ClipboardList
                   size={19}
@@ -703,11 +1422,20 @@ export default function Transporte() {
 
               <div>
 
-                <h2 className="text-xl font-black text-white text-center">
+                <h2 className="
+                  text-xl
+                  font-black
+                  text-white
+                  text-center
+                ">
                   Romaneios
                 </h2>
 
-                <p className="text-xs text-[#BDC1D6] text-center">
+                <p className="
+                  text-xs
+                  text-[#BDC1D6]
+                  text-center
+                ">
                   {filtrados.length} romaneios encontrados
                 </p>
 
@@ -715,11 +1443,24 @@ export default function Transporte() {
 
             </div>
 
-            <div className="relative w-full max-w-[360px]">
+
+            {/* BUSCA */}
+
+            <div className="
+              relative
+              w-full
+              max-w-[360px]
+            ">
 
               <Search
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6272A4]"
+                className="
+                  absolute
+                  left-3
+                  top-1/2
+                  -translate-y-1/2
+                  text-[#6272A4]
+                "
               />
 
               <input
@@ -751,6 +1492,9 @@ export default function Transporte() {
 
           </div>
 
+
+          {/* TABELA ROMANEIOS */}
+
           <div className="overflow-x-auto">
 
             <table className="w-full table-fixed">
@@ -759,27 +1503,79 @@ export default function Transporte() {
 
                 <tr className="border-b border-[#44475A]">
 
-                  <th className="w-[12%] px-3 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    w-[12%]
+                    px-3
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Romaneio
                   </th>
 
-                  <th className="w-[10%] px-3 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    w-[10%]
+                    px-3
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     NF
                   </th>
 
-                  <th className="w-[14%] px-3 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    w-[14%]
+                    px-3
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Data
                   </th>
 
-                  <th className="w-[30%] px-3 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    w-[30%]
+                    px-3
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Motorista
                   </th>
 
-                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    px-3
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Toras
                   </th>
 
-                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase text-[#7F87A8]">
+                  <th className="
+                    px-3
+                    py-2
+                    text-center
+                    text-xs
+                    font-semibold
+                    uppercase
+                    text-[#7F87A8]
+                  ">
                     Comercial
                   </th>
 
@@ -791,6 +1587,7 @@ export default function Transporte() {
 
                 {paginaAtual.map(
                   (item) => (
+
                     <tr
                       key={`${item.romaneio}-${item.nf}`}
                       className="
@@ -801,45 +1598,95 @@ export default function Transporte() {
                       "
                     >
 
-                      <td className="px-3 py-2 text-center text-sm font-black text-white">
+                      <td className="
+                        px-3
+                        py-2
+                        text-center
+                        text-sm
+                        font-black
+                        text-white
+                      ">
                         {item.romaneio}
                       </td>
 
-                      <td className="px-3 py-2 text-center text-sm text-white">
+                      <td className="
+                        px-3
+                        py-2
+                        text-center
+                        text-sm
+                        text-white
+                      ">
                         {item.nf}
                       </td>
 
-                      <td className="px-3 py-2 text-center text-sm text-[#BDC1D6]">
+                      <td className="
+                        px-3
+                        py-2
+                        text-center
+                        text-sm
+                        text-[#BDC1D6]
+                      ">
                         {item.data}
                       </td>
 
-                      <td className="px-3 py-2 text-center text-sm font-bold text-white">
+                      <td className="
+                        px-3
+                        py-2
+                        text-center
+                        text-sm
+                        font-bold
+                        text-white
+                      ">
                         {item.motorista}
                       </td>
 
-                      <td className="px-3 py-2 text-center text-sm text-white">
+                      <td className="
+                        px-3
+                        py-2
+                        text-center
+                        text-sm
+                        text-white
+                      ">
                         {item.toras}
                       </td>
 
-                      <td className="px-3 py-2 text-center text-sm font-bold text-[#8BE9FD]">
+                      <td className="
+                        px-3
+                        py-2
+                        text-center
+                        text-sm
+                        font-bold
+                        text-[#8BE9FD]
+                      ">
                         {item.comercial.toFixed(2)} m³
                       </td>
 
                     </tr>
+
                   )
                 )}
 
-                {paginaAtual.length ===
-                  0 && (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="px-5 py-8 text-center text-sm text-[#BDC1D6]"
-                      >
-                        Nenhum romaneio encontrado.
-                      </td>
-                    </tr>
-                  )}
+
+                {paginaAtual.length === 0 && (
+
+                  <tr>
+
+                    <td
+                      colSpan={6}
+                      className="
+                        px-5
+                        py-8
+                        text-center
+                        text-sm
+                        text-[#BDC1D6]
+                      "
+                    >
+                      Nenhum romaneio encontrado.
+                    </td>
+
+                  </tr>
+
+                )}
 
               </tbody>
 
@@ -847,9 +1694,22 @@ export default function Transporte() {
 
           </div>
 
+
           {/* PAGINAÇÃO */}
 
-          <div className="flex flex-col items-center justify-center gap-3 border-t border-[#44475A] px-5 py-3.5 sm:flex-row sm:justify-between">
+          <div className="
+            flex
+            flex-col
+            items-center
+            justify-center
+            gap-3
+            border-t
+            border-[#44475A]
+            px-5
+            py-3.5
+            sm:flex-row
+            sm:justify-between
+          ">
 
             <span className="text-xs text-[#7F87A8]">
               Mostrando{" "}
@@ -858,7 +1718,12 @@ export default function Transporte() {
               {filtrados.length}
             </span>
 
-            <div className="flex items-center gap-1">
+
+            <div className="
+              flex
+              items-center
+              gap-1
+            ">
 
               <button
                 disabled={pagina === 1}
@@ -884,6 +1749,7 @@ export default function Transporte() {
                 ‹
               </button>
 
+
               {Array.from(
                 {
                   length: totalPaginas,
@@ -892,6 +1758,7 @@ export default function Transporte() {
                   i + 1
               ).map(
                 (numeroPagina) => (
+
                   <button
                     key={numeroPagina}
                     onClick={() =>
@@ -905,6 +1772,7 @@ export default function Transporte() {
                       rounded-lg
                       text-xs
                       font-bold
+
                       ${
                         pagina ===
                         numeroPagina
@@ -915,8 +1783,10 @@ export default function Transporte() {
                   >
                     {numeroPagina}
                   </button>
+
                 )
               )}
+
 
               <button
                 disabled={
@@ -953,6 +1823,7 @@ export default function Transporte() {
         </div>
 
       </div>
+
     </MainLayout>
   );
 }
