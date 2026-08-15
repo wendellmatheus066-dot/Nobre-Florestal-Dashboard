@@ -34,6 +34,11 @@ const menus = [
     path: "/medicao",
   },
   {
+    icon: Truck,
+    title: "Transporte",
+    path: "/transporte",
+  },
+  {
     icon: Map,
     title: "Mapa Florestal",
     path: "/mapa",
@@ -78,6 +83,7 @@ export default function Sidebar({
 
         <div className="flex h-full flex-col">
 
+          {/* Botão fechar no celular */}
           <div className="flex justify-end p-3 lg:hidden">
             <button
               onClick={() => setSidebarOpen(false)}
@@ -87,6 +93,7 @@ export default function Sidebar({
             </button>
           </div>
 
+          {/* LOGO */}
           <div className="flex flex-col items-center pt-6">
 
             <div className="relative flex h-24 w-24 items-center justify-center">
@@ -121,6 +128,7 @@ export default function Sidebar({
 
           </div>
 
+          {/* MENU */}
           <nav className="mt-8 flex-1 overflow-y-auto px-4">
 
             <div className="flex flex-col gap-5">
@@ -173,12 +181,14 @@ export default function Sidebar({
                             className="text-[#50FA7B]"
                           />
                         )}
+
                       </>
                     )}
                   </NavLink>
                 );
               })}
 
+              {/* ADMINISTRAÇÃO */}
               {isAdmin && (
                 <>
                   <div className="my-5 border-t border-[#44475A]" />
@@ -229,6 +239,7 @@ export default function Sidebar({
                             className="text-[#50FA7B]"
                           />
                         )}
+
                       </>
                     )}
                   </NavLink>
@@ -238,7 +249,8 @@ export default function Sidebar({
             </div>
 
           </nav>
-          {/* Rodapé */}
+
+          {/* RODAPÉ */}
           <footer className="mt-auto border-t border-[#44475A] bg-[#1D1F28] px-4 py-4">
 
             <button
@@ -248,6 +260,7 @@ export default function Sidebar({
               }}
               className="mb-4 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-[#F8F8F2] transition hover:bg-[#343746]"
             >
+
               <LogOut
                 size={20}
                 className="text-red-400"
@@ -256,6 +269,7 @@ export default function Sidebar({
               <span className="font-semibold">
                 Sair
               </span>
+
             </button>
 
             <p className="text-[10px] uppercase tracking-[0.30em] text-[#6272A4]">
@@ -275,7 +289,6 @@ export default function Sidebar({
         </div>
 
       </aside>
-
     </>
   );
-}          
+}

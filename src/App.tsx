@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Arraste from "./pages/Arraste";
 import Medicao from "./pages/Medicao";
+import Transporte from "./pages/Transporte";
 import MapaFlorestal from "./pages/MapaFlorestal";
 import Login from "./pages/Login";
 
@@ -18,12 +19,20 @@ function App() {
     <Routes>
 
       {/* Página de Login */}
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
       {/* Página inicial */}
       <Route
         path="/"
-        element={<Navigate to="/dashboard" replace />}
+        element={
+          <Navigate
+            to="/dashboard"
+            replace
+          />
+        }
       />
 
       {/* Dashboard */}
@@ -56,6 +65,16 @@ function App() {
         }
       />
 
+      {/* Transporte */}
+      <Route
+        path="/transporte"
+        element={
+          <ProtectedRoute>
+            <Transporte />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Mapa */}
       <Route
         path="/mapa"
@@ -76,6 +95,7 @@ function App() {
         }
       />
 
+      {/* Usuários */}
       <Route
         path="/admin/usuarios"
         element={
@@ -85,6 +105,7 @@ function App() {
         }
       />
 
+      {/* Novo usuário */}
       <Route
         path="/admin/usuarios/novo"
         element={
@@ -94,6 +115,7 @@ function App() {
         }
       />
 
+      {/* Editar usuário */}
       <Route
         path="/admin/usuarios/:id"
         element={
@@ -106,7 +128,12 @@ function App() {
       {/* Qualquer rota inválida */}
       <Route
         path="*"
-        element={<Navigate to="/login" replace />}
+        element={
+          <Navigate
+            to="/login"
+            replace
+          />
+        }
       />
 
     </Routes>

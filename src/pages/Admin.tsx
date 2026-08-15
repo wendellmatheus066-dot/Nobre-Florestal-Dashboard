@@ -67,29 +67,73 @@ export default function Admin() {
 
     if (!file) return;
 
+    console.log("=================================");
+    console.log("ARQUIVO SELECIONADO");
+    console.log("Nome:", file.name);
+    console.log("Tamanho:", file.size);
+    console.log("Tipo:", file.type);
+    console.log("=================================");
+
     setSelectedFile(file);
     setSuccess(false);
   }
 
   async function handleImport() {
 
+    console.log("=================================");
+    console.log("INÍCIO DA IMPORTAÇÃO");
+    console.log("=================================");
+
     if (!selectedFile) {
+      console.error("NENHUM ARQUIVO SELECIONADO");
       alert("Selecione um arquivo");
       return;
     }
+
+    console.log("Arquivo:", selectedFile.name);
+    console.log("Tipo de importação:", tipoImportacao);
 
     try {
 
       setLoading(true);
 
+      // ========================================
+      // ETAPA 1 - LER ARQUIVO
+      // ========================================
+
+      console.log("---------------------------------");
+      console.log("ETAPA 1: LENDO ARQUIVO...");
+      console.log("---------------------------------");
+
       const buffer =
         await selectedFile.arrayBuffer();
+
+      console.log(
+        "Arquivo convertido para ArrayBuffer."
+      );
+
+      console.log(
+        "Tamanho do buffer:",
+        buffer.byteLength
+      );
+
+      // ========================================
+      // ETAPA 2 - LER EXCEL
+      // ========================================
+
+      console.log("---------------------------------");
+      console.log("ETAPA 2: LENDO EXCEL...");
+      console.log("---------------------------------");
 
       const workbook =
         XLSX.read(buffer, {
           type: "array",
           cellDates: true,
         });
+
+      console.log(
+        "Excel lido com sucesso."
+      );
 
       console.log(
         "ABAS ENCONTRADAS:",
@@ -104,8 +148,17 @@ export default function Admin() {
         tipoImportacao === "inventario"
       ) {
 
+        console.log("---------------------------------");
+        console.log("IMPORTAÇÃO DE INVENTÁRIO");
+        console.log("---------------------------------");
+
         const primeiraAba =
           workbook.SheetNames[0];
+
+        console.log(
+          "Primeira aba:",
+          primeiraAba
+        );
 
         const dados =
           XLSX.utils.sheet_to_json(
@@ -117,13 +170,21 @@ export default function Admin() {
           );
 
         console.log(
-          "Importando INVENTÁRIO:",
+          "Inventário encontrado:",
           dados.length
+        );
+
+        console.log(
+          "Enviando inventário para Supabase..."
         );
 
         await salvarPlanilha(
           "inventario",
           dados
+        );
+
+        console.log(
+          "INVENTÁRIO ENVIADO COM SUCESSO."
         );
       }
 
@@ -135,12 +196,39 @@ export default function Admin() {
         tipoImportacao === "operacao"
       ) {
 
+        console.log("---------------------------------");
+        console.log("ETAPA 3: PROCESSANDO OPERAÇÃO");
+        console.log("---------------------------------");
+
+        console.log(
+          "Quantidade de abas:",
+          workbook.SheetNames.length
+        );
+
         for (
           const aba of workbook.SheetNames
         ) {
 
+          console.log("");
+          console.log("=================================");
+          console.log(
+            "PROCESSANDO ABA:",
+            aba
+          );
+          console.log("=================================");
+
           const sheet =
             workbook.Sheets[aba];
+
+          if (!sheet) {
+
+            console.error(
+              "ERRO: PLANILHA NÃO ENCONTRADA:",
+              aba
+            );
+
+            continue;
+          }
 
           const dados =
             XLSX.utils.sheet_to_json(
@@ -161,8 +249,12 @@ export default function Admin() {
               .toUpperCase();
 
           console.log(
-            "Importando:",
-            nome,
+            "Nome normalizado:",
+            nome
+          );
+
+          console.log(
+            "Quantidade de registros:",
             dados.length
           );
 
@@ -174,11 +266,18 @@ export default function Admin() {
             nome === "PRODUCAO"
           ) {
 
+            console.log(
+              ">>> PRODUÇÃO ENCONTRADA"
+            );
+
             await salvarPlanilha(
               "producao",
               dados
             );
 
+            console.log(
+              ">>> PRODUÇÃO ENVIADA"
+            );
           }
 
           // ==================================
@@ -189,11 +288,18 @@ export default function Admin() {
             nome === "ARRASTE"
           ) {
 
+            console.log(
+              ">>> ARRASTE ENCONTRADO"
+            );
+
             await salvarPlanilha(
               "arraste",
               dados
             );
 
+            console.log(
+              ">>> ARRASTE ENVIADO"
+            );
           }
 
           // ==================================
@@ -204,11 +310,18 @@ export default function Admin() {
             nome === "MEDICAO"
           ) {
 
+            console.log(
+              ">>> MEDIÇÃO ENCONTRADA"
+            );
+
             await salvarPlanilha(
               "medicao",
               dados
             );
 
+            console.log(
+              ">>> MEDIÇÃO ENVIADA"
+            );
           }
 
           // ==================================
@@ -220,7 +333,7 @@ export default function Admin() {
           ) {
 
             console.log(
-              "JUSTIFICADAS ENCONTRADAS:",
+              ">>> JUSTIFICADAS ENCONTRADAS:",
               dados.length
             );
 
@@ -230,21 +343,111 @@ export default function Admin() {
             );
 
             console.log(
-              "JUSTIFICADAS ENVIADAS AO SUPABASE:",
+              ">>> JUSTIFICADAS ENVIADAS"
+            );
+          }
+
+          // ==================================
+          // TRANSPORTE
+          // ==================================
+
+          if (
+            nome === "TRANSPORTE"
+          ) {
+
+            console.log(
+              "#################################"
+            );
+
+            console.log(
+              ">>> TRANSPORTE ENCONTRADA"
+            );
+
+            console.log(
+              "Quantidade de registros:",
               dados.length
+            );
+
+            if (dados.length > 0) {
+
+              console.log(
+                "Primeiro registro TRANSPORTE:",
+                dados[0]
+              );
+
+            } else {
+
+              console.warn(
+                "A ABA TRANSPORTE ESTÁ VAZIA."
+              );
+
+            }
+
+            console.log(
+              ">>> INICIANDO ENVIO PARA SUPABASE"
+            );
+
+            await salvarPlanilha(
+              "transporte",
+              dados
+            );
+
+            console.log(
+              ">>> TRANSPORTE ENVIADA COM SUCESSO"
+            );
+
+            console.log(
+              "#################################"
             );
           }
         }
+
+        console.log("---------------------------------");
+        console.log(
+          "TODAS AS ABAS DA OPERAÇÃO PROCESSADAS"
+        );
+        console.log("---------------------------------");
       }
+
+      // ========================================
+      // FINAL
+      // ========================================
+
+      console.log("=================================");
+      console.log("IMPORTAÇÃO FINALIZADA COM SUCESSO");
+      console.log("=================================");
 
       setSuccess(true);
 
     } catch (error) {
 
+      console.error("=================================");
+      console.error("ERRO IMPORTAÇÃO");
+      console.error("=================================");
+
       console.error(
-        "ERRO IMPORTAÇÃO:",
+        "Objeto completo do erro:",
         error
       );
+
+      if (error instanceof Error) {
+
+        console.error(
+          "Nome do erro:",
+          error.name
+        );
+
+        console.error(
+          "Mensagem:",
+          error.message
+        );
+
+        console.error(
+          "Stack:",
+          error.stack
+        );
+
+      }
 
       alert(
         "Erro na importação. Veja o console."
@@ -252,8 +455,11 @@ export default function Admin() {
 
     } finally {
 
-      setLoading(false);
+      console.log(
+        "FINALIZANDO PROCESSO DE IMPORTAÇÃO."
+      );
 
+      setLoading(false);
     }
   }
 
@@ -401,7 +607,7 @@ export default function Admin() {
               </option>
 
               <option value="operacao">
-                🚛 Derruba / Arraste / Medição / Justificadas
+                🚛 Derruba / Arraste / Medição / Justificadas / Transporte
               </option>
 
             </select>
