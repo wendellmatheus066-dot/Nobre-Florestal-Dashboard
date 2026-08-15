@@ -5,7 +5,6 @@ import { supabase } from "../lib/supabase";
 import {
   Truck,
   ClipboardList,
-  Search,
 } from "lucide-react";
 
 type Registro = {
@@ -91,14 +90,6 @@ export default function Transporte() {
   const [erro, setErro] =
     useState("");
 
-  const [busca, setBusca] =
-    useState("");
-
-  const [pagina, setPagina] =
-    useState(1);
-
-  const porPagina = 10;
-
   // ==================================================
   // CARREGAR TRANSPORTE
   // ==================================================
@@ -143,79 +134,6 @@ export default function Transporte() {
   }, []);
 
   // ==================================================
-  // ROMANEIOS
-  // ==================================================
-
-  const romaneios =
-    useMemo<Romaneio[]>(() => {
-      const mapa =
-        new Map<string, Romaneio>();
-
-      for (const linha of registros) {
-        const romaneio =
-          pegar(
-            linha,
-            "Romaneio",
-            "ROMANEIO"
-          ) || "SEM ROMANEIO";
-
-        if (!mapa.has(romaneio)) {
-          mapa.set(romaneio, {
-            romaneio,
-
-            nf: pegar(
-              linha,
-              "NF",
-              "Nf",
-              "nf"
-            ),
-
-            data: pegar(
-              linha,
-              "Data",
-              "DATA"
-            ),
-
-            motorista: pegar(
-              linha,
-              "Motorista",
-              "MOTORISTA"
-            ),
-
-            toras: 0,
-            florestal: 0,
-            comercial: 0,
-          });
-        }
-
-        const item =
-          mapa.get(romaneio)!;
-
-        item.toras += 1;
-
-        item.florestal += numero(
-          linha["Florestal M3"] ??
-            linha["Florestal M³"] ??
-            linha["Florestal"]
-        );
-
-        item.comercial += numero(
-          linha["Comercial M3"] ??
-            linha["Comercial M³"] ??
-            linha["Comercial"]
-        );
-      }
-
-      return Array.from(
-        mapa.values()
-      ).sort(
-        (a, b) =>
-          Number(a.romaneio) -
-          Number(b.romaneio)
-      );
-    }, [registros]);
-
-  // ==================================================
   // MOTORISTAS
   // ==================================================
 
@@ -224,10 +142,13 @@ export default function Transporte() {
       const mapa =
         new Map<string, Motorista>();
 
-      for (const item of romaneios) {
+      for (const linha of registros) {
         const motorista =
-          item.motorista ||
-          "SEM MOTORISTA";
+          pegar(
+            linha,
+            "Motorista",
+            "MOTORISTA"
+          ) || "SEM MOTORISTA";
 
         if (!mapa.has(motorista)) {
           mapa.set(motorista, {
@@ -244,40 +165,113 @@ export default function Transporte() {
           mapa.get(motorista)!;
 
         dados.viagens += 1;
-        dados.toras += item.toras;
+        dados.toras += 1;
 
-        dados.florestal +=
-          item.florestal;
+        dados.florestal += numero(
+          linha["Florestal M3"] ??
+            linha["Florestal M³"] ??
+            linha["Florestal"]
+        );
 
-        dados.comercial +=
-          item.comercial;
+        dados.comercial += numero(
+          linha["Comercial M3"] ??
+            linha["Comercial M³"] ??
+            linha["Comercial"]
+        );
       }
 
-      for (
-        const motorista of mapa.values()
-      ) {
+      for (const motorista of mapa.values()) {
         motorista.media =
           motorista.viagens > 0
-            ? motorista.comercial /
-              motorista.viagens
+            ? motorista.comercial / motorista.viagens
             : 0;
       }
 
-      return Array.from(
-        mapa.values()
-      ).sort(
-        (a, b) =>
-          b.comercial -
-          a.comercial
+      return Array.from(mapa.values()).sort(
+        (a, b) => b.comercial - a.comercial
       );
-    }, [romaneios]);
+    }, [registros]);
+
+  // ==================================================
+  // GRÁFICOS: ESPÉCIE E UT
+  // ==================================================
+
+  const graficoEspecies =
+    useMemo(() => {
+      const mapa = new Map<string, number>();
+
+      for (const linha of registros) {
+        const especie =
+          pegar(
+            linha,
+            "Espécie",
+            "ESPÉCIE",
+            "Especie",
+            "ESPECIE"
+          ) || "SEM ESPÉCIE";
+
+        const volume = numero(
+          linha["Comercial M3"] ??
+            linha["Comercial M³"] ??
+            linha["Comercial"]
+        );
+
+        mapa.set(
+          especie,
+          (mapa.get(especie) || 0) + volume
+        );
+      }
+
+      return Array.from(mapa.entries())
+        .map(([nome, volume]) => ({ nome, volume }))
+        .sort((a, b) => b.volume - a.volume)
+        .slice(0, 10);
+    }, [registros]);
+
+  const graficoUT =
+    useMemo(() => {
+      const mapa = new Map<string, number>();
+
+      for (const linha of registros) {
+        const ut =
+          pegar(
+            linha,
+            "UT",
+            "UT Inventário",
+            "UT INVENTÁRIO",
+            "Nº UT",
+            "Nº UT Inventário",
+            "Numero UT"
+          ) || "SEM UT";
+
+        const volume = numero(
+          linha["Comercial M3"] ??
+            linha["Comercial M³"] ??
+            linha["Comercial"]
+        );
+
+        mapa.set(
+          ut,
+          (mapa.get(ut) || 0) + volume
+        );
+      }
+
+      return Array.from(mapa.entries())
+        .map(([nome, volume]) => ({ nome, volume }))
+        .sort((a, b) => b.volume - a.volume)
+        .slice(0, 10);
+    }, [registros]);
 
   // ==================================================
   // TOTAIS
   // ==================================================
 
   const totalRomaneios =
-    romaneios.length;
+    new Set(
+      registros.map((linha) =>
+        pegar(linha, "Romaneio", "ROMANEIO")
+      ).filter(Boolean)
+    ).size;
 
   const totalToras =
     registros.length;
@@ -308,64 +302,8 @@ export default function Transporte() {
 
   const mediaRomaneio =
     totalRomaneios > 0
-      ? totalComercial /
-        totalRomaneios
+      ? totalComercial / totalRomaneios
       : 0;
-
-  // ==================================================
-  // BUSCA
-  // ==================================================
-
-  const filtrados =
-    romaneios.filter((item) => {
-      const termo =
-        busca
-          .toLowerCase()
-          .trim();
-
-      if (!termo) {
-        return true;
-      }
-
-      return (
-        item.romaneio
-          .toLowerCase()
-          .includes(termo) ||
-        item.nf
-          .toLowerCase()
-          .includes(termo) ||
-        item.motorista
-          .toLowerCase()
-          .includes(termo)
-      );
-    });
-
-  // ==================================================
-  // PAGINAÇÃO
-  // ==================================================
-
-  const totalPaginas =
-    Math.max(
-      1,
-      Math.ceil(
-        filtrados.length /
-          porPagina
-      )
-    );
-
-  const inicio =
-    (pagina - 1) *
-    porPagina;
-
-  const paginaAtual =
-    filtrados.slice(
-      inicio,
-      inicio + porPagina
-    );
-
-  useEffect(() => {
-    setPagina(1);
-  }, [busca]);
 
   // ==================================================
   // LOADING
@@ -1261,469 +1199,92 @@ export default function Transporte() {
         </div>
 
 
-        {/* ESPAÇO ENTRE DESEMPENHO E ROMANEIOS */}
+        {/* ESPAÇO ENTRE DESEMPENHO E GRÁFICOS */}
 
         <div className="h-12" />
 
-
         {/* ========================================= */}
-        {/* ROMANEIOS */}
+        {/* GRÁFICOS DE TRANSPORTE */}
         {/* ========================================= */}
 
-        <div className="
-          rgb-card
-          mx-auto
-          w-full
-          max-w-[1250px]
-          rounded-2xl
-          border
-          border-[#44475A]
-          bg-[#343746]
-          overflow-hidden
-          shadow-[0_8px_24px_rgba(0,0,0,0.14)]
-        ">
+        <div className="mx-auto grid w-full max-w-[1250px] grid-cols-1 gap-5 lg:grid-cols-2">
 
-          {/* CABEÇALHO */}
+          {/* POR ESPÉCIE */}
 
-          <div className="
-            flex
-            flex-col
-            items-center
-            justify-center
-            gap-2
-            border-b
-            border-[#44475A]
-            px-3
-            py-2
-            text-center
-          ">
+          <div className="rgb-card overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.14)]">
 
-            <div className="
-              flex
-              items-center
-              justify-center
-              gap-3
-            ">
-
-              <div className="
-                flex
-                h-9
-                w-9
-                items-center
-                justify-center
-                rounded-lg
-                bg-[#282A36]
-              ">
-
-                <ClipboardList
-                  size={19}
-                  className="text-[#BDC1D6]"
-                />
-
-              </div>
-
-              <div>
-
-                <h2 className="
-                  text-xl
-                  font-black
-                  text-white
-                  text-center
-                ">
-                  Romaneios
-                </h2>
-
-                <p className="
-                  text-xs
-                  text-[#BDC1D6]
-                  text-center
-                ">
-                  {filtrados.length} romaneios encontrados
-                </p>
-
-              </div>
-
+            <div className="mb-5 text-center">
+              <h2 className="text-xl font-black text-white">Produção por Espécie</h2>
+              <p className="mt-1 text-xs text-[#BDC1D6]">Volume comercial transportado por espécie</p>
             </div>
 
+            <div className="space-y-3">
+              {graficoEspecies.length === 0 ? (
+                <p className="py-8 text-center text-sm text-[#7F87A8]">Nenhuma espécie encontrada nos dados de transporte.</p>
+              ) : (
+                graficoEspecies.map((item) => {
+                  const max = graficoEspecies[0]?.volume || 1;
+                  const percentual = (item.volume / max) * 100;
 
-            {/* BUSCA */}
-
-            <div className="
-              relative
-              w-full
-              max-w-[360px]
-            ">
-
-              <Search
-                size={16}
-                className="
-                  absolute
-                  left-3
-                  top-1/2
-                  -translate-y-1/2
-                  text-[#6272A4]
-                "
-              />
-
-              <input
-                value={busca}
-                onChange={(e) =>
-                  setBusca(
-                    e.target.value
-                  )
-                }
-                placeholder="Buscar romaneio, NF ou motorista..."
-                className="
-                  h-10
-                  w-full
-                  rounded-lg
-                  border
-                  border-[#44475A]
-                  bg-[#282A36]
-                  pl-10
-                  pr-3
-                  text-sm
-                  text-white
-                  outline-none
-                  placeholder:text-[#6272A4]
-                  focus:border-[#50FA7B]
-                "
-              />
-
-            </div>
-
-          </div>
-
-
-          {/* TABELA ROMANEIOS */}
-
-          <div className="overflow-x-auto">
-
-            <table className="w-full table-fixed">
-
-              <thead>
-
-                <tr className="border-b border-[#44475A]">
-
-                  <th className="
-                    w-[12%]
-                    px-3
-                    py-2
-                    text-center
-                    text-xs
-                    font-semibold
-                    uppercase
-                    text-[#7F87A8]
-                  ">
-                    Romaneio
-                  </th>
-
-                  <th className="
-                    w-[10%]
-                    px-3
-                    py-2
-                    text-center
-                    text-xs
-                    font-semibold
-                    uppercase
-                    text-[#7F87A8]
-                  ">
-                    NF
-                  </th>
-
-                  <th className="
-                    w-[14%]
-                    px-3
-                    py-2
-                    text-center
-                    text-xs
-                    font-semibold
-                    uppercase
-                    text-[#7F87A8]
-                  ">
-                    Data
-                  </th>
-
-                  <th className="
-                    w-[30%]
-                    px-3
-                    py-2
-                    text-center
-                    text-xs
-                    font-semibold
-                    uppercase
-                    text-[#7F87A8]
-                  ">
-                    Motorista
-                  </th>
-
-                  <th className="
-                    px-3
-                    py-2
-                    text-center
-                    text-xs
-                    font-semibold
-                    uppercase
-                    text-[#7F87A8]
-                  ">
-                    Toras
-                  </th>
-
-                  <th className="
-                    px-3
-                    py-2
-                    text-center
-                    text-xs
-                    font-semibold
-                    uppercase
-                    text-[#7F87A8]
-                  ">
-                    Comercial
-                  </th>
-
-                </tr>
-
-              </thead>
-
-              <tbody>
-
-                {paginaAtual.map(
-                  (item) => (
-
-                    <tr
-                      key={`${item.romaneio}-${item.nf}`}
-                      className="
-                        border-b
-                        border-[#44475A]
-                        last:border-0
-                        hover:bg-[#3B3E4D]
-                      "
-                    >
-
-                      <td className="
-                        px-3
-                        py-2
-                        text-center
-                        text-sm
-                        font-black
-                        text-white
-                      ">
-                        {item.romaneio}
-                      </td>
-
-                      <td className="
-                        px-3
-                        py-2
-                        text-center
-                        text-sm
-                        text-white
-                      ">
-                        {item.nf}
-                      </td>
-
-                      <td className="
-                        px-3
-                        py-2
-                        text-center
-                        text-sm
-                        text-[#BDC1D6]
-                      ">
-                        {item.data}
-                      </td>
-
-                      <td className="
-                        px-3
-                        py-2
-                        text-center
-                        text-sm
-                        font-bold
-                        text-white
-                      ">
-                        {item.motorista}
-                      </td>
-
-                      <td className="
-                        px-3
-                        py-2
-                        text-center
-                        text-sm
-                        text-white
-                      ">
-                        {item.toras}
-                      </td>
-
-                      <td className="
-                        px-3
-                        py-2
-                        text-center
-                        text-sm
-                        font-bold
-                        text-[#8BE9FD]
-                      ">
-                        {item.comercial.toFixed(2)} m³
-                      </td>
-
-                    </tr>
-
-                  )
-                )}
-
-
-                {paginaAtual.length === 0 && (
-
-                  <tr>
-
-                    <td
-                      colSpan={6}
-                      className="
-                        px-5
-                        py-8
-                        text-center
-                        text-sm
-                        text-[#BDC1D6]
-                      "
-                    >
-                      Nenhum romaneio encontrado.
-                    </td>
-
-                  </tr>
-
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-
-          {/* PAGINAÇÃO */}
-
-          <div className="
-            flex
-            flex-col
-            items-center
-            justify-center
-            gap-3
-            border-t
-            border-[#44475A]
-            px-5
-            py-3.5
-            sm:flex-row
-            sm:justify-between
-          ">
-
-            <span className="text-xs text-[#7F87A8]">
-              Mostrando{" "}
-              {paginaAtual.length}{" "}
-              de{" "}
-              {filtrados.length}
-            </span>
-
-
-            <div className="
-              flex
-              items-center
-              gap-1
-            ">
-
-              <button
-                disabled={pagina === 1}
-                onClick={() =>
-                  setPagina(
-                    (p) =>
-                      Math.max(
-                        1,
-                        p - 1
-                      )
-                  )
-                }
-                className="
-                  h-8
-                  w-8
-                  rounded-lg
-                  border
-                  border-[#44475A]
-                  text-white
-                  disabled:opacity-30
-                "
-              >
-                ‹
-              </button>
-
-
-              {Array.from(
-                {
-                  length: totalPaginas,
-                },
-                (_, i) =>
-                  i + 1
-              ).map(
-                (numeroPagina) => (
-
-                  <button
-                    key={numeroPagina}
-                    onClick={() =>
-                      setPagina(
-                        numeroPagina
-                      )
-                    }
-                    className={`
-                      h-8
-                      min-w-8
-                      rounded-lg
-                      text-xs
-                      font-bold
-
-                      ${
-                        pagina ===
-                        numeroPagina
-                          ? "bg-[#50FA7B]/10 text-[#50FA7B]"
-                          : "text-[#BDC1D6] hover:bg-[#44475A]"
-                      }
-                    `}
-                  >
-                    {numeroPagina}
-                  </button>
-
-                )
+                  return (
+                    <div key={item.nome}>
+                      <div className="mb-1 flex items-center justify-between gap-3">
+                        <span className="truncate text-xs font-bold text-white">{item.nome}</span>
+                        <span className="shrink-0 text-xs font-bold text-[#50FA7B]">{item.volume.toFixed(2)} m³</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-[#282A36]">
+                        <div
+                          className="h-full rounded-full bg-[#50FA7B] transition-all duration-500"
+                          style={{ width: `${percentual}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
               )}
+            </div>
+
+          </div>
 
 
-              <button
-                disabled={
-                  pagina ===
-                    totalPaginas ||
-                  totalPaginas === 0
-                }
-                onClick={() =>
-                  setPagina(
-                    (p) =>
-                      Math.min(
-                        totalPaginas,
-                        p + 1
-                      )
-                  )
-                }
-                className="
-                  h-8
-                  w-8
-                  rounded-lg
-                  border
-                  border-[#44475A]
-                  text-white
-                  disabled:opacity-30
-                "
-              >
-                ›
-              </button>
+          {/* POR UT */}
 
+          <div className="rgb-card overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.14)]">
+
+            <div className="mb-5 text-center">
+              <h2 className="text-xl font-black text-white">Produção por UT</h2>
+              <p className="mt-1 text-xs text-[#BDC1D6]">Volume comercial transportado por UT</p>
+            </div>
+
+            <div className="space-y-3">
+              {graficoUT.length === 0 ? (
+                <p className="py-8 text-center text-sm text-[#7F87A8]">Nenhuma UT encontrada nos dados de transporte.</p>
+              ) : (
+                graficoUT.map((item) => {
+                  const max = graficoUT[0]?.volume || 1;
+                  const percentual = (item.volume / max) * 100;
+
+                  return (
+                    <div key={item.nome}>
+                      <div className="mb-1 flex items-center justify-between gap-3">
+                        <span className="truncate text-xs font-bold text-white">UT {item.nome}</span>
+                        <span className="shrink-0 text-xs font-bold text-[#8BE9FD]">{item.volume.toFixed(2)} m³</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-[#282A36]">
+                        <div
+                          className="h-full rounded-full bg-[#8BE9FD] transition-all duration-500"
+                          style={{ width: `${percentual}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
           </div>
 
         </div>
-
       </div>
 
     </MainLayout>
