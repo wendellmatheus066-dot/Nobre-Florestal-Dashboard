@@ -11,16 +11,6 @@ type Registro = {
   [key: string]: any;
 };
 
-type Romaneio = {
-  romaneio: string;
-  nf: string;
-  data: string;
-  motorista: string;
-  toras: number;
-  florestal: number;
-  comercial: number;
-};
-
 type Motorista = {
   motorista: string;
   viagens: number;
