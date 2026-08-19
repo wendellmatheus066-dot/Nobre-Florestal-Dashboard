@@ -68,6 +68,9 @@ export default function MapaFlorestal() {
   const [upa13GeoJson, setUpa13GeoJson] =
     useState<any>(null);
 
+  // PESQUISA DE ÁRVORE / DERRUBADOR
+  const [buscaMapa, setBuscaMapa] = useState("");
+
   // ========================================
   // FECHAR MAPA NO SAFARI
   // ========================================
@@ -438,6 +441,31 @@ export default function MapaFlorestal() {
   );
 
   // ========================================
+  // FILTRO / PESQUISA DO MAPA
+  // ========================================
+
+  const pontosMapaFiltrados = pontosMapa.filter((arvore: any) => {
+    const busca = buscaMapa.trim().toLowerCase();
+
+    if (!busca) {
+      return true;
+    }
+
+    const numeroArvore = limparNumero(
+      arvore["Nº ÁRVORE"]
+    ).toLowerCase();
+
+    const motoserrista = String(
+      arvore.MOTOSERRISTA || ""
+    ).trim().toLowerCase();
+
+    return (
+      numeroArvore.includes(busca) ||
+      motoserrista.includes(busca)
+    );
+  });
+
+  // ========================================
   // TOTAIS
   // ========================================
 
@@ -523,6 +551,59 @@ export default function MapaFlorestal() {
           <div className="h-6" />
 
           <div className="relative h-[600px]">
+
+            {/* ========================================
+                PESQUISA ÁRVORE / DERRUBADOR
+            ======================================== */}
+
+            <div
+              className="
+                absolute
+                top-3
+                left-1/2
+                z-[1000]
+                w-[min(420px,calc(100%-24px))]
+                -translate-x-1/2
+                rounded-xl
+                border
+                border-white/10
+                bg-black/60
+                p-2
+                backdrop-blur-md
+                shadow-xl
+              "
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">🔎</span>
+
+                <input
+                  type="text"
+                  value={buscaMapa}
+                  onChange={(e) =>
+                    setBuscaMapa(e.target.value)
+                  }
+                  placeholder="Nº da árvore ou nome do derrubador"
+                  className="w-full min-w-0 bg-transparent text-sm text-white outline-none placeholder:text-white/60"
+                />
+
+                {buscaMapa && (
+                  <button
+                    type="button"
+                    onClick={() => setBuscaMapa("")}
+                    className="rounded-md px-2 py-1 text-sm text-white/80 hover:bg-white/10"
+                    aria-label="Limpar pesquisa"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {buscaMapa.trim() && (
+                <div className="mt-1 px-1 text-[11px] text-white/70">
+                  {pontosMapaFiltrados.length} árvore(s) encontrada(s)
+                </div>
+              )}
+            </div>
 
             {/* ========================================
                 BOTÃO VOLTAR
@@ -849,14 +930,14 @@ export default function MapaFlorestal() {
                 ======================================== */}
 
                 <AjustarMapa
-                  pontos={pontosMapa}
+                  pontos={pontosMapaFiltrados}
                 />
 
                 {/* ========================================
                     PONTOS DAS ÁRVORES
                 ======================================== */}
 
-                {pontosMapa.map(
+                {pontosMapaFiltrados.map(
                   (
                     arvore: any,
                     index: number
