@@ -459,9 +459,31 @@ export default function MapaFlorestal() {
       arvore.MOTOSERRISTA || ""
     ).trim().toLowerCase();
 
+    const motivo = String(
+      arvore.MOTIVO_JUSTIFICATIVA ||
+      arvore["Motivo"] ||
+      ""
+    ).trim().toLowerCase();
+
+    const equipe = String(
+      arvore.EQUIPE ||
+      arvore["Equipe"] ||
+      ""
+    ).trim().toLowerCase();
+
+    const skideiro = String(
+      arvore.SKIDEIRO_PATIO ||
+      arvore["Skideiro Patio"] ||
+      arvore["Skideiro"] ||
+      ""
+    ).trim().toLowerCase();
+
     return (
       numeroArvore.includes(busca) ||
-      motoserrista.includes(busca)
+      motoserrista.includes(busca) ||
+      motivo.includes(busca) ||
+      equipe.includes(busca) ||
+      skideiro.includes(busca)
     );
   });
 
