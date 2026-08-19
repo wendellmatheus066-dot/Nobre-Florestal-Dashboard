@@ -91,17 +91,37 @@ export default function Transporte() {
         setLoading(true);
         setErro("");
 
-        const { data, error } =
-          await supabase
-            .from("transporte")
-            .select("dados");
+        // O Supabase retorna no máximo 1.000 registros por consulta.
+        // Buscamos em páginas para não perder toras quando a tabela passar de 1.000.
+        const pagina = 1000;
+        let inicio = 0;
+        const todosOsDados: any[] = [];
 
-        if (error) {
-          throw error;
+        while (true) {
+          const { data, error } = await supabase
+            .from("transporte")
+            .select("dados")
+            .range(inicio, inicio + pagina - 1);
+
+          if (error) {
+            throw error;
+          }
+
+          if (!data || data.length === 0) {
+            break;
+          }
+
+          todosOsDados.push(...data);
+
+          if (data.length < pagina) {
+            break;
+          }
+
+          inicio += pagina;
         }
 
         const dados =
-          (data || []).map(
+          todosOsDados.map(
             (item: any) => item.dados
           );
 
