@@ -308,47 +308,78 @@ export default function Justificadas() {
   return (
     <MainLayout>
       <style>{`
-        @property --just-angle {
-          syntax: "<angle>";
-          initial-value: 0deg;
-          inherits: false;
-        }
+        @keyframes justRgbFlow {
+          0% {
+            background-position: 0% 50%;
+          }
 
-        @keyframes justRgbRun {
-          to {
-            --just-angle: 360deg;
+          50% {
+            background-position: 100% 50%;
+          }
+
+          100% {
+            background-position: 0% 50%;
           }
         }
 
-        .just-rgb {
-          border: 1px solid transparent;
+        .just-rgb,
+        .just-rgb-card,
+        .just-rgb-card-soft {
+          position: relative;
+          overflow: hidden;
+          border: 2px solid transparent !important;
+          isolation: isolate;
+
           background:
-            linear-gradient(#0c1715, #0c1715) padding-box,
-            conic-gradient(
-              from var(--just-angle),
+            linear-gradient(#0C1715, #0C1715) padding-box,
+            linear-gradient(
+              90deg,
+              #00D084,
+              #A855F7,
+              #00A8FF,
+              #FFD600,
               #00D084,
               #A855F7,
               #00A8FF,
               #FFD600,
               #00D084
             ) border-box;
-          animation: justRgbRun 7s linear infinite;
+
+          background-size: 100% 100%, 300% 100%;
+          background-position: center, 0% 50%;
+          animation: justRgbFlow 5s ease-in-out infinite;
         }
 
-        .just-rgb-soft {
-          position: relative;
-          border: 1px solid rgba(255,255,255,0.08);
+        .just-rgb-card-soft {
           background:
-            linear-gradient(#111d1b, #111d1b) padding-box,
-            conic-gradient(
-              from var(--just-angle),
-              rgba(0,208,132,0.55),
-              rgba(168,85,247,0.35),
-              rgba(0,168,255,0.40),
-              rgba(255,214,0,0.35),
-              rgba(0,208,132,0.55)
+            linear-gradient(#101815, #101815) padding-box,
+            linear-gradient(
+              90deg,
+              rgba(0,208,132,0.95),
+              rgba(168,85,247,0.75),
+              rgba(0,168,255,0.90),
+              rgba(255,214,0,0.82),
+              rgba(0,208,132,0.95)
             ) border-box;
-          animation: justRgbRun 8s linear infinite;
+
+          background-size: 100% 100%, 300% 100%;
+          background-position: center, 0% 50%;
+          animation-duration: 6s;
+        }
+
+        .just-rgb > *,
+        .just-rgb-card > *,
+        .just-rgb-card-soft > * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .just-rgb:hover,
+        .just-rgb-card:hover,
+        .just-rgb-card-soft:hover {
+          box-shadow:
+            0 0 18px rgba(0,208,132,0.16),
+            0 12px 28px rgba(0,0,0,0.22);
         }
 
         .just-kpi {
@@ -417,29 +448,14 @@ export default function Justificadas() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={limparFiltros}
-              className="
-                inline-flex items-center justify-center gap-2
-                rounded-xl border border-white/10
-                bg-[#2B2D3A] px-4 py-2.5
-                text-sm font-bold text-[#F8F8F2]
-                transition
-                hover:border-[#00D084]/50
-                hover:bg-[#343746]
-              "
-            >
-              <RotateCcw size={16} />
-              Limpar filtros
-            </button>
+
 
           </div>
 
           {/* FILTROS */}
           <div className="just-rgb mt-8 rounded-2xl p-[1px]">
 
-            <div className="rounded-2xl bg-[#101815] p-5 lg:p-6">
+            <div className="just-rgb-card rounded-2xl p-5 lg:p-6">
 
               {/* CABEÇALHO DOS FILTROS */}
               <div className="flex flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-center lg:justify-between">
@@ -686,50 +702,16 @@ export default function Justificadas() {
 
               </div>
 
-              {/* RESUMO DOS FILTROS */}
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold text-[#7E849F]">
-                    Resultado:
-                  </span>
-
-                  <span className="rounded-full border border-[#00D084]/20 bg-[#00D084]/10 px-3 py-1 text-xs font-black text-[#7CFFB2]">
-                    {filtrados.length.toLocaleString("pt-BR")} registros
-                  </span>
-
-                  {filtroUT !== "TODAS" && (
-                    <span className="rounded-full border border-white/10 bg-[#21222C] px-3 py-1 text-xs font-bold text-[#BDC1D6]">
-                      UT {filtroUT}
-                    </span>
-                  )}
-
-                  {filtroEspecie !== "TODAS" && (
-                    <span className="rounded-full border border-[#00A8FF]/20 bg-[#00A8FF]/10 px-3 py-1 text-xs font-bold text-[#8BE9FD]">
-                      {filtroEspecie}
-                    </span>
-                  )}
-
-                  {filtroMotivo !== "TODOS" && (
-                    <span className="rounded-full border border-red-400/20 bg-red-400/10 px-3 py-1 text-xs font-bold text-red-300">
-                      {filtroMotivo}
-                    </span>
-                  )}
-                </div>
-
-                <span className="text-[11px] font-semibold text-[#626A84]">
-                  
-                </span>
-
-              </div>
-
             </div>
           </div>
 
-          {/* KPIs */}
-          <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {/* ESPAÇO ENTRE FILTROS E CARDS */}
+          <div className="h-10" />
 
-            <div className="just-kpi relative flex min-h-[170px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-red-500/25 bg-[#151011] p-6 text-center">
+          {/* KPIs */}
+          <div className="mt-2 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+
+            <div className="just-kpi just-rgb-card relative flex min-h-[170px] flex-col items-center justify-center overflow-hidden rounded-2xl p-6 text-center">
               <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-red-900 via-red-500 to-red-200" />
 
               <div className="flex flex-col items-center justify-center">
@@ -754,7 +736,7 @@ export default function Justificadas() {
               </div>
             </div>
 
-            <div className="just-kpi just-rgb-soft flex min-h-[170px] flex-col items-center justify-center rounded-2xl p-6 text-center">
+            <div className="just-kpi just-rgb-card-soft flex min-h-[170px] flex-col items-center justify-center rounded-2xl p-6 text-center">
               <div className="flex flex-col items-center justify-center">
                 <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#9AA1BA]">
                   UTs envolvidas
@@ -777,7 +759,7 @@ export default function Justificadas() {
               </div>
             </div>
 
-            <div className="just-kpi just-rgb-soft flex min-h-[170px] flex-col items-center justify-center rounded-2xl p-6 text-center">
+            <div className="just-kpi just-rgb-card-soft flex min-h-[170px] flex-col items-center justify-center rounded-2xl p-6 text-center">
               <div className="flex flex-col items-center justify-center">
                 <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#9AA1BA]">
                   Espécies
@@ -810,7 +792,7 @@ export default function Justificadas() {
           {/* VISÃO RÁPIDA */}
           <div className="mt-2 grid grid-cols-1 gap-10 lg:grid-cols-2">
 
-            <div className="min-h-[190px] rounded-2xl border border-white/10 bg-[#0C1715] p-7 text-center">
+            <div className="just-rgb-card min-h-[190px] rounded-2xl p-7 text-center">
               <div className="flex h-full flex-col items-center justify-center">
                 <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#7E849F]">
                   Principal motivo
@@ -842,7 +824,7 @@ export default function Justificadas() {
               </div>
             </div>
 
-            <div className="min-h-[190px] rounded-2xl border border-white/10 bg-[#0C1715] p-7 text-center">
+            <div className="just-rgb-card min-h-[190px] rounded-2xl p-7 text-center">
               <div className="flex h-full flex-col items-center justify-center">
                 <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#7E849F]">
                   Espécie com mais justificativas
@@ -882,7 +864,7 @@ export default function Justificadas() {
           {/* RANKINGS */}
           <div className="mt-2 grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-            <div className="min-h-[420px] rounded-2xl border border-white/10 bg-[#0C1715] p-8">
+            <div className="just-rgb-card min-h-[420px] rounded-2xl p-8">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10">
                   <AlertTriangle
@@ -940,7 +922,7 @@ export default function Justificadas() {
               </div>
             </div>
 
-            <div className="min-h-[420px] rounded-2xl border border-white/10 bg-[#0C1715] p-8">
+            <div className="just-rgb-card min-h-[420px] rounded-2xl p-8">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00A8FF]/10">
                   <Leaf
