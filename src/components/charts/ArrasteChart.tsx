@@ -7,8 +7,8 @@ import { processDashboardData } from "../../services/dataProcessor";
 
 function converterNumero(valor: any): number {
   if (
-    valor === null ||
     valor === undefined ||
+    valor === null ||
     valor === ""
   ) {
     return 0;
@@ -46,14 +46,13 @@ function converterNumero(valor: any): number {
 
 function normalizarData(valor: any): string {
   if (
-    valor === null ||
     valor === undefined ||
+    valor === null ||
     valor === ""
   ) {
     return "";
   }
 
-  // Date real: mantém a data do objeto.
   if (
     valor instanceof Date &&
     !isNaN(valor.getTime())
@@ -71,7 +70,6 @@ function normalizarData(valor: any): string {
 
   const texto = String(valor).trim();
 
-  // ISO.
   const iso = texto.match(
     /^(\d{4})-(\d{2})-(\d{2})/
   );
@@ -80,7 +78,6 @@ function normalizarData(valor: any): string {
     return `${iso[1]}-${iso[2]}-${iso[3]}`;
   }
 
-  // Serial de data do Excel.
   if (
     /^\d+(?:\.\d+)?$/.test(texto)
   ) {
@@ -112,19 +109,6 @@ function normalizarData(valor: any): string {
     }
   }
 
-  /*
-   * DATA ORIGINADA DO ARQUIVO:
-   *
-   * 09/01/2026 = 01/09/2026
-   * 09/02/2026 = 02/09/2026
-   *
-   * Ou seja: quando as duas partes são <= 12,
-   * os dados atuais estão em MM/DD/YYYY.
-   *
-   * Casos inequívocos continuam funcionando:
-   * 09/31/2026 = 31/09? Não é possível;
-   * 31/08/2026 = 31/08/2026.
-   */
   if (texto.includes("/")) {
     const partes = texto.split("/");
 
@@ -132,11 +116,17 @@ function normalizarData(valor: any): string {
       return "";
     }
 
-    const primeiro = Number(partes[0]);
-    const segundo = Number(partes[1]);
+    const primeiro = Number(
+      partes[0]
+    );
 
-    let ano = String(partes[2])
-      .replace(/\s.*/, "");
+    const segundo = Number(
+      partes[1]
+    );
+
+    let ano = String(
+      partes[2]
+    ).replace(/\s.*/, "");
 
     if (
       !Number.isFinite(primeiro) ||
@@ -153,18 +143,18 @@ function normalizarData(valor: any): string {
     let dia: number;
     let mes: number;
 
+    /*
+     * Dados atuais do arquivo:
+     * 09/01/2026 = 01/09/2026
+     * 09/02/2026 = 02/09/2026
+     */
     if (primeiro > 12) {
-      // 31/08/2026 -> 31/08/2026
       dia = primeiro;
       mes = segundo;
     } else if (segundo > 12) {
-      // 08/31/2026 -> 31/08/2026
       dia = segundo;
       mes = primeiro;
     } else {
-      // Dados atuais: MM/DD/YYYY
-      // 09/01 -> 01/09
-      // 09/02 -> 02/09
       mes = primeiro;
       dia = segundo;
     }
@@ -209,14 +199,14 @@ function formatarDataBr(
   );
 }
 
-export default function ProductionChart() {
+export default function ArrasteChart() {
   const { data } = useExcel();
   const { filters } = useFilters();
 
   const dashboard =
     processDashboardData(
       data,
-      filters.derruba
+      filters.arraste
     );
 
   const pontos =
@@ -225,14 +215,14 @@ export default function ProductionChart() {
         new Map<string, number>();
 
       for (
-        const row of dashboard.producao
+        const row of dashboard.arraste
       ) {
         const dataNormalizada =
           normalizarData(
-            row["Data do Corte"] ??
-            row["DATA DO CORTE"] ??
-            row["Data"] ??
-            row["DATA"]
+            row["Data Patio"] ??
+            row["Data Pátio"] ??
+            row["DATA"] ??
+            row["Data"]
           );
 
         if (!dataNormalizada) {
@@ -241,9 +231,10 @@ export default function ProductionChart() {
 
         const quantidade =
           converterNumero(
-            row["QUANT."] ??
-            row["QUANT"] ??
+            row["qtd"] ??
             row["QTD"] ??
+            row["Qtd"] ??
+            row["QUANT."] ??
             row["QUANTIDADE"] ??
             0
           );
@@ -258,8 +249,6 @@ export default function ProductionChart() {
         );
       }
 
-      // A chave ISO YYYY-MM-DD garante
-      // ordenação cronológica verdadeira.
       return Array.from(
         porData.entries()
       )
@@ -275,12 +264,12 @@ export default function ProductionChart() {
             quantidade,
           })
         );
-    }, [dashboard.producao]);
+    }, [dashboard.arraste]);
 
   if (pontos.length === 0) {
     return (
       <div className="flex min-h-[360px] items-center justify-center text-sm font-semibold text-[#7F87A8]">
-        Nenhum dado de produção encontrado.
+        Nenhum dado de arraste encontrado.
       </div>
     );
   }
@@ -318,21 +307,23 @@ export default function ProductionChart() {
 
             return [
               `<b>${p?.name ?? ""}</b>`,
-              `Produção: <b>${Number(
+              `Arraste: <b>${Number(
                 p?.value ?? 0
               ).toLocaleString(
                 "pt-BR"
-              )}</b>`,
+              )}</b> árvores`,
             ].join("<br/>");
           },
         },
 
         xAxis: {
           type: "category",
+
           data: pontos.map(
             (item) =>
               item.label
           ),
+
           boundaryGap: false,
 
           axisLabel: {
@@ -377,7 +368,7 @@ export default function ProductionChart() {
 
         series: [
           {
-            name: "Produção",
+            name: "Arraste",
             type: "line",
             smooth: true,
 
@@ -392,11 +383,11 @@ export default function ProductionChart() {
 
             lineStyle: {
               width: 4,
-              color: "#50FA7B",
+              color: "#FF7A00",
             },
 
             itemStyle: {
-              color: "#50FA7B",
+              color: "#FF7A00",
               borderColor: "#21222C",
               borderWidth: 2,
             },
@@ -413,12 +404,12 @@ export default function ProductionChart() {
                   {
                     offset: 0,
                     color:
-                      "rgba(80,250,123,0.25)",
+                      "rgba(255,122,0,0.25)",
                   },
                   {
                     offset: 1,
                     color:
-                      "rgba(80,250,123,0.03)",
+                      "rgba(255,122,0,0.03)",
                   },
                 ],
               },
@@ -430,7 +421,7 @@ export default function ProductionChart() {
               itemStyle: {
                 shadowBlur: 14,
                 shadowColor:
-                  "rgba(80,250,123,0.35)",
+                  "rgba(255,122,0,0.35)",
               },
             },
           },

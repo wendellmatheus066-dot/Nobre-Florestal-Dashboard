@@ -50,8 +50,9 @@ export default function Arraste() {
     dashboard.arraste
   );
 
-  const stats =
-    calcularStatsArraste(registros);
+  const stats = calcularStatsArraste(
+    registros
+  );
 
   // ==========================================
   // INDICADORES DO ARRASTE

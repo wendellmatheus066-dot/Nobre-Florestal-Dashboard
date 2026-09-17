@@ -1,9 +1,46 @@
-import ReactECharts from "echarts-for-react";
 import { useMemo } from "react";
+import ReactECharts from "echarts-for-react";
 
 import { useExcel } from "../../hooks/useExcel";
 import { useFilters } from "../../context/FilterContext";
 import { processDashboardData } from "../../services/dataProcessor";
+
+function converterNumero(valor: any): number {
+  if (
+    valor === undefined ||
+    valor === null ||
+    valor === ""
+  ) {
+    return 0;
+  }
+
+  if (typeof valor === "number") {
+    return Number.isFinite(valor)
+      ? valor
+      : 0;
+  }
+
+  let texto = String(valor)
+    .trim()
+    .replace(/\s/g, "");
+
+  if (
+    texto.includes(".") &&
+    texto.includes(",")
+  ) {
+    texto = texto
+      .replace(/\./g, "")
+      .replace(",", ".");
+  } else if (texto.includes(",")) {
+    texto = texto.replace(",", ".");
+  }
+
+  const numero = Number(texto);
+
+  return Number.isFinite(numero)
+    ? numero
+    : 0;
+}
 
 export default function UTChart() {
   const { data } = useExcel();
@@ -14,175 +51,223 @@ export default function UTChart() {
     filters.derruba
   );
 
-  const option = useMemo(() => {
-    const uts = new Map<string, number>();
+  const graficoUT = useMemo(() => {
+    const mapa = new Map<string, number>();
 
-    dashboard.producao.forEach((row: any) => {
-      const ut = String(row["UT"] ?? "Sem UT").trim();
+    for (const row of dashboard.producao) {
+      const ut = String(
+        row["UT"] ??
+        row["UT "] ??
+        row["UT Nº"] ??
+        row["Nº UT"] ??
+        ""
+      ).trim();
 
-      const quantidade = Number(
-        String(row["QUANT."] ?? 0)
-          .replace(/\./g, "")
-          .replace(",", ".")
+      if (!ut) {
+        continue;
+      }
+
+      const quantidade = converterNumero(
+        row["QUANT."] ??
+        row["QUANT"] ??
+        row["QTD"] ??
+        row["QUANTIDADE"] ??
+        1
       );
 
-      uts.set(
+      mapa.set(
         ut,
-        (uts.get(ut) ?? 0) + quantidade
+        (mapa.get(ut) ?? 0) + quantidade
       );
-    });
+    }
 
-    // Ordena do maior para o menor
-    const ranking = [...uts.entries()].sort(
-      (a, b) => b[1] - a[1]
+    return Array.from(mapa.entries())
+      .map(([nome, producao]) => ({
+        nome,
+        producao,
+      }))
+      .sort(
+        (a, b) =>
+          b.producao - a.producao
+      );
+  }, [dashboard.producao]);
+
+  if (graficoUT.length === 0) {
+    return (
+      <div className="flex min-h-[430px] items-center justify-center text-sm font-semibold text-[#7F87A8]">
+        Nenhuma UT encontrada nos dados.
+      </div>
     );
+  }
 
-    const categorias = ranking.map(([ut]) => ut);
-    const valores = ranking.map(([, valor]) => valor);
+  return (
+    <div className="w-full">
+      <ReactECharts
+        option={{
+          animation: true,
+          animationDuration: 700,
 
-    return {
-      backgroundColor: "transparent",
-
-      animation: true,
-      animationDuration: 800,
-
-      tooltip: {
-        trigger: "axis",
-        axisPointer: {
-          type: "shadow",
-        },
-        backgroundColor: "#282A36",
-        borderColor: "#4F8EF7",
-        borderWidth: 1,
-        textStyle: {
-          color: "#F8F8F2",
-        },
-        formatter: (params: any) => {
-          const p = params[0];
-
-          return `
-            <div style="padding:4px">
-              <strong>UT ${p.name}</strong><br/>
-              Produção:
-              <strong style="color:#60A5FA">
-                ${Number(p.value).toLocaleString("pt-BR")}
-              </strong>
-            </div>
-          `;
-        },
-      },
-
-      grid: {
-        top: 15,
-        left: 80,
-        right: 45,
-        bottom: 15,
-        containLabel: true,
-      },
-
-      xAxis: {
-        type: "value",
-
-        splitLine: {
-          lineStyle: {
-            color: "#44475A",
-            opacity: 0.35,
+          grid: {
+            left: 52,
+            right: 58,
+            top: 12,
+            bottom: 20,
+            containLabel: true,
           },
-        },
 
-        axisLine: {
-          show: false,
-        },
+          tooltip: {
+            trigger: "axis",
+            axisPointer: {
+              type: "shadow",
+            },
+            backgroundColor: "#21222C",
+            borderColor: "#00D084",
+            textStyle: {
+              color: "#FFFFFF",
+              fontWeight: 700,
+            },
+            formatter: (params: any[]) => {
+              const p = params?.[0];
 
-        axisTick: {
-          show: false,
-        },
-
-        axisLabel: {
-          color: "#BDC1D6",
-          fontSize: 12,
-        },
-      },
-
-      yAxis: {
-        type: "category",
-
-        inverse: true,
-
-        data: categorias,
-
-        axisLine: {
-          show: false,
-        },
-
-        axisTick: {
-          show: false,
-        },
-
-        axisLabel: {
-          color: "#F8F8F2",
-          fontSize: 13,
-          fontWeight: "bold",
-        },
-      },
-
-      series: [
-        {
-          name: "Produção",
-
-          type: "bar",
-
-          data: valores,
-
-          barWidth: 24,
-
-          itemStyle: {
-            borderRadius: [0, 10, 10, 0],
-
-            color: (params: any) => {
-              const cores = [
-                "#1D4ED8",
-                "#2563EB",
-                "#3B82F6",
-                "#4F8EF7",
-                "#60A5FA",
-                "#93C5FD",
-                "#60A5FA",
-                "#4F8EF7",
-                "#3B82F6",
-              ];
-
-              return cores[params.dataIndex] ?? "#4F8EF7";
+              return [
+                `<b>UT ${p?.name ?? ""}</b>`,
+                `Produção: <b>${Number(
+                  p?.value ?? 0
+                ).toLocaleString(
+                  "pt-BR"
+                )}</b> árvores`,
+              ].join("<br/>");
             },
           },
 
-          label: {
-            show: true,
-            position: "right",
-            color: "#FFFFFF",
-            fontWeight: "bold",
-            fontSize: 12,
-            formatter: ({ value }: any) =>
-              Number(value).toLocaleString("pt-BR"),
+          xAxis: {
+            type: "value",
+            min: 0,
+
+            axisLabel: {
+              color: "#7F87A8",
+              fontSize: 10,
+              fontWeight: 700,
+            },
+
+            axisLine: {
+              show: false,
+            },
+
+            axisTick: {
+              show: false,
+            },
+
+            splitLine: {
+              lineStyle: {
+                color:
+                  "rgba(255,255,255,0.055)",
+              },
+            },
           },
 
-          emphasis: {
-            focus: "series",
-          },
-        },
-      ],
-    };
-  }, [dashboard.producao]);
+          yAxis: {
+            type: "category",
+            inverse: true,
+            data: graficoUT.map(
+              (item) => item.nome
+            ),
 
-  return (
-    <ReactECharts
-      option={option}
-      notMerge={true}
-      lazyUpdate={true}
-      style={{
-        width: "100%",
-        height: 420,
-      }}
-    />
+            axisLabel: {
+              color: "#BDC1D6",
+              fontSize: 11,
+              fontWeight: 800,
+              margin: 14,
+            },
+
+            axisLine: {
+              show: false,
+            },
+
+            axisTick: {
+              show: false,
+            },
+          },
+
+          series: [
+            {
+              name: "Produção",
+              type: "bar",
+
+              data: graficoUT.map(
+                (item) => item.producao
+              ),
+
+              // Barras menores e separadas.
+              barWidth: 13,
+              barCategoryGap: "55%",
+
+              itemStyle: {
+                borderRadius: [
+                  0,
+                  8,
+                  8,
+                  0,
+                ],
+                color: {
+                  type: "linear",
+                  x: 0,
+                  y: 0,
+                  x2: 1,
+                  y2: 0,
+                  colorStops: [
+                    {
+                      offset: 0,
+                      color: "#00A8FF",
+                    },
+                    {
+                      offset: 0.55,
+                      color: "#4C8BF5",
+                    },
+                    {
+                      offset: 1,
+                      color: "#8BE9FD",
+                    },
+                  ],
+                },
+              },
+
+              label: {
+                show: true,
+                position: "right",
+                distance: 8,
+                color: "#FFFFFF",
+                fontSize: 11,
+                fontWeight: 900,
+
+                formatter: (params: any) =>
+                  Number(
+                    params.value
+                  ).toLocaleString(
+                    "pt-BR"
+                  ),
+              },
+
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 14,
+                  shadowColor:
+                    "rgba(0,168,255,0.30)",
+                },
+              },
+            },
+          ],
+        }}
+
+        style={{
+          width: "100%",
+          height: "500px",
+        }}
+
+        opts={{
+          renderer: "canvas",
+        }}
+      />
+    </div>
   );
 }

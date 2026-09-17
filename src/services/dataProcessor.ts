@@ -144,14 +144,78 @@ function normalizarData(valor: any): string {
     return "";
   }
 
-  const texto = String(valor).trim();
-
+  // Date real: mantém a data do objeto.
   if (
-    /^\d{4}-\d{2}-\d{2}$/.test(texto)
+    valor instanceof Date &&
+    !isNaN(valor.getTime())
   ) {
-    return texto;
+    return (
+      `${valor.getFullYear()}-` +
+      `${String(
+        valor.getMonth() + 1
+      ).padStart(2, "0")}-` +
+      `${String(
+        valor.getDate()
+      ).padStart(2, "0")}`
+    );
   }
 
+  const texto = String(valor).trim();
+
+  // ISO.
+  const iso = texto.match(
+    /^(\d{4})-(\d{2})-(\d{2})/
+  );
+
+  if (iso) {
+    return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  }
+
+  // Serial de data do Excel.
+  if (
+    /^\d+(?:\.\d+)?$/.test(texto)
+  ) {
+    const serial = Number(texto);
+
+    if (
+      serial > 20000 &&
+      serial < 80000
+    ) {
+      const data = new Date(
+        Date.UTC(
+          1899,
+          11,
+          30
+        ) +
+          serial *
+            86400000
+      );
+
+      return (
+        `${data.getUTCFullYear()}-` +
+        `${String(
+          data.getUTCMonth() + 1
+        ).padStart(2, "0")}-` +
+        `${String(
+          data.getUTCDate()
+        ).padStart(2, "0")}`
+      );
+    }
+  }
+
+  /*
+   * DATA ORIGINADA DO ARQUIVO:
+   *
+   * 09/01/2026 = 01/09/2026
+   * 09/02/2026 = 02/09/2026
+   *
+   * Ou seja: quando as duas partes são <= 12,
+   * os dados atuais estão em MM/DD/YYYY.
+   *
+   * Casos inequívocos continuam funcionando:
+   * 09/31/2026 = 31/09? Não é possível;
+   * 31/08/2026 = 31/08/2026.
+   */
   if (texto.includes("/")) {
     const partes = texto.split("/");
 
@@ -162,30 +226,36 @@ function normalizarData(valor: any): string {
     const primeiro = Number(partes[0]);
     const segundo = Number(partes[1]);
 
-    let ano = partes[2];
+    let ano = String(partes[2])
+      .replace(/\s.*/, "");
 
     if (
-      isNaN(primeiro) ||
-      isNaN(segundo) ||
-      isNaN(Number(ano))
+      !Number.isFinite(primeiro) ||
+      !Number.isFinite(segundo) ||
+      !Number.isFinite(Number(ano))
     ) {
       return "";
     }
 
     if (ano.length === 2) {
-      ano = "20" + ano;
+      ano = `20${ano}`;
     }
 
-    let mes: number;
     let dia: number;
+    let mes: number;
 
     if (primeiro > 12) {
+      // 31/08/2026 -> 31/08/2026
       dia = primeiro;
       mes = segundo;
     } else if (segundo > 12) {
-      mes = primeiro;
+      // 08/31/2026 -> 31/08/2026
       dia = segundo;
+      mes = primeiro;
     } else {
+      // Dados atuais: MM/DD/YYYY
+      // 09/01 -> 01/09
+      // 09/02 -> 02/09
       mes = primeiro;
       dia = segundo;
     }
@@ -201,8 +271,12 @@ function normalizarData(valor: any): string {
 
     return (
       `${ano}-` +
-      `${String(mes).padStart(2, "0")}-` +
-      `${String(dia).padStart(2, "0")}`
+      `${String(
+        mes
+      ).padStart(2, "0")}-` +
+      `${String(
+        dia
+      ).padStart(2, "0")}`
     );
   }
 

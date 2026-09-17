@@ -1,419 +1,387 @@
-import ReactECharts from "echarts-for-react";
 import { useMemo } from "react";
-import * as echarts from "echarts";
+import ReactECharts from "echarts-for-react";
 
 import { useExcel } from "../../../hooks/useExcel";
 import { useFilters } from "../../../context/FilterContext";
-
 import { processDashboardData } from "../../../services/dataProcessor";
+
+function converterNumero(valor: any): number {
+  if (
+    valor === undefined ||
+    valor === null ||
+    valor === ""
+  ) {
+    return 0;
+  }
+
+  if (typeof valor === "number") {
+    return Number.isFinite(valor) ? valor : 0;
+  }
+
+  let texto = String(valor)
+    .trim()
+    .replace(/\s/g, "");
+
+  if (texto.includes(".") && texto.includes(",")) {
+    texto = texto
+      .replace(/\./g, "")
+      .replace(",", ".");
+  } else if (texto.includes(",")) {
+    texto = texto.replace(",", ".");
+  }
+
+  const numero = Number(texto);
+
+  return Number.isFinite(numero) ? numero : 0;
+}
+
+/*
+ * Os dados atuais do Arraste estão vindo neste padrão:
+ *
+ * 09/01/2026 -> 01/09/2026
+ * 09/02/2026 -> 02/09/2026
+ *
+ * Por isso, quando as duas partes são <= 12,
+ * interpretamos como MM/DD/YYYY.
+ */
+function normalizarDataArraste(valor: any): string {
+  if (
+    valor === undefined ||
+    valor === null ||
+    valor === ""
+  ) {
+    return "";
+  }
+
+  if (
+    valor instanceof Date &&
+    !isNaN(valor.getTime())
+  ) {
+    return [
+      valor.getFullYear(),
+      String(valor.getMonth() + 1).padStart(2, "0"),
+      String(valor.getDate()).padStart(2, "0"),
+    ].join("-");
+  }
+
+  const texto = String(valor).trim();
+
+  const iso = texto.match(
+    /^(\d{4})-(\d{2})-(\d{2})/
+  );
+
+  if (iso) {
+    return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  }
+
+  // Serial Excel
+  if (/^\d+(?:\.\d+)?$/.test(texto)) {
+    const serial = Number(texto);
+
+    if (serial > 20000 && serial < 80000) {
+      const data = new Date(
+        Date.UTC(1899, 11, 30) +
+          serial * 86400000
+      );
+
+      return [
+        data.getUTCFullYear(),
+        String(data.getUTCMonth() + 1).padStart(2, "0"),
+        String(data.getUTCDate()).padStart(2, "0"),
+      ].join("-");
+    }
+  }
+
+  if (texto.includes("/")) {
+    const partes = texto.split("/");
+
+    if (partes.length !== 3) {
+      return "";
+    }
+
+    const a = Number(partes[0]);
+    const b = Number(partes[1]);
+
+    let ano = String(partes[2]).replace(/\s.*/, "");
+
+    if (
+      !Number.isFinite(a) ||
+      !Number.isFinite(b) ||
+      !Number.isFinite(Number(ano))
+    ) {
+      return "";
+    }
+
+    if (ano.length === 2) {
+      ano = `20${ano}`;
+    }
+
+    let dia: number;
+    let mes: number;
+
+    if (a > 12) {
+      // 31/08/2026 -> 31/08/2026
+      dia = a;
+      mes = b;
+    } else if (b > 12) {
+      // 08/31/2026 -> 31/08/2026
+      dia = b;
+      mes = a;
+    } else {
+      // Dados atuais do Arraste: MM/DD/YYYY
+      // 09/01/2026 -> 01/09/2026
+      // 09/02/2026 -> 02/09/2026
+      mes = a;
+      dia = b;
+    }
+
+    if (
+      mes < 1 ||
+      mes > 12 ||
+      dia < 1 ||
+      dia > 31
+    ) {
+      return "";
+    }
+
+    return (
+      `${ano}-` +
+      `${String(mes).padStart(2, "0")}-` +
+      `${String(dia).padStart(2, "0")}`
+    );
+  }
+
+  return "";
+}
+
+function formatarDataBr(dataIso: string): string {
+  const partes = dataIso.match(
+    /^(\d{4})-(\d{2})-(\d{2})$/
+  );
+
+  if (!partes) {
+    return dataIso;
+  }
+
+  return `${partes[3]}/${partes[2]}/${partes[1]}`;
+}
 
 export default function ProductionChart() {
   const { data } = useExcel();
   const { filters } = useFilters();
 
-  // Processa os dados sempre que o Excel ou o filtro mudar
-  const dashboard = useMemo(() => {
-    return processDashboardData(data, filters.arraste);
-  }, [data, filters.arraste]);
+  const dashboard = processDashboardData(
+    data,
+    filters.arraste
+  );
 
-  const option = useMemo(() => {
-    const agrupado = new Map<string, number>();
+  const pontos = useMemo(() => {
+    const porData = new Map<string, number>();
 
-    // -------------------------------------------------------
-    // CONVERTER QUALQUER TIPO DE DATA PARA DD/MM/YYYY
-    // -------------------------------------------------------
-    const normalizarData = (valor: any): string => {
-      if (valor === null || valor === undefined || valor === "") {
-        return "";
-      }
-
-      // Se já for Date
-      if (valor instanceof Date && !isNaN(valor.getTime())) {
-        const dia = String(valor.getDate()).padStart(2, "0");
-        const mes = String(valor.getMonth() + 1).padStart(2, "0");
-        const ano = valor.getFullYear();
-
-        return `${dia}/${mes}/${ano}`;
-      }
-
-      const texto = String(valor).trim();
-
-      if (!texto) {
-        return "";
-      }
-
-      // -----------------------------------------------------
-      // DATA DO EXCEL COMO NÚMERO SERIAL
-      // Exemplo: 46242
-      // -----------------------------------------------------
-      if (/^\d{5}(\.\d+)?$/.test(texto)) {
-        const numero = Number(texto);
-
-        if (numero > 20000 && numero < 60000) {
-          const dataExcel = new Date(
-            Date.UTC(1899, 11, 30) + numero * 86400000
-          );
-
-          const dia = String(dataExcel.getUTCDate()).padStart(2, "0");
-          const mes = String(dataExcel.getUTCMonth() + 1).padStart(2, "0");
-          const ano = dataExcel.getUTCFullYear();
-
-          return `${dia}/${mes}/${ano}`;
-        }
-      }
-
-      // -----------------------------------------------------
-      // ISO
-      // 2026-08-07
-      // 2026-08-07T00:00:00
-      // -----------------------------------------------------
-      if (/^\d{4}-\d{2}-\d{2}/.test(texto)) {
-        const partes = texto.substring(0, 10).split("-");
-
-        if (partes.length === 3) {
-          return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        }
-      }
-
-      // -----------------------------------------------------
-      // DD/MM/YYYY
-      // DD/MM/YY
-      // -----------------------------------------------------
-      if (texto.includes("/")) {
-        const partes = texto.substring(0, 10).split("/");
-
-        if (partes.length === 3) {
-          let dia = partes[0].replace(/\D/g, "");
-          let mes = partes[1].replace(/\D/g, "");
-          let ano = partes[2].replace(/\D/g, "");
-
-          if (dia && mes && ano) {
-            dia = dia.padStart(2, "0");
-            mes = mes.padStart(2, "0");
-
-            if (ano.length === 2) {
-              ano = "20" + ano;
-            }
-
-            return `${dia}/${mes}/${ano}`;
-          }
-        }
-      }
-
-      // -----------------------------------------------------
-      // TENTA DATA EM TEXTO
-      // -----------------------------------------------------
-      const tentativa = new Date(texto);
-
-      if (!isNaN(tentativa.getTime())) {
-        const dia = String(tentativa.getDate()).padStart(2, "0");
-        const mes = String(tentativa.getMonth() + 1).padStart(2, "0");
-        const ano = tentativa.getFullYear();
-
-        return `${dia}/${mes}/${ano}`;
-      }
-
-      return "";
-    };
-
-    // -------------------------------------------------------
-    // CONVERTER QUANTIDADE
-    // -------------------------------------------------------
-    const normalizarQuantidade = (valor: any): number => {
-      if (valor === null || valor === undefined || valor === "") {
-        return 0;
-      }
-
-      // Se já for número, NÃO altera o valor
-      if (typeof valor === "number") {
-        return isNaN(valor) ? 0 : valor;
-      }
-
-      let texto = String(valor).trim();
-
-      if (!texto) {
-        return 0;
-      }
-
-      // Remove espaços
-      texto = texto.replace(/\s/g, "");
-
-      // Caso brasileiro:
-      // 1.234,56
-      if (texto.includes(",") && texto.includes(".")) {
-        texto = texto.replace(/\./g, "");
-        texto = texto.replace(",", ".");
-      }
-
-      // Caso:
-      // 123,45
-      else if (texto.includes(",")) {
-        texto = texto.replace(",", ".");
-      }
-
-      const numero = Number(texto);
-
-      return isNaN(numero) ? 0 : numero;
-    };
-
-    // -------------------------------------------------------
-    // AGRUPAR PRODUÇÃO POR DATA
-    // -------------------------------------------------------
-    const linhas = dashboard?.arraste ?? [];
-
-    console.log("=================================");
-    console.log("PRODUÇÃO POR DIA - ARRASTE");
-    console.log("Quantidade de linhas:", linhas.length);
-
-    if (linhas.length > 0) {
-      console.log("Primeira linha:", linhas[0]);
-      console.log("Data Patio:", linhas[0]["Data Patio"]);
-      console.log("Tipo da Data:", typeof linhas[0]["Data Patio"]);
-      console.log("Qtd:", linhas[0]["qtd"]);
-    }
-
-    console.log("=================================");
-
-    linhas.forEach((row: any) => {
-      if (!row) return;
-
-      // Procura a data principal
-      const valorData =
+    for (const row of dashboard.arraste) {
+      const data = normalizarDataArraste(
         row["Data Patio"] ??
-        row["DATA PATIO"] ??
         row["Data Pátio"] ??
-        row["DATA"] ??
-        row["Data"];
+        row["DATA PATIO"] ??
+        row["DATA PÁTIO"] ??
+        row["Data"] ??
+        row["DATA"]
+      );
 
-      const dataPatio = normalizarData(valorData);
-
-      if (!dataPatio) {
-        console.warn("Linha sem data:", row);
-        return;
+      if (!data) {
+        continue;
       }
 
-      // Procura quantidade
-      const valorQuantidade =
+      const quantidade = converterNumero(
         row["qtd"] ??
         row["QTD"] ??
         row["Qtd"] ??
-        row["Quantidade"] ??
+        row["QUANT."] ??
+        row["QUANT"] ??
         row["QUANTIDADE"] ??
-        0;
-
-      const quantidade = normalizarQuantidade(valorQuantidade);
-
-      if (quantidade === 0) {
-        return;
-      }
-
-      agrupado.set(
-        dataPatio,
-        (agrupado.get(dataPatio) ?? 0) + quantidade
+        0
       );
-    });
 
-    // -------------------------------------------------------
-    // ORDENAR DATAS
-    // -------------------------------------------------------
-    const dias = [...agrupado.keys()].sort((a, b) => {
-      const [diaA, mesA, anoA] = a.split("/").map(Number);
-      const [diaB, mesB, anoB] = b.split("/").map(Number);
+      porData.set(
+        data,
+        (porData.get(data) ?? 0) +
+          quantidade
+      );
+    }
 
-      const dataA = new Date(
-        anoA,
-        mesA - 1,
-        diaA
-      ).getTime();
+    return Array.from(porData.entries())
+      .sort(
+        ([dataA], [dataB]) =>
+          dataA.localeCompare(dataB)
+      )
+      .map(
+        ([data, quantidade]) => ({
+          data,
+          label: formatarDataBr(data),
+          quantidade,
+        })
+      );
+  }, [dashboard.arraste]);
 
-      const dataB = new Date(
-        anoB,
-        mesB - 1,
-        diaB
-      ).getTime();
-
-      return dataA - dataB;
-    });
-
-    const valores = dias.map(
-      (dia) => agrupado.get(dia) ?? 0
+  if (pontos.length === 0) {
+    return (
+      <div className="flex min-h-[360px] items-center justify-center text-sm font-semibold text-[#7F87A8]">
+        Nenhum dado de arraste encontrado.
+      </div>
     );
-
-    console.log("Datas do gráfico:", dias);
-    console.log("Valores do gráfico:", valores);
-
-    // -------------------------------------------------------
-    // CONFIGURAÇÃO DO ECHARTS
-    // -------------------------------------------------------
-    return {
-      backgroundColor: "transparent",
-
-      animation: true,
-      animationDuration: 800,
-
-      tooltip: {
-        trigger: "axis",
-
-        axisPointer: {
-          type: "line",
-        },
-
-        backgroundColor: "#282A36",
-
-        borderColor: "#50FA7B",
-
-        borderWidth: 1,
-
-        textStyle: {
-          color: "#F8F8F2",
-        },
-
-        formatter: (params: any) => {
-          if (!params || !params.length) {
-            return "";
-          }
-
-          const item = params[0];
-
-          return `
-            <div>
-              <strong>${item.axisValue}</strong><br/>
-              Produção: ${Number(item.value).toLocaleString(
-                "pt-BR"
-              )}
-            </div>
-          `;
-        },
-      },
-
-      grid: {
-        top: 20,
-        left: 50,
-        right: 25,
-        bottom: 45,
-      },
-
-      xAxis: {
-        type: "category",
-
-        boundaryGap: false,
-
-        data: dias,
-
-        axisLine: {
-          lineStyle: {
-            color: "#44475A",
-          },
-        },
-
-        axisTick: {
-          show: false,
-        },
-
-        axisLabel: {
-          color: "#BDC1D6",
-
-          fontSize: 12,
-
-          rotate: dias.length > 6 ? 30 : 0,
-
-          formatter: (value: string) => value,
-        },
-      },
-
-      yAxis: {
-        type: "value",
-
-        min: 0,
-
-        splitLine: {
-          lineStyle: {
-            color: "#44475A",
-          },
-        },
-
-        axisLine: {
-          show: false,
-        },
-
-        axisTick: {
-          show: false,
-        },
-
-        axisLabel: {
-          color: "#BDC1D6",
-
-          fontSize: 12,
-
-          formatter: (value: number) =>
-            value.toLocaleString("pt-BR"),
-        },
-      },
-
-      series: [
-        {
-          name: "Produção",
-
-          type: "line",
-
-          smooth: true,
-
-          data: valores,
-
-          symbol: "circle",
-
-          symbolSize: 8,
-
-          lineStyle: {
-            width: 4,
-
-            color: "#50FA7B",
-          },
-
-          itemStyle: {
-            color: "#50FA7B",
-
-            borderColor: "#282A36",
-
-            borderWidth: 2,
-          },
-
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(
-              0,
-              0,
-              0,
-              1,
-              [
-                {
-                  offset: 0,
-                  color: "rgba(80,250,123,0.35)",
-                },
-                {
-                  offset: 1,
-                  color: "rgba(80,250,123,0.03)",
-                },
-              ]
-            ),
-          },
-
-          emphasis: {
-            focus: "series",
-          },
-        },
-      ],
-    };
-  }, [dashboard]);
+  }
 
   return (
     <ReactECharts
-      option={option}
+      option={{
+        animation: true,
+        animationDuration: 600,
+
+        grid: {
+          left: 56,
+          right: 24,
+          top: 24,
+          bottom: 82,
+          containLabel: true,
+        },
+
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "line",
+          },
+          backgroundColor: "#21222C",
+          borderColor: "#00D084",
+          textStyle: {
+            color: "#FFFFFF",
+            fontWeight: 700,
+          },
+          formatter: (params: any[]) => {
+            const p = params?.[0];
+
+            return [
+              `<b>${p?.name ?? ""}</b>`,
+              `Arraste: <b>${Number(
+                p?.value ?? 0
+              ).toLocaleString(
+                "pt-BR"
+              )}</b> árvores`,
+            ].join("<br/>");
+          },
+        },
+
+        xAxis: {
+          type: "category",
+          data: pontos.map(
+            (item) => item.label
+          ),
+          boundaryGap: false,
+
+          axisLabel: {
+            color: "#BDC1D6",
+            fontSize: 10,
+            fontWeight: 700,
+            interval: "auto",
+            rotate: 30,
+          },
+
+          axisLine: {
+            lineStyle: {
+              color: "#4A5168",
+            },
+          },
+
+          axisTick: {
+            show: false,
+          },
+        },
+
+        yAxis: {
+          type: "value",
+
+          axisLabel: {
+            color: "#7F87A8",
+            fontSize: 10,
+            fontWeight: 700,
+          },
+
+          splitLine: {
+            lineStyle: {
+              color: "rgba(255,255,255,0.055)",
+            },
+          },
+
+          axisLine: {
+            show: false,
+          },
+        },
+
+        series: [
+          {
+            name: "Arraste",
+            type: "line",
+            smooth: true,
+
+            data: pontos.map(
+              (item) => item.quantidade
+            ),
+
+            symbol: "circle",
+            symbolSize: 7,
+            showSymbol: true,
+
+            lineStyle: {
+              width: 4,
+              color: "#00D084",
+            },
+
+            itemStyle: {
+              color: "#00D084",
+              borderColor: "#21222C",
+              borderWidth: 2,
+            },
+
+            areaStyle: {
+              color: {
+                type: "linear",
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+
+                colorStops: [
+                  {
+                    offset: 0,
+                    color: "rgba(0,208,132,0.25)",
+                  },
+                  {
+                    offset: 1,
+                    color: "rgba(0,208,132,0.03)",
+                  },
+                ],
+              },
+            },
+
+            emphasis: {
+              focus: "series",
+
+              itemStyle: {
+                shadowBlur: 14,
+                shadowColor:
+                  "rgba(0,208,132,0.35)",
+              },
+            },
+          },
+        ],
+      }}
       style={{
         width: "100%",
-        height: 420,
+        height: "100%",
+        minHeight: "360px",
       }}
-      notMerge={true}
-      lazyUpdate={false}
+      opts={{
+        renderer: "canvas",
+      }}
     />
   );
 }

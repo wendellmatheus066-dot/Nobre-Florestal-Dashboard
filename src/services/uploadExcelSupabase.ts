@@ -30,6 +30,59 @@ async function atualizarUltimaImportacao() {
 }
 
 // ============================
+// LIMPAR INVENTÁRIO
+// ============================
+
+async function limparInventario() {
+  console.log(
+    "Limpando inventário diretamente no Supabase..."
+  );
+
+  const { error } = await supabase.rpc(
+    "limpar_inventario"
+  );
+
+  if (error) {
+    console.error(
+      "Erro limpando inventário:",
+      error
+    );
+
+    throw error;
+  }
+
+  console.log(
+    "Inventário antigo removido com sucesso."
+  );
+}
+
+// ============================
+// LIMPAR TABELA NORMAL
+// ============================
+
+async function limparTabela(
+  tabela: string
+) {
+  const { error } = await supabase
+    .from(tabela)
+    .delete()
+    .neq("id", 0);
+
+  if (error) {
+    console.error(
+      `Erro limpando ${tabela}:`,
+      error
+    );
+
+    throw error;
+  }
+
+  console.log(
+    `${tabela}: dados antigos apagados`
+  );
+}
+
+// ============================
 // SALVAR PLANILHA
 // ============================
 
@@ -39,39 +92,55 @@ export async function salvarPlanilha(
 ) {
   try {
     console.log(
-      "Importando tabela:",
+      "================================="
+    );
+
+    console.log(
+      "IMPORTANDO TABELA:",
       tabela
     );
 
     console.log(
-      "Quantidade:",
+      "QUANTIDADE:",
       dados.length
     );
 
-    // INVENTÁRIO é muito grande
-    // não tenta apagar tudo
-    if (tabela !== "inventario") {
-      const { error: deleteError } =
-        await supabase
-          .from(tabela)
-          .delete()
-          .neq("id", 0);
+    console.log(
+      "================================="
+    );
 
-      if (deleteError) {
-        console.error(
-          "Erro limpando tabela:",
-          deleteError
-        );
+    // ==========================================
+    // LIMPEZA
+    // ==========================================
 
-        throw deleteError;
-      }
+    if (tabela === "inventario") {
+      // Inventário é muito grande.
+      // A limpeza é feita diretamente no banco.
+      await limparInventario();
     } else {
-      console.log(
-        "Inventário: mantendo dados existentes para evitar timeout"
-      );
+      await limparTabela(tabela);
     }
 
-    const tamanhoLote = 100;
+    // ==========================================
+    // NENHUM DADO
+    // ==========================================
+
+    if (
+      !dados ||
+      dados.length === 0
+    ) {
+      console.log(
+        `${tabela}: nenhum dado para inserir`
+      );
+
+      return true;
+    }
+
+    // ==========================================
+    // INSERÇÃO EM LOTES
+    // ==========================================
+
+    const tamanhoLote = 500;
 
     for (
       let i = 0;
@@ -79,7 +148,10 @@ export async function salvarPlanilha(
       i += tamanhoLote
     ) {
       const lote = dados
-        .slice(i, i + tamanhoLote)
+        .slice(
+          i,
+          i + tamanhoLote
+        )
         .map((linha) => ({
           dados: linha,
         }));
@@ -91,7 +163,7 @@ export async function salvarPlanilha(
 
       if (error) {
         console.error(
-          "Erro inserindo lote:",
+          `Erro inserindo lote de ${tabela}:`,
           error
         );
 
@@ -99,19 +171,16 @@ export async function salvarPlanilha(
       }
 
       console.log(
-        `${tabela}: enviado ${i + lote.length}/${dados.length}`
-      );
-
-      // pequena pausa
-      await new Promise((resolve) =>
-        setTimeout(resolve, 100)
+        `${tabela}: enviado ${Math.min(
+          i + lote.length,
+          dados.length
+        )}/${dados.length}`
       );
     }
 
-    // ============================
-    // Atualiza somente quando for
-    // Produção / Arraste / Medição
-    // ============================
+    // ==========================================
+    // ÚLTIMA IMPORTAÇÃO
+    // ==========================================
 
     if (
       tabela === "producao" ||
@@ -122,15 +191,39 @@ export async function salvarPlanilha(
     }
 
     console.log(
+      "================================="
+    );
+
+    console.log(
       "IMPORTAÇÃO FINALIZADA:",
       tabela
     );
 
+    console.log(
+      "TOTAL:",
+      dados.length
+    );
+
+    console.log(
+      "================================="
+    );
+
     return true;
+
   } catch (error) {
     console.error(
-      "ERRO IMPORTAÇÃO:",
-      error
+      "================================="
+    );
+
+    console.error(
+      "ERRO NA IMPORTAÇÃO:",
+      tabela
+    );
+
+    console.error(error);
+
+    console.error(
+      "================================="
     );
 
     throw error;

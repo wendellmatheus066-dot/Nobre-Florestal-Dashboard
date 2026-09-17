@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
+  Home,
   Truck,
   Ruler,
   Map,
@@ -8,6 +9,7 @@ import {
   ChevronRight,
   LogOut,
   X,
+  ClipboardList,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -19,9 +21,19 @@ type SidebarProps = {
 
 const menus = [
   {
+    icon: Home,
+    title: "Painel Central",
+    path: "/painel-central",
+  },
+  {
     icon: LayoutDashboard,
     title: "Derruba",
     path: "/",
+  },
+  {
+    icon: ClipboardList,
+    title: "Justificadas",
+    path: "/justificadas",
   },
   {
     icon: Truck,
@@ -83,7 +95,7 @@ export default function Sidebar({
 
         <div className="flex h-full flex-col">
 
-          {/* Botão fechar no celular */}
+          {/* BOTÃO FECHAR NO CELULAR */}
           <div className="flex justify-end p-3 lg:hidden">
             <button
               onClick={() => setSidebarOpen(false)}
@@ -281,7 +293,7 @@ export default function Sidebar({
             </h3>
 
             <p className="mt-1 text-xs text-[#BDC1D6]">
-              Versão 1.0.0
+              Versão 2.0.0
             </p>
 
           </footer>

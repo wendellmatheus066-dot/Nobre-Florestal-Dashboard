@@ -1,7 +1,14 @@
 import { supabase } from "../lib/supabase";
 
+// ============================
+// LIMPAR NÚMERO
+// ============================
+
 function limparNumero(valor: any) {
-  if (valor === undefined || valor === null) {
+  if (
+    valor === undefined ||
+    valor === null
+  ) {
     return "";
   }
 
@@ -14,26 +21,36 @@ function limparNumero(valor: any) {
 // BUSCAR TABELA COMPLETA
 // ============================
 
-async function buscarTabelaSupabase(tabela: string) {
+async function buscarTabelaSupabase(
+  tabela: string
+) {
   const todos: any[] = [];
+
   const tamanho = 1000;
   let inicio = 0;
 
   try {
     while (true) {
-      const { data, error } = await supabase
-        .from(tabela)
-        .select("dados")
-        .order("id", {
-          ascending: true,
-        })
-        .range(inicio, inicio + tamanho - 1);
+      const { data, error } =
+        await supabase
+          .from(tabela)
+          .select("dados")
+          .order("id", {
+            ascending: true,
+          })
+          .range(
+            inicio,
+            inicio + tamanho - 1
+          );
 
       if (error) {
         throw error;
       }
 
-      if (!data || data.length === 0) {
+      if (
+        !data ||
+        data.length === 0
+      ) {
         break;
       }
 
@@ -44,7 +61,9 @@ async function buscarTabelaSupabase(tabela: string) {
         data.length
       );
 
-      if (data.length < tamanho) {
+      if (
+        data.length < tamanho
+      ) {
         break;
       }
 
@@ -56,7 +75,10 @@ async function buscarTabelaSupabase(tabela: string) {
       todos.length
     );
 
-    return todos.map((item) => item.dados);
+    return todos.map(
+      (item) => item.dados
+    );
+
   } catch (error) {
     console.error(
       `Erro buscando ${tabela}:`,
@@ -101,9 +123,9 @@ async function buscarInventarioFiltrado(
 
     const resultados: any[] = [];
 
-    // ==================================================
-    // Fazemos em lotes para não estourar a URL da consulta
-    // ==================================================
+    // ============================
+    // LOTES DE 500
+    // ============================
 
     const tamanhoLote = 500;
 
@@ -112,10 +134,11 @@ async function buscarInventarioFiltrado(
       inicio < numerosLimpos.length;
       inicio += tamanhoLote
     ) {
-      const lote = numerosLimpos.slice(
-        inicio,
-        inicio + tamanhoLote
-      );
+      const lote =
+        numerosLimpos.slice(
+          inicio,
+          inicio + tamanhoLote
+        );
 
       console.log(
         `Buscando lote ${inicio} - ${
@@ -164,6 +187,7 @@ async function buscarInventarioFiltrado(
     return resultados.map(
       (item) => item.dados
     );
+
   } catch (error) {
     console.error(
       "Erro inventário:",
@@ -217,6 +241,20 @@ export async function buscarJustificadasSupabase() {
 // ============================
 // INVENTÁRIO
 // ============================
+//
+// IMPORTANTE:
+//
+// O inventário completo contém:
+// - Explorar
+// - Explorar_CAP
+// - Substituta
+//
+// Todas continuam armazenadas.
+//
+// Quando forem usados filtros por número
+// de árvore, buscamos somente os números
+// necessários.
+//
 
 export async function buscarInventarioSupabase(
   numeros: string[] = []
@@ -233,6 +271,141 @@ export async function buscarInventarioSupabase(
 }
 
 // ============================
+// META DA DERRUBA
+// ============================
+//
+// REGRA:
+//
+// SOMENTE "Explorar" entra na META.
+//
+// NÃO entram na meta:
+// - Explorar_CAP
+// - Substituta
+//
+// Essas duas categorias continuam
+// disponíveis no inventário como
+// árvores substitutas.
+//
+
+export async function contarInventarioExplorar() {
+  try {
+    console.log(
+      "================================="
+    );
+
+    console.log(
+      "BUSCANDO META DO DERRUBA"
+    );
+
+    console.log(
+      "Categoria da META: Explorar"
+    );
+
+    console.log(
+      "Explorar_CAP: NÃO entra"
+    );
+
+    console.log(
+      "Substituta: NÃO entra"
+    );
+
+    console.log(
+      "================================="
+    );
+
+    const { count, error } =
+      await supabase
+        .from("inventario")
+        .select("id", {
+          count: "exact",
+          head: true,
+        })
+        .eq(
+          "dados->>CATEGORIA",
+          "Explorar"
+        );
+
+    if (error) {
+      throw error;
+    }
+
+    const total = count ?? 0;
+
+    console.log(
+      "================================="
+    );
+
+    console.log(
+      "META DERRUBA — SOMENTE EXPLORAR:",
+      total
+    );
+
+    console.log(
+      "================================="
+    );
+
+    return total;
+
+  } catch (error) {
+    console.error(
+      "Erro contando inventário Explorar:",
+      error
+    );
+
+    return 0;
+  }
+}
+
+// ============================
+// CONTAR SUBSTITUTAS
+// ============================
+//
+// Apenas para uso futuro no sistema.
+//
+// NÃO altera a META.
+//
+
+export async function contarInventarioSubstitutas() {
+  try {
+    const { count, error } =
+      await supabase
+        .from("inventario")
+        .select("id", {
+          count: "exact",
+          head: true,
+        })
+        .in(
+          "dados->>CATEGORIA",
+          [
+            "Explorar_CAP",
+            "Substituta",
+          ]
+        );
+
+    if (error) {
+      throw error;
+    }
+
+    const total = count ?? 0;
+
+    console.log(
+      "SUBSTITUTAS DISPONÍVEIS:",
+      total
+    );
+
+    return total;
+
+  } catch (error) {
+    console.error(
+      "Erro contando substitutas:",
+      error
+    );
+
+    return 0;
+  }
+}
+
+// ============================
 // ÚLTIMA IMPORTAÇÃO
 // ============================
 
@@ -241,7 +414,9 @@ export async function buscarUltimaImportacao() {
     const { data, error } =
       await supabase
         .from("configuracoes2")
-        .select("chave, valor");
+        .select(
+          "chave, valor"
+        );
 
     if (error) {
       console.error(
@@ -252,19 +427,24 @@ export async function buscarUltimaImportacao() {
       return null;
     }
 
-    if (!data || data.length === 0) {
+    if (
+      !data ||
+      data.length === 0
+    ) {
       return null;
     }
 
-    const registro = data.find(
-      (item: any) =>
-        item.chave ===
-        "ultima_importacao"
-    );
+    const registro =
+      data.find(
+        (item: any) =>
+          item.chave ===
+          "ultima_importacao"
+      );
 
     return (
       registro?.valor ?? null
     );
+
   } catch (error) {
     console.error(
       "Erro inesperado:",

@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
+import PainelCentral from "./pages/PainelCentral";
+import Justificadas from "./pages/Justificadas";
 import Arraste from "./pages/Arraste";
 import Medicao from "./pages/Medicao";
 import Transporte from "./pages/Transporte";
@@ -35,12 +37,32 @@ function App() {
         }
       />
 
-      {/* Dashboard */}
+      {/* Painel Central 2.0 */}
+      <Route
+        path="/painel-central"
+        element={
+          <ProtectedRoute>
+            <PainelCentral />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Dashboard / Derruba */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Justificadas */}
+      <Route
+        path="/justificadas"
+        element={
+          <ProtectedRoute>
+            <Justificadas />
           </ProtectedRoute>
         }
       />
