@@ -8,7 +8,7 @@ import {
   Pane,
 } from "react-leaflet";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 
 import { ArrowLeft } from "lucide-react";
@@ -51,6 +51,116 @@ function AjustarMapa({ pontos }: any) {
 }
 
 // ========================================
+// SELEÇÃO INTELIGENTE POR TOQUE
+// ========================================
+// No celular, o ponto visual continua pequeno, mas a seleção
+// usa a posição real do dedo e procura a árvore mais próxima.
+// Isso evita aumentar todos os pontos e criar conflitos quando
+// existem muitas árvores próximas umas das outras.
+
+function SelecaoInteligenteCelular({
+  pontos,
+  onSelecionar,
+}: {
+  pontos: any[];
+  onSelecionar: (arvore: any) => void;
+}) {
+  const mapa = useMap();
+
+  useEffect(() => {
+    const container = mapa.getContainer();
+
+    let inicioX = 0;
+    let inicioY = 0;
+    let inicioTempo = 0;
+    let arrastou = false;
+
+    const aoPressionar = (evento: PointerEvent) => {
+      if (evento.pointerType !== "touch" && evento.pointerType !== "pen") {
+        return;
+      }
+
+      inicioX = evento.clientX;
+      inicioY = evento.clientY;
+      inicioTempo = Date.now();
+      arrastou = false;
+    };
+
+    const aoMover = (evento: PointerEvent) => {
+      if (evento.pointerType !== "touch" && evento.pointerType !== "pen") {
+        return;
+      }
+
+      const dx = evento.clientX - inicioX;
+      const dy = evento.clientY - inicioY;
+
+      if (Math.sqrt(dx * dx + dy * dy) > 10) {
+        arrastou = true;
+      }
+    };
+
+    const aoSoltar = (evento: PointerEvent) => {
+      if (evento.pointerType !== "touch" && evento.pointerType !== "pen") {
+        return;
+      }
+
+      const duracao = Date.now() - inicioTempo;
+
+      // Se o usuário estava arrastando o mapa, não seleciona árvore.
+      if (arrastou || duracao > 800) {
+        return;
+      }
+
+      const rect = container.getBoundingClientRect();
+      const pontoToque = {
+        x: evento.clientX - rect.left,
+        y: evento.clientY - rect.top,
+      };
+
+      const RAIO_TOQUE = 32;
+
+      let maisProxima: any = null;
+      let menorDistancia = Infinity;
+
+      for (const arvore of pontos) {
+        const lat = Number(arvore.LATITUDE);
+        const lng = Number(arvore.LONGITUDE);
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          continue;
+        }
+
+        const pontoArvore = mapa.latLngToContainerPoint([lat, lng]);
+        const dx = pontoArvore.x - pontoToque.x;
+        const dy = pontoArvore.y - pontoToque.y;
+        const distancia = Math.sqrt(dx * dx + dy * dy);
+
+        if (distancia <= RAIO_TOQUE && distancia < menorDistancia) {
+          menorDistancia = distancia;
+          maisProxima = arvore;
+        }
+      }
+
+      if (maisProxima) {
+        onSelecionar(maisProxima);
+      }
+    };
+
+    container.addEventListener("pointerdown", aoPressionar, { passive: true });
+    container.addEventListener("pointermove", aoMover, { passive: true });
+    container.addEventListener("pointerup", aoSoltar, { passive: true });
+
+    return () => {
+      container.removeEventListener("pointerdown", aoPressionar);
+      container.removeEventListener("pointermove", aoMover);
+      container.removeEventListener("pointerup", aoSoltar);
+    };
+  }, [mapa, pontos, onSelecionar]);
+
+  return null;
+}
+
+// ========================================
 // MAPA FLORESTAL
 // ========================================
 
@@ -70,6 +180,12 @@ export default function MapaFlorestal() {
 
   // PESQUISA DE ÁRVORE / DERRUBADOR
   const [buscaMapa, setBuscaMapa] = useState("");
+
+  // REFERÊNCIAS DOS MARCADORES.
+  // O toque inteligente usa estas referências para abrir
+  // o Popup do próprio CircleMarker. Assim não criamos
+  // um Popup separado e evitamos o erro "reading 'lat'".
+  const marcadoresArvores = useRef<Map<number, any>>(new Map());
 
   // ========================================
   // FECHAR MAPA NO SAFARI
@@ -834,6 +950,22 @@ export default function MapaFlorestal() {
                   attribution="Google Satellite"
                 />
 
+                {/* TOQUE INTELIGENTE NO CELULAR */}
+                <SelecaoInteligenteCelular
+                  pontos={pontosMapaFiltrados}
+                  onSelecionar={(arvore) => {
+                    const indice =
+                      pontosMapaFiltrados.indexOf(arvore);
+
+                    const marcador =
+                      marcadoresArvores.current.get(indice);
+
+                    if (marcador) {
+                      marcador.openPopup();
+                    }
+                  }}
+                />
+
                 {/* ========================================
                     ESTRADAS PRINCIPAIS
                 ======================================== */}
@@ -964,7 +1096,6 @@ export default function MapaFlorestal() {
                     arvore: any,
                     index: number
                   ) => {
-
                     let cor =
                       "#EF4444";
 
@@ -992,178 +1123,21 @@ export default function MapaFlorestal() {
                         "#A855F7";
                     }
 
-                    const popupConteudo = (
-                      <Popup>
-                        <div className="min-w-[220px]">
-
-                          <div className="mb-2 border-b pb-2">
-
-                            <strong className="text-base">
-
-                              {arvore.STATUS ===
-                                "DERRUBADA" &&
-                                "🔴 Derrubada"}
-
-                              {arvore.STATUS ===
-                                "ARRASTE" &&
-                                "🟡 Arraste"}
-
-                              {arvore.STATUS ===
-                                "MEDIÇÃO" &&
-                                "🔵 Medição"}
-
-                              {arvore.STATUS ===
-                                "JUSTIFICADA" &&
-                                "🟣 Justificada"}
-
-                            </strong>
-
-                            {/* DERRUBADA */}
-
-                            {arvore.STATUS ===
-                              "DERRUBADA" && (
-                              <div>
-
-                                <strong>
-                                  Motoserrista:
-                                </strong>{" "}
-
-                                <span className="font-normal">
-                                  {arvore.MOTOSERRISTA ||
-                                    "Não informado"}
-                                </span>
-
-                              </div>
-                            )}
-
-                            {/* ARRASTE */}
-
-                            {arvore.STATUS ===
-                              "ARRASTE" && (
-                              <div>
-
-                                <strong>
-                                  Skideiro Patio:
-                                </strong>{" "}
-
-                                <span className="font-normal">
-                                  {arvore.SKIDEIRO_PATIO ||
-                                    "Não informado"}
-                                </span>
-
-                              </div>
-                            )}
-
-                            {/* MEDIÇÃO */}
-
-                            {arvore.STATUS ===
-                              "MEDIÇÃO" && (
-                              <div>
-
-                                <strong>
-                                  Equipe:
-                                </strong>{" "}
-
-                                <span className="font-normal">
-                                  {arvore.EQUIPE ||
-                                    "Não informado"}
-                                </span>
-
-                              </div>
-                            )}
-
-                          </div>
-
-                          <div className="space-y-1 text-sm">
-
-                            <div>
-                              <strong>
-                                Árvore:
-                              </strong>{" "}
-                              {
-                                arvore[
-                                  "Nº ÁRVORE"
-                                ]
-                              }
-                            </div>
-
-                            <div>
-                              <strong>
-                                Espécie:
-                              </strong>{" "}
-                              {arvore.ESPECIE}
-                            </div>
-
-                            <div>
-                              <strong>
-                                CAP:
-                              </strong>{" "}
-                              {arvore.CAP} cm
-                            </div>
-
-                            <div>
-                              <strong>
-                                UPA:
-                              </strong>{" "}
-                              {arvore.UPA}
-                            </div>
-
-                            <div>
-                              <strong>
-                                UT:
-                              </strong>{" "}
-                              {arvore.UT}
-                            </div>
-
-                            {/* MOTIVO DA JUSTIFICATIVA */}
-
-                            {arvore.STATUS ===
-                              "JUSTIFICADA" && (
-                              <div className="mt-2 border-t pt-2">
-
-                                <strong>
-                                  Motivo:
-                                </strong>{" "}
-
-                                <span className="font-normal">
-                                  {arvore.MOTIVO_JUSTIFICATIVA ||
-                                    arvore[
-                                      "Motivo"
-                                    ] ||
-                                    "Não informado"}
-                                </span>
-
-                              </div>
-                            )}
-
-                            {/* VOLUME */}
-
-                            {arvore.STATUS ===
-                              "MEDIÇÃO" && (
-                              <div className="mt-2 border-t pt-2">
-
-                                <strong>
-                                  Volume Comercial:
-                                </strong>{" "}
-
-                                {Number(
-                                  arvore.VOLUME_TOTAL ||
-                                    0
-                                ).toFixed(2)}{" "}
-                                m³
-
-                              </div>
-                            )}
-
-                          </div>
-
-                        </div>
-                      </Popup>
-                    );
-
                     return (
                       <CircleMarker
-                        key={index}
+                        key={`${arvore["Nº ÁRVORE"]}-${index}`}
+                        ref={(marcador) => {
+                          if (marcador) {
+                            marcadoresArvores.current.set(
+                              index,
+                              marcador
+                            );
+                          } else {
+                            marcadoresArvores.current.delete(
+                              index
+                            );
+                          }
+                        }}
                         center={[
                           Number(
                             arvore.LATITUDE
@@ -1174,15 +1148,168 @@ export default function MapaFlorestal() {
                         ]}
                         radius={2}
                         pathOptions={{
-                          color:
-                            "#FFFFFF",
+                          color: "#FFFFFF",
                           weight: 0.7,
-                          fillColor:
-                            cor,
+                          fillColor: cor,
                           fillOpacity: 0.95,
                         }}
+                        eventHandlers={{
+                          // No computador o clique normal continua
+                          // funcionando pelo próprio marcador.
+                          click: () => {
+                            const marcador =
+                              marcadoresArvores.current.get(
+                                index
+                              );
+
+                            if (marcador) {
+                              marcador.openPopup();
+                            }
+                          },
+                        }}
                       >
-                        {popupConteudo}
+                        <Popup
+                          closeButton={true}
+                          closeOnClick={true}
+                          autoPan={true}
+                        >
+                          <div className="min-w-[220px] max-w-[280px]">
+                            <div className="mb-2 border-b pb-2">
+                              <strong className="text-base">
+                                {arvore.STATUS ===
+                                  "DERRUBADA" &&
+                                  "🔴 Derrubada"}
+
+                                {arvore.STATUS ===
+                                  "ARRASTE" &&
+                                  "🟡 Arraste"}
+
+                                {arvore.STATUS ===
+                                  "MEDIÇÃO" &&
+                                  "🔵 Medição"}
+
+                                {arvore.STATUS ===
+                                  "JUSTIFICADA" &&
+                                  "🟣 Justificada"}
+                              </strong>
+
+                              {/* DERRUBADA */}
+                              {arvore.STATUS ===
+                                "DERRUBADA" && (
+                                <div>
+                                  <strong>
+                                    Motoserrista:
+                                  </strong>{" "}
+                                  <span className="font-normal">
+                                    {arvore.MOTOSERRISTA ||
+                                      "Não informado"}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* ARRASTE */}
+                              {arvore.STATUS ===
+                                "ARRASTE" && (
+                                <div>
+                                  <strong>
+                                    Skideiro Patio:
+                                  </strong>{" "}
+                                  <span className="font-normal">
+                                    {arvore.SKIDEIRO_PATIO ||
+                                      "Não informado"}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* MEDIÇÃO */}
+                              {arvore.STATUS ===
+                                "MEDIÇÃO" && (
+                                <div>
+                                  <strong>
+                                    Equipe:
+                                  </strong>{" "}
+                                  <span className="font-normal">
+                                    {arvore.EQUIPE ||
+                                      "Não informado"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="space-y-1 text-sm">
+                              <div>
+                                <strong>
+                                  Árvore:
+                                </strong>{" "}
+                                {
+                                  arvore[
+                                    "Nº ÁRVORE"
+                                  ]
+                                }
+                              </div>
+
+                              <div>
+                                <strong>
+                                  Espécie:
+                                </strong>{" "}
+                                {arvore.ESPECIE}
+                              </div>
+
+                              <div>
+                                <strong>
+                                  CAP:
+                                </strong>{" "}
+                                {arvore.CAP} cm
+                              </div>
+
+                              <div>
+                                <strong>
+                                  UPA:
+                                </strong>{" "}
+                                {arvore.UPA}
+                              </div>
+
+                              <div>
+                                <strong>
+                                  UT:
+                                </strong>{" "}
+                                {arvore.UT}
+                              </div>
+
+                              {/* MOTIVO DA JUSTIFICATIVA */}
+                              {arvore.STATUS ===
+                                "JUSTIFICADA" && (
+                                <div className="mt-2 border-t pt-2">
+                                  <strong>
+                                    Motivo:
+                                  </strong>{" "}
+                                  <span className="font-normal">
+                                    {arvore.MOTIVO_JUSTIFICATIVA ||
+                                      arvore[
+                                        "Motivo"
+                                      ] ||
+                                      "Não informado"}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* VOLUME */}
+                              {arvore.STATUS ===
+                                "MEDIÇÃO" && (
+                                <div className="mt-2 border-t pt-2">
+                                  <strong>
+                                    Volume Comercial:
+                                  </strong>{" "}
+                                  {Number(
+                                    arvore.VOLUME_TOTAL ||
+                                      0
+                                  ).toFixed(2)}{" "}
+                                  m³
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Popup>
                       </CircleMarker>
                     );
                   }
