@@ -34,83 +34,147 @@ export default function Dashboard() {
 
   return (
     <MainLayout>
-      <div className="pt-8">
-        <Container>
-          <Header
-            title="Dashboard de Produção"
-            subtitle="Sistema de Gestão Florestal - NOBRE FLORESTAL"
+      <Container>
+
+        {/* =====================================================
+            HEADER
+        ===================================================== */}
+        <Header
+          title="Dashboard de Produção"
+          subtitle="Sistema de Gestão Florestal - NOBRE FLORESTAL"
+        />
+
+        {/* Espaço entre Header e Filtros */}
+        <div className="h-8" />
+
+        {/* =====================================================
+            FILTROS
+        ===================================================== */}
+        <FilterBar tipo="derruba" />
+
+        {/* Espaço entre Filtros e KPIs */}
+        <div className="h-9" />
+
+        {/* =====================================================
+            KPIs
+        ===================================================== */}
+        <section
+          className="
+            grid
+            grid-cols-1
+            gap-6
+            sm:grid-cols-2
+            lg:grid-cols-3
+            xl:grid-cols-5
+          "
+        >
+          <KpiCard
+            title="Produção Geral"
+            value={dashboard.indicadores.producaoTotal.toLocaleString(
+              "pt-BR"
+            )}
+            icon={<Trees size={22} />}
           />
 
-          <div className="h-6" />
+          <KpiCard
+            title="Operadores Ativos"
+            value={dashboard.indicadores.operadores.toLocaleString(
+              "pt-BR"
+            )}
+            icon={<Users size={22} />}
+          />
 
-          <FilterBar tipo="derruba" />
+          <KpiCard
+            title="Dias Trabalhados"
+            value={dashboard.indicadores.dias.toLocaleString(
+              "pt-BR"
+            )}
+            icon={<CalendarDays size={22} />}
+          />
 
-          <div className="h-6" />
+          <KpiCard
+            title="Média por Dia"
+            value={dashboard.indicadores.media.toLocaleString(
+              "pt-BR"
+            )}
+            icon={<TrendingUp size={22} />}
+          />
 
-          {/* ================= KPIs ================= */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            <KpiCard
-              title="Produção Geral"
-              value={dashboard.indicadores.producaoTotal.toLocaleString("pt-BR")}
-              icon={<Trees size={22} />}
-            />
+          <KpiCard
+            title="Espécies Exploradas"
+            value={dashboard.indicadores.especies.toLocaleString(
+              "pt-BR"
+            )}
+            icon={<Leaf size={22} />}
+          />
+        </section>
 
-            <KpiCard
-              title="Operadores Ativos"
-              value={dashboard.indicadores.operadores.toLocaleString("pt-BR")}
-              icon={<Users size={22} />}
-            />
+        {/* Espaço entre KPIs e gráficos */}
+        <div className="h-10" />
 
-            <KpiCard
-              title="Dias Trabalhados"
-              value={dashboard.indicadores.dias.toLocaleString("pt-BR")}
-              icon={<CalendarDays size={22} />}
-            />
+        {/* =====================================================
+            PRIMEIRA LINHA DE GRÁFICOS
+        ===================================================== */}
+        <section
+          className="
+            grid
+            grid-cols-1
+            gap-7
+            xl:grid-cols-12
+          "
+        >
 
-            <KpiCard
-              title="Média por Dia"
-              value={dashboard.indicadores.media.toLocaleString("pt-BR")}
-              icon={<TrendingUp size={22} />}
-            />
-
-            <KpiCard
-              title="Espécies Exploradas"
-              value={dashboard.indicadores.especies.toLocaleString("pt-BR")}
-              icon={<Leaf size={22} />}
-            />
+          {/* PRODUÇÃO POR DIA */}
+          <div className="min-w-0 xl:col-span-8">
+            <ChartCard title="Produção por Dia">
+              <ProductionChart />
+            </ChartCard>
           </div>
 
-          <div className="h-8" />
-
-          {/* ================= Primeira Linha ================= */}
-          <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
-            <div className="xl:col-span-8">
-              <ChartCard title="Produção por Dia">
-                <ProductionChart />
-              </ChartCard>
-            </div>
-
-            <div className="xl:col-span-4">
-              <ChartCard title="DESTAQUE">
-                <RankingChart />
-              </ChartCard>
-            </div>
+          {/* DESTAQUE */}
+          <div className="min-w-0 xl:col-span-4">
+            <ChartCard title="DESTAQUE">
+              <RankingChart />
+            </ChartCard>
           </div>
 
-          <div className="h-8" />
+        </section>
 
-          {/* ================= Segunda Linha ================= */}
-          <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
+        {/* Espaço entre as linhas */}
+        <div className="h-8" />
+
+        {/* =====================================================
+            SEGUNDA LINHA DE GRÁFICOS
+        ===================================================== */}
+        <section
+          className="
+            grid
+            grid-cols-1
+            gap-7
+            xl:grid-cols-2
+          "
+        >
+
+          {/* PRODUÇÃO POR UT */}
+          <div className="min-w-0">
             <ChartCard title="Produção por UT">
               <UTChart />
             </ChartCard>
+          </div>
 
+          {/* PRODUÇÃO POR ESPÉCIE */}
+          <div className="min-w-0">
             <ChartCard title="Produção por Espécie">
               <SpeciesChart />
             </ChartCard>
           </div>
-        </Container>
-      </div>
+
+        </section>
+
+        {/* Espaço inferior */}
+        <div className="h-8" />
+
+      </Container>
     </MainLayout>
   );
 }

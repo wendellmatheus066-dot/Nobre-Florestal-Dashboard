@@ -372,62 +372,120 @@ const frasesMotivacionais = [
     referencia: "Filipenses 4:13",
   },
   {
+    texto: "O Senhor é o meu pastor; nada me faltará.",
+    referencia: "Salmos 23:1",
+  },
+  {
+    texto: "Confia no Senhor de todo o teu coração.",
+    referencia: "Provérbios 3:5",
+  },
+  {
+    texto: "Entrega o teu caminho ao Senhor; confia nele.",
+    referencia: "Salmos 37:5",
+  },
+  {
+    texto: "O Senhor é a minha luz e a minha salvação; de quem terei medo?",
+    referencia: "Salmos 27:1",
+  },
+  {
+    texto: "Seja forte e corajoso. Não tenha medo.",
+    referencia: "Josué 1:9",
+  },
+  {
+    texto: "Este é o dia que o Senhor fez; alegremo-nos e exultemos nele.",
+    referencia: "Salmos 118:24",
+  },
+  {
+    texto: "O Senhor pelejará por vós, e vós vos calareis.",
+    referencia: "Êxodo 14:14",
+  },
+  {
+    texto: "Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia.",
+    referencia: "Salmos 46:1",
+  },
+  {
     texto: "Tudo tem o seu tempo determinado.",
     referencia: "Eclesiastes 3:1",
   },
   {
-    texto: "Seja forte e corajoso.",
-    referencia: "Josué 1:9",
-  },
-
-  // Citações de personalidades
-  {
-    texto: "Se você pensa que pode ou que pensa que não pode, você está certo.",
-    referencia: "Henry Ford",
+    texto: "Aquele que habita no esconderijo do Altíssimo descansará à sombra do Onipotente.",
+    referencia: "Salmos 91:1",
   },
   {
-    texto: "Acredite que você pode e você já está no meio do caminho.",
-    referencia: "Theodore Roosevelt",
+    texto: "Não temas, porque eu sou contigo.",
+    referencia: "Isaías 41:10",
   },
   {
-    texto: "Sempre parece impossível até que seja feito.",
-    referencia: "Nelson Mandela",
+    texto: "Os que esperam no Senhor renovarão as suas forças.",
+    referencia: "Isaías 40:31",
   },
   {
-    texto: "A vida é como andar de bicicleta. Para manter o equilíbrio, é preciso continuar se movendo.",
-    referencia: "Albert Einstein",
+    texto: "O Senhor firma os passos de um homem.",
+    referencia: "Salmos 37:23",
   },
   {
-    texto: "Gênio é 1% inspiração e 99% transpiração.",
-    referencia: "Thomas Edison",
+    texto: "Bem-aventurado aquele que confia no Senhor.",
+    referencia: "Jeremias 17:7",
   },
   {
-    texto: "Não conte os dias; faça os dias valerem a pena.",
-    referencia: "Muhammad Ali",
+    texto: "Buscai primeiro o Reino de Deus e a sua justiça.",
+    referencia: "Mateus 6:33",
   },
   {
-    texto: "Eu fracassei várias e várias vezes na minha vida. E é por isso que tenho sucesso.",
-    referencia: "Michael Jordan",
+    texto: "Porque para Deus nada será impossível.",
+    referencia: "Lucas 1:37",
   },
   {
-    texto: "A única maneira de fazer um excelente trabalho é amar o que você faz.",
-    referencia: "Steve Jobs",
+    texto: "A minha graça te basta.",
+    referencia: "2 Coríntios 12:9",
   },
   {
-    texto: "A melhor maneira de começar é parar de falar e começar a fazer.",
-    referencia: "Walt Disney",
+    texto: "O Senhor é bom, uma fortaleza no dia da angústia.",
+    referencia: "Naum 1:7",
   },
   {
-    texto: "O que você ganha ao alcançar seus objetivos não é tão importante quanto aquilo que você se torna ao alcançá-los.",
-    referencia: "Henry David Thoreau",
+    texto: "Em paz também me deitarei e dormirei, porque só tu, Senhor, me fazes habitar em segurança.",
+    referencia: "Salmos 4:8",
   },
   {
-    texto: "A vida é uma sucessão de lições que devem ser vividas para serem compreendidas.",
-    referencia: "Helen Keller",
+    texto: "Lança o teu cuidado sobre o Senhor, e ele te susterá.",
+    referencia: "Salmos 55:22",
   },
   {
-    texto: "Eu não tenho ídolos. Tenho admiração por trabalho, dedicação e competência.",
-    referencia: "Ayrton Senna",
+    texto: "O coração alegre aformoseia o rosto.",
+    referencia: "Provérbios 15:13",
+  },
+  {
+    texto: "A fé é a certeza daquilo que esperamos.",
+    referencia: "Hebreus 11:1",
+  },
+  {
+    texto: "Sede fortes, e fortaleça-se o vosso coração.",
+    referencia: "Salmos 31:24",
+  },
+  {
+    texto: "O Senhor dará força ao seu povo; o Senhor abençoará o seu povo com paz.",
+    referencia: "Salmos 29:11",
+  },
+  {
+    texto: "O Senhor está perto dos que têm o coração quebrantado.",
+    referencia: "Salmos 34:18",
+  },
+  {
+    texto: "Aquietai-vos e sabei que eu sou Deus.",
+    referencia: "Salmos 46:10",
+  },
+  {
+    texto: "Em todas estas coisas somos mais que vencedores.",
+    referencia: "Romanos 8:37",
+  },
+  {
+    texto: "Se Deus é por nós, quem será contra nós?",
+    referencia: "Romanos 8:31",
+  },
+  {
+    texto: "O Senhor é a minha força e o meu escudo.",
+    referencia: "Salmos 28:7",
   },
 ];
 
@@ -1546,50 +1604,36 @@ const PainelCentral: React.FC =
 
           <Container>
 
-            <Header
-              title="Painel Central"
-              subtitle="Acompanhamento da operação e previsão de término"
-            />
+            <div style={{ marginBottom: "24px" }}>
+              <Header
+                title="Painel Central"
+                subtitle="Acompanhamento da operação e previsão de término"
+              />
+            </div>
 
             {/* SAUDAÇÃO + FRASE MOTIVACIONAL */}
-            <div className="mt-5 text-center">
-
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-2xl">👋</span>
-                <h2 className="text-3xl font-extrabold tracking-tight text-white">
-                  {saudacao}!
-                </h2>
-              </div>
-
-              <p className="mt-1 text-sm font-medium text-gray-400">
-                
-              </p>
-
+            <div style={{ marginTop: "0px" }}>
               <div
-                className="
-                  relative mx-auto mt-5 w-full max-w-none overflow-hidden
-                  rounded-2xl border border-[#00D084]/30
-                  bg-gradient-to-r from-[#081714] via-[#0d211c] to-[#081714]
-                  px-8 py-5
-                  shadow-[0_8px_30px_rgba(0,0,0,0.18)]
-                "
+                className="relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-[#44475A] bg-[#343746] px-5 py-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
               >
-                <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-[#A855F7] via-[#00D084] to-[#00A8FF]" />
+                <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-[#00D084] via-[#A855F7] to-[#00A8FF]" />
 
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-2xl opacity-80">❝</span>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#00D084]/10 text-xl text-[#00D084]">
+                  ✦
+                </div>
 
-                  <div>
-                    <p className="text-lg font-bold italic leading-relaxed text-white">
-                      {fraseMotivacional.texto}
-                    </p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-extrabold text-[#00D084]">
+                    {saudacao}, NOBRE!
+                  </p>
 
-                    <p className="mt-1 text-sm font-bold text-[#00D084]">
-                      {fraseMotivacional.referencia}
-                    </p>
-                  </div>
+                  <p className="mt-1 text-sm font-bold leading-relaxed text-white">
+                    “{fraseMotivacional.texto}”
+                  </p>
 
-                  <span className="self-end text-2xl opacity-80">❞</span>
+                  <p className="mt-0.5 text-xs font-semibold text-gray-400">
+                    {fraseMotivacional.referencia}
+                  </p>
                 </div>
               </div>
             </div>
